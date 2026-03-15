@@ -21,6 +21,7 @@ export default function AdminImportPage() {
   const [phrases, setPhrases] = useState<ExtractedPhrase[]>([])
   const [error, setError] = useState<string | null>(null)
   const [insertedCount, setInsertedCount] = useState(0)
+  const [skippedCount, setSkippedCount] = useState(0)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null
@@ -71,6 +72,7 @@ export default function AdminImportPage() {
       const data: SaveResponse = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error ?? `HTTP ${res.status}`)
       setInsertedCount(data.inserted_count)
+      setSkippedCount(data.skipped_count ?? 0)
       setStep('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : '不明なエラー')
@@ -303,6 +305,9 @@ export default function AdminImportPage() {
               <p className="text-green-700 font-semibold">
                 ✓ {insertedCount}件のフレーズを登録しました
               </p>
+              {skippedCount > 0 && (
+                <p className="text-sm text-gray-500">{skippedCount}件は既存のため重複スキップ</p>
+              )}
               <button
                 onClick={handleReset}
                 className="rounded-md border border-green-400 bg-white px-4 py-2 text-sm font-medium text-green-700 hover:bg-green-50 transition-colors"

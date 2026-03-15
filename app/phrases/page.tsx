@@ -2,22 +2,18 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Phrase, SourceType } from '@/types'
 
 const SOURCE_TYPES: SourceType[] = ['DSH_Event', 'YouTube', 'Podcast']
 
-const DIFFICULTY_LABEL: Record<number, string> = {
-  1: 'とても簡単', 2: '簡単', 3: '普通', 4: '難しい', 5: 'とても難しい',
-}
-const DIFFICULTY_COLOR: Record<number, string> = {
-  1: 'bg-green-100 text-green-700',
-  2: 'bg-blue-100 text-blue-700',
-  3: 'bg-yellow-100 text-yellow-700',
-  4: 'bg-orange-100 text-orange-700',
-  5: 'bg-red-100 text-red-700',
+const DIFF_CONFIG: Record<number, { label: string; cls: string }> = {
+  1: { label: 'Lv.1', cls: 'bg-emerald-100 text-emerald-700' },
+  2: { label: 'Lv.2', cls: 'bg-sky-100 text-sky-700' },
+  3: { label: 'Lv.3', cls: 'bg-amber-100 text-amber-700' },
+  4: { label: 'Lv.4', cls: 'bg-orange-100 text-orange-700' },
+  5: { label: 'Lv.5', cls: 'bg-red-100 text-red-700' },
 }
 
 export default function PhrasesPage() {
@@ -47,119 +43,107 @@ export default function PhrasesPage() {
     if (!window.speechSynthesis) return
     window.speechSynthesis.cancel()
     const utt = new SpeechSynthesisUtterance(text)
-    utt.lang = 'en-US'
-    utt.rate = 0.9
+    utt.lang = 'en-US'; utt.rate = 0.88
     utt.onend = () => setSpeaking(null)
     setSpeaking(id)
     window.speechSynthesis.speak(utt)
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-2xl mx-auto space-y-5">
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between">
-          <div>
-            <Link href="/" className="text-sm text-gray-400 hover:text-gray-600">← ホーム</Link>
-            <h1 className="text-xl font-bold text-gray-900 mt-0.5">フレーズ一覧</h1>
-          </div>
-          <span className="text-sm text-gray-400">{phrases.length}件</span>
-        </div>
+  const diff = (d: number) => DIFF_CONFIG[d] ?? DIFF_CONFIG[3]
 
-        {/* 検索・フィルター */}
-        <div className="space-y-2">
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* ヘッダー */}
+      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-slate-100 px-4 py-3">
+        <div className="max-w-2xl mx-auto space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Link href="/" className="text-slate-400 hover:text-slate-600 text-lg leading-none">‹</Link>
+              <h1 className="text-base font-bold text-slate-800">フレーズ一覧</h1>
+            </div>
+            <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+              {loading ? '...' : `${phrases.length}件`}
+            </span>
+          </div>
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="フレーズ・日本語で検索..."
-            className="bg-white"
+            placeholder="フレーズ・意味で検索..."
+            className="h-9 text-sm bg-slate-50 border-slate-200"
           />
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setSource('')}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                source === '' ? 'bg-gray-800 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              すべて
-            </button>
-            {SOURCE_TYPES.map((type) => (
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
+            {['', ...SOURCE_TYPES].map((type) => (
               <button
-                key={type}
-                onClick={() => setSource(source === type ? '' : type)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  source === type ? 'bg-gray-800 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                key={type || 'all'}
+                onClick={() => setSource(type)}
+                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  source === type
+                    ? 'bg-slate-800 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {type}
+                {type || 'すべて'}
               </button>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* 一覧 */}
+      {/* 一覧 */}
+      <div className="max-w-2xl mx-auto p-4 space-y-2">
         {loading ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-24 rounded-xl bg-gray-200 animate-pulse" />
-            ))}
-          </div>
+          [...Array(6)].map((_, i) => (
+            <div key={i} className="h-[88px] rounded-2xl bg-slate-200 animate-pulse" />
+          ))
         ) : phrases.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-4xl mb-3">📭</p>
-            <p className="text-sm">フレーズが見つかりません</p>
+          <div className="text-center py-20 space-y-3">
+            <p className="text-4xl">📭</p>
+            <p className="text-sm text-slate-400">フレーズが見つかりません</p>
             {!q && !source && (
-              <Link href="/admin/import" className="mt-3 inline-block text-sm text-blue-500 hover:underline">
-                インポートしてフレーズを追加する →
+              <Link href="/admin/import" className="text-xs text-blue-500 hover:underline">
+                インポートして追加 →
               </Link>
             )}
           </div>
         ) : (
-          <div className="space-y-3">
-            {phrases.map((p) => (
-              <Card key={p.id} className="hover:shadow-sm transition-shadow">
-                <CardContent className="pt-4 pb-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-gray-900 text-base">{p.phrase}</span>
-                        {p.pronunciation && (
-                          <span className="text-xs text-gray-400 font-normal">{p.pronunciation}</span>
-                        )}
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLOR[p.difficulty] ?? DIFFICULTY_COLOR[3]}`}>
-                          {DIFFICULTY_LABEL[p.difficulty] ?? '普通'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-blue-700 mt-1 font-medium">{p.meaning_ja}</p>
-                      {p.original_context && (
-                        <p className="text-xs text-gray-400 mt-1.5 italic leading-relaxed">
-                          &quot;{p.original_context}&quot;
-                        </p>
-                      )}
-                      {p.source_title && (
-                        <div className="mt-2 flex items-center gap-1.5">
-                          <Badge variant="secondary" className="text-xs font-normal">{p.source_type}</Badge>
-                          <span className="text-xs text-gray-400 truncate">{p.source_title}</span>
-                        </div>
-                      )}
-                    </div>
-                    {/* 発音ボタン (Web Speech API) */}
-                    <button
-                      onClick={() => speak(p.phrase, p.id)}
-                      className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-                        speaking === p.id
-                          ? 'bg-blue-100 text-blue-600 animate-pulse'
-                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                      }`}
-                      title="発音を聞く"
-                    >
-                      🔊
-                    </button>
+          phrases.map((p) => (
+            <div
+              key={p.id}
+              className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-slate-900">{p.phrase}</span>
+                  {p.pronunciation && (
+                    <span className="text-xs text-slate-400">{p.pronunciation}</span>
+                  )}
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${diff(p.difficulty).cls}`}>
+                    {diff(p.difficulty).label}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-blue-600 mt-1">{p.meaning_ja}</p>
+                {p.original_context && (
+                  <p className="text-xs text-slate-400 mt-1 italic line-clamp-2">
+                    &quot;{p.original_context}&quot;
+                  </p>
+                )}
+                {p.source_title && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{p.source_type}</Badge>
+                    <span className="text-[10px] text-slate-400 truncate">{p.source_title}</span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                )}
+              </div>
+              <button
+                onClick={() => speak(p.phrase, p.id)}
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                  speaking === p.id ? 'bg-blue-100 text-blue-600 animate-pulse' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                🔊
+              </button>
+            </div>
+          ))
         )}
       </div>
     </div>
