@@ -222,7 +222,7 @@ export default function QuizPage() {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
       {/* ヘッダー */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto w-full">
+      <div className="flex-shrink-0 px-4 pt-3 pb-1 flex items-center justify-between max-w-lg mx-auto w-full">
         <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
         <div className="flex items-center gap-3">
           <span className="text-xs text-emerald-400 font-semibold">✓ {score.correct}</span>
@@ -236,11 +236,11 @@ export default function QuizPage() {
       </div>
 
       {/* スクロール可能コンテンツエリア */}
-      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto px-4 pt-4 max-w-lg mx-auto w-full">
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto px-4 pt-2 max-w-lg mx-auto w-full">
         {current && (
-          <div className="space-y-3 pb-3">
+          <div className="space-y-2 pb-2">
             {/* フレーズカード */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-3">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center space-y-2">
               <div className="flex justify-center gap-2 flex-wrap">
                 {current.usage_scene && (
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${SCENE_CLS[current.usage_scene]}`}>
@@ -253,10 +253,7 @@ export default function QuizPage() {
                   </span>
                 )}
               </div>
-              <p className="text-3xl sm:text-4xl font-bold text-white tracking-wide break-words">{current.phrase}</p>
-              {step === 'result' && current.pronunciation && (
-                <p className="text-sm text-slate-500">{current.pronunciation}</p>
-              )}
+              <p className="text-2xl sm:text-3xl font-bold text-white tracking-wide break-words">{current.phrase}</p>
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <button onClick={() => speak(current.phrase, 'phrase')}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}>
@@ -268,7 +265,7 @@ export default function QuizPage() {
 
             {/* 判定中 */}
             {step === 'judging' && (
-              <p className="text-center text-slate-400 text-sm animate-pulse py-4">AIが判定中...</p>
+              <p className="text-center text-slate-400 text-sm animate-pulse py-2">AIが判定中...</p>
             )}
 
             {/* 結果 */}
@@ -276,19 +273,19 @@ export default function QuizPage() {
               const status = judgment.status ?? (judgment.correct ? 'correct' : 'incorrect')
               const cfg = STATUS_CONFIG[status]
               return (
-                <div className="space-y-3">
-                  <div className={`rounded-2xl p-4 text-center border ${cfg.cls}`}>
-                    <p className={`text-lg font-bold ${cfg.textCls}`}>{cfg.label}</p>
-                    {judgment.feedback && <p className="text-xs text-slate-300 mt-1">{judgment.feedback}</p>}
+                <div className="space-y-2">
+                  <div className={`rounded-2xl p-3 text-center border ${cfg.cls}`}>
+                    <p className={`text-base font-bold ${cfg.textCls}`}>{cfg.label}</p>
+                    {judgment.feedback && <p className="text-xs text-slate-300 mt-0.5">{judgment.feedback}</p>}
                   </div>
 
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-2">
                     <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">正解の意味</p>
-                      <p className="text-white font-semibold">{current.meaning_ja}</p>
+                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">正解の意味</p>
+                      <p className="text-white font-semibold text-sm">{current.meaning_ja}</p>
                     </div>
                     {current.original_context && (
-                      <div className="border-t border-white/10 pt-3 space-y-2">
+                      <div className="border-t border-white/10 pt-2 space-y-1.5">
                         <p className="text-xs text-slate-500 uppercase tracking-wider">使用例</p>
                         <div className="flex items-start gap-2">
                           <p className="flex-1 text-sm text-slate-200 italic leading-relaxed">
@@ -323,9 +320,9 @@ export default function QuizPage() {
       </div>
 
       {/* 下部アクションエリア（常時表示） */}
-      <div className="flex-shrink-0 px-4 pb-6 pt-3 max-w-lg mx-auto w-full bg-slate-900 border-t border-white/5">
+      <div className="flex-shrink-0 px-4 pb-4 pt-2 max-w-lg mx-auto w-full bg-slate-900 border-t border-white/5">
         {step === 'question' && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <input
               ref={inputRef}
               type="text"
@@ -334,24 +331,24 @@ export default function QuizPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="日本語で意味を入力..."
               style={{ fontSize: '16px' }}
-              className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
             />
             <button
               onClick={handleSubmit}
               disabled={!answer.trim()}
-              className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700"
+              className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700"
             >
               判定する
             </button>
           </div>
         )}
         {step === 'judging' && (
-          <div className="h-[112px]" /> /* input+button と同じ高さを確保してレイアウトシフトを防ぐ */
+          <div className="h-[100px]" />
         )}
         {step === 'result' && (
           <button
             onClick={handleNext}
-            className="w-full py-3.5 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors active:bg-white/30"
+            className="w-full py-3 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors active:bg-white/30"
           >
             {index + 1 >= total ? '結果を見る' : '次のフレーズ →'}
           </button>
