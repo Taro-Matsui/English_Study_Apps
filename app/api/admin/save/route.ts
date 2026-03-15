@@ -14,9 +14,17 @@ export async function POST(req: NextRequest) {
   }
 
   const { phrases, source_type, source_title, source_date } = body
+
+  // フレーズ件数上限（DoS対策）
   if (!phrases?.length) {
     return NextResponse.json<SaveResponse>(
       { success: false, inserted_count: 0, skipped_count: 0, error: '登録するフレーズがありません' },
+      { status: 400 }
+    )
+  }
+  if (phrases.length > 200) {
+    return NextResponse.json<SaveResponse>(
+      { success: false, inserted_count: 0, skipped_count: 0, error: '一度に登録できるフレーズは200件までです' },
       { status: 400 }
     )
   }
@@ -61,7 +69,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data, error } = await db.from('phrases').insert(newRows).select()
-    if (error) throw new Error(`Supabase挿入エラー: ${error.message}`)
+    if (error) throw new Error('フレーズの挿入に失敗しました')
 
     return NextResponse.json<SaveResponse>({
       success: true,
@@ -69,10 +77,9 @@ export async function POST(req: NextRequest) {
       skipped_count: skipped,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : '不明なエラー'
-    console.error('[admin/save]', message)
+    console.error('[admin/save]', err instanceof Error ? err.message : err)
     return NextResponse.json<SaveResponse>(
-      { success: false, inserted_count: 0, skipped_count: 0, error: message },
+      { success: false, inserted_count: 0, skipped_count: 0, error: 'フレーズの登録中にエラーが発生しました' },
       { status: 500 }
     )
   }

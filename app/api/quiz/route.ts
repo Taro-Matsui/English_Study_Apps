@@ -4,7 +4,9 @@ import { getSupabase } from '@/lib/supabase'
 // ランダムにフレーズを取得（クイズ用）
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const limit = Number(searchParams.get('limit') ?? '10')
+  // limit を 1〜50 に制限（未指定・不正値は 10 に正規化）
+  const rawLimit = parseInt(searchParams.get('limit') ?? '10', 10)
+  const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 50) : 10
 
   const db = getSupabase()
 

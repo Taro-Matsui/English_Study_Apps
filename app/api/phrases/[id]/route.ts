@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 
+const ALLOWED_REASONS = ['product_name', 'not_phrase'] as const
+type AllowedReason = typeof ALLOWED_REASONS[number]
+
+// UUID v4 形式チェック（SQLインジェクション / 意図しいID操作を防ぐ）
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const { id } = params
+
+  if (!UUID_RE.test(id)) {
+    return NextResponse.json({ error: '不正なIDです' }, { status: 400 })
+  }
+
   let body: { delete_reason: string }
   try {
     body = await req.json()
@@ -14,16 +25,19 @@ export async function PATCH(
   }
 
   const { delete_reason } = body
-  if (!delete_reason) {
-    return NextResponse.json({ error: '削除理由を指定してください' }, { status: 400 })
+  if (!delete_reason || !(ALLOWED_REASONS as readonly string[]).includes(delete_reason)) {
+    return NextResponse.json(
+      { error: `削除理由は ${ALLOWED_REASONS.join(' / ')} のいずれかを指定してください` },
+      { status: 400 }
+    )
   }
 
   const db = getSupabaseAdmin()
   const { error } = await db
     .from('phrases')
-    .update({ deleted_at: new Date().toISOString(), delete_reason })
+    .update({ deleted_at: new Date().toISOString(), delete_reason: delete_reason as AllowedReason })
     .eq('id', id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return NextResponse.json({ error: 'データベースエラーが発生しました' }, { status: 500 })
   return NextResponse.json({ success: true })
 }

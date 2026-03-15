@@ -16,7 +16,14 @@ export interface JudgeResponse {
 
 export async function POST(req: NextRequest) {
   const body: JudgeRequest = await req.json()
-  const { phrase, user_answer, meaning_ja, original_context } = body
+
+  // 入力長制限（プロンプトインジェクション・DoS 対策）
+  const phrase = String(body.phrase ?? '').slice(0, 200)
+  const user_answer = String(body.user_answer ?? '').slice(0, 500)
+  const meaning_ja = String(body.meaning_ja ?? '').slice(0, 500)
+  const original_context = body.original_context
+    ? String(body.original_context).slice(0, 1000)
+    : undefined
 
   if (!user_answer?.trim()) {
     return NextResponse.json<JudgeResponse>({ correct: false, feedback: '回答を入力してください' })

@@ -17,6 +17,9 @@ export async function GET() {
     .order('started_at', { ascending: false })
     .limit(30)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[history]', error.message)
+    return NextResponse.json({ error: '履歴の取得に失敗しました' }, { status: 500 })
+  }
   return NextResponse.json(sessions ?? [])
 }
