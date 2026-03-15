@@ -155,13 +155,13 @@ export default function QuizPage() {
   )
 
   if (step === 'loading') return (
-    <div className="min-h-[100dvh] bg-slate-900 flex items-center justify-center">
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
       <p className="text-slate-500 text-sm animate-pulse">読み込み中...</p>
     </div>
   )
 
   if (step === 'empty') return (
-    <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center gap-4 p-8 text-center">
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
       <p className="text-slate-400 text-sm">フレーズが登録されていません</p>
       <Link href="/admin/import" className="text-sm text-blue-400 hover:underline">インポートして追加 →</Link>
@@ -172,7 +172,7 @@ export default function QuizPage() {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
     return (
-      <div className="min-h-[100dvh] bg-slate-900 flex flex-col p-4">
+      <div className="min-h-screen bg-slate-900 flex flex-col p-4">
         <div className="max-w-lg mx-auto w-full pt-8 space-y-5">
           <div className="text-center space-y-2">
             <p className="text-5xl">{grade}</p>
@@ -205,7 +205,7 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-slate-900 flex flex-col">
       <div className="px-4 pt-safe-top pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto w-full">
         <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
         <div className="flex items-center gap-3">
@@ -252,7 +252,8 @@ export default function QuizPage() {
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   placeholder="日本語で意味を入力..."
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 text-base focus:outline-none focus:border-blue-500 transition-colors"
+                  style={{ fontSize: '16px' }}
+                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                 />
                 <button onClick={handleSubmit} disabled={!answer.trim()}
                   className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700">
