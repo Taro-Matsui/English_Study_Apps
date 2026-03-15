@@ -27,9 +27,22 @@ ${text}
     "pronunciation": "発音記号（IPA）",
     "meaning_ja": "日本語での意味・説明",
     "original_context": "元テキストでの使用例文（英語原文をそのまま引用）",
-    "difficulty": 3
+    "difficulty": 3,
+    "usage_scene": "daily|technical|business|other のいずれか",
+    "engineer_level": "junior|mid|senior のいずれか"
   }
-]`
+]
+
+usage_scene の選び方：
+- daily: 日常的な会話や雑談でも使われる汎用表現
+- technical: コード・アーキテクチャ・インフラなど技術的な場面で使う専門的表現
+- business: 会議・提案・交渉など職業的コミュニケーション場面で使う表現
+- other: 上記に分類しにくいもの
+
+engineer_level の選び方：
+- junior: 入門〜1年目の初級エンジニアでも理解できる表現
+- mid: 実務経験2〜4年の中級エンジニアが使いこなす表現
+- senior: シニア・リーダー層が多用する高度な表現`
 
 export async function extractPhrasesWithClaude(text: string): Promise<ExtractedPhrase[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY

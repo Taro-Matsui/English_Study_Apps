@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
-import { JudgeResponse } from '../api/quiz/judge/route'
+import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
+import type { JudgeResponse } from '../api/quiz/judge/route'
 
 interface QuizPhrase {
   id: string
@@ -13,16 +14,43 @@ interface QuizPhrase {
   original_context: string | null
   difficulty: number
   source_title: string | null
+  usage_scene: UsageScene | null
+  engineer_level: EngineerLevel | null
 }
 
 type Step = 'loading' | 'question' | 'judging' | 'result' | 'done' | 'empty'
 
-function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5)
+function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5) }
+
+const SCENE_LABEL: Record<UsageScene, string> = {
+  daily: '日常会話', technical: 'テクニカル', business: 'ビジネス', other: 'その他',
+}
+const SCENE_CLS: Record<UsageScene, string> = {
+  daily: 'bg-emerald-500/20 text-emerald-400',
+  technical: 'bg-sky-500/20 text-sky-400',
+  business: 'bg-violet-500/20 text-violet-400',
+  other: 'bg-slate-500/20 text-slate-400',
+}
+const LEVEL_LABEL: Record<EngineerLevel, string> = { junior: '初級', mid: '中級', senior: '上級' }
+const LEVEL_CLS: Record<EngineerLevel, string> = {
+  junior: 'bg-emerald-500/20 text-emerald-400',
+  mid: 'bg-amber-500/20 text-amber-400',
+  senior: 'bg-red-500/20 text-red-400',
 }
 
-const DIFF_COLOR: Record<number, string> = {
-  1: 'text-emerald-500', 2: 'text-sky-500', 3: 'text-amber-500', 4: 'text-orange-500', 5: 'text-red-500',
+function highlightPhrase(text: string, phrase: string): React.ReactNode {
+  if (!phrase || !text) return <>{text}</>
+  const idx = text.toLowerCase().indexOf(phrase.toLowerCase())
+  if (idx === -1) return <>{text}</>
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-amber-400/30 text-amber-300 rounded px-0.5 not-italic font-semibold">
+        {text.slice(idx, idx + phrase.length)}
+      </mark>
+      {text.slice(idx + phrase.length)}
+    </>
+  )
 }
 
 export default function QuizPage() {
@@ -32,29 +60,24 @@ export default function QuizPage() {
   const [score, setScore] = useState({ correct: 0, incorrect: 0 })
   const [answer, setAnswer] = useState('')
   const [judgment, setJudgment] = useState<JudgeResponse | null>(null)
+  const [answers, setAnswers] = useState<QuizAnswerRecord[]>([])
   const [speaking, setSpeaking] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
-    setStep('loading')
+    setStep('loading'); setAnswers([])
     try {
       const res = await fetch('/api/quiz?limit=10')
       const data: QuizPhrase[] = await res.json()
       if (!data.length) { setStep('empty'); return }
       setPhrases(shuffle(data).slice(0, 10))
-      setIndex(0)
-      setScore({ correct: 0, incorrect: 0 })
-      setStep('question')
+      setIndex(0); setScore({ correct: 0, incorrect: 0 }); setStep('question')
     } catch { setStep('empty') }
   }, [])
 
   useEffect(() => { load() }, [load])
-
-  // フォーカス管理
   useEffect(() => {
-    if (step === 'question') {
-      setTimeout(() => inputRef.current?.focus(), 100)
-    }
+    if (step === 'question') setTimeout(() => inputRef.current?.focus(), 100)
   }, [step, index])
 
   const current = phrases[index]
@@ -67,51 +90,44 @@ export default function QuizPage() {
     const utt = new SpeechSynthesisUtterance(phrase)
     utt.lang = 'en-US'; utt.rate = 0.85
     utt.onend = () => setSpeaking(false)
-    setSpeaking(true)
-    window.speechSynthesis.speak(utt)
+    setSpeaking(true); window.speechSynthesis.speak(utt)
   }
 
   async function handleSubmit() {
     if (!answer.trim() || !current) return
     setStep('judging')
-
     try {
       const res = await fetch('/api/quiz/judge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phrase: current.phrase,
-          user_answer: answer,
-          meaning_ja: current.meaning_ja,
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phrase: current.phrase, user_answer: answer, meaning_ja: current.meaning_ja }),
       })
       const data: JudgeResponse = await res.json()
       setJudgment(data)
-      setScore((s) => ({
-        correct: s.correct + (data.correct ? 1 : 0),
-        incorrect: s.incorrect + (data.correct ? 0 : 1),
-      }))
-      speak(current.phrase)
-      setStep('result')
-    } catch {
-      setStep('question')
-    }
+      setScore((s) => ({ correct: s.correct + (data.correct ? 1 : 0), incorrect: s.incorrect + (data.correct ? 0 : 1) }))
+      setAnswers((prev) => [...prev, {
+        phrase_id: current.id, phrase: current.phrase, meaning_ja: current.meaning_ja ?? '',
+        user_answer: answer, is_correct: data.correct, ai_feedback: data.feedback,
+      }])
+      speak(current.phrase); setStep('result')
+    } catch { setStep('question') }
   }
 
   function handleNext() {
     const next = index + 1
-    if (next >= total) { setStep('done'); return }
-    setIndex(next)
-    setAnswer('')
-    setJudgment(null)
-    setStep('question')
+    if (next >= total) {
+      setStep('done')
+      fetch('/api/quiz/complete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      }).catch(() => {})
+      return
+    }
+    setIndex(next); setAnswer(''); setJudgment(null); setStep('question')
   }
-
-  // ───── 画面分岐 ─────
 
   if (step === 'loading') return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <div className="text-slate-500 text-sm animate-pulse">読み込み中...</div>
+      <p className="text-slate-500 text-sm animate-pulse">読み込み中...</p>
     </div>
   )
 
@@ -127,30 +143,32 @@ export default function QuizPage() {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8">
-        <div className="w-full max-w-sm space-y-8 text-center">
-          <div className="space-y-2">
-            <p className="text-6xl">{grade}</p>
+      <div className="min-h-screen bg-slate-900 flex flex-col p-4">
+        <div className="max-w-lg mx-auto w-full pt-8 space-y-5">
+          <div className="text-center space-y-2">
+            <p className="text-5xl">{grade}</p>
             <p className="text-5xl font-bold text-white">{pct}<span className="text-2xl text-slate-400">%</span></p>
-            <p className="text-slate-400 text-sm">正解率</p>
-          </div>
-          <div className="flex justify-center gap-10">
-            <div>
-              <p className="text-3xl font-bold text-emerald-400">{score.correct}</p>
-              <p className="text-xs text-slate-500 mt-1">正解</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-red-400">{score.incorrect}</p>
-              <p className="text-xs text-slate-500 mt-1">不正解</p>
+            <div className="flex justify-center gap-8 pt-2">
+              <div><p className="text-3xl font-bold text-emerald-400">{score.correct}</p><p className="text-xs text-slate-500 mt-1">正解</p></div>
+              <div><p className="text-3xl font-bold text-red-400">{score.incorrect}</p><p className="text-xs text-slate-500 mt-1">不正解</p></div>
             </div>
           </div>
-          <div className="flex gap-3">
-            <button onClick={load} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">
-              もう一度
-            </button>
-            <Link href="/" className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors text-center">
-              ホーム
-            </Link>
+          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            {answers.map((a, i) => (
+              <div key={i} className={`rounded-xl p-3 border text-sm ${a.is_correct ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-white">{a.phrase}</span>
+                  <span className={`text-xs ${a.is_correct ? 'text-emerald-400' : 'text-red-400'}`}>{a.is_correct ? '✓ 正解' : '✗ 不正解'}</span>
+                </div>
+                <p className="text-slate-400 text-xs mt-1">回答: {a.user_answer}</p>
+                {!a.is_correct && <p className="text-slate-300 text-xs mt-0.5">正解: {a.meaning_ja}</p>}
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={load} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">もう一度</button>
+            <Link href="/history" className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors text-center">記録</Link>
+            <Link href="/" className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors text-center">ホーム</Link>
           </div>
         </div>
       </div>
@@ -159,7 +177,6 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
-      {/* ヘッダー */}
       <div className="px-4 pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto w-full">
         <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg">‹</Link>
         <div className="flex items-center gap-3">
@@ -168,94 +185,86 @@ export default function QuizPage() {
           <span className="text-xs text-slate-500">{answered + 1}/{total}</span>
         </div>
       </div>
-
-      {/* 進捗バー */}
       <div className="px-4 max-w-lg mx-auto w-full">
         <Progress value={(answered / total) * 100} className="h-1" />
       </div>
-
-      {/* メインカード */}
-      <div className="flex-1 flex items-start justify-center px-4 pt-6 pb-8">
+      <div className="flex-1 flex items-start justify-center px-4 pt-5 pb-8">
         {current && (
           <div className="w-full max-w-lg space-y-4">
-            {/* フレーズカード */}
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center space-y-4">
-              <span className={`text-xs font-bold ${DIFF_COLOR[current.difficulty] ?? DIFF_COLOR[3]}`}>
-                Level {current.difficulty}
-              </span>
-              <div>
-                <p className="text-4xl font-bold text-white tracking-wide leading-tight">{current.phrase}</p>
-                {step === 'result' && current.pronunciation && (
-                  <p className="text-sm text-slate-500 mt-2">{current.pronunciation}</p>
+            <div className="bg-white/5 border border-white/10 rounded-3xl p-7 text-center space-y-3">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {current.usage_scene && (
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${SCENE_CLS[current.usage_scene]}`}>
+                    {SCENE_LABEL[current.usage_scene]}
+                  </span>
+                )}
+                {current.engineer_level && (
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${LEVEL_CLS[current.engineer_level]}`}>
+                    {LEVEL_LABEL[current.engineer_level]}
+                  </span>
                 )}
               </div>
-              <button
-                onClick={() => speak(current.phrase)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${
-                  speaking ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'
-                }`}
-              >
+              <p className="text-4xl font-bold text-white tracking-wide">{current.phrase}</p>
+              {step === 'result' && current.pronunciation && (
+                <p className="text-sm text-slate-500">{current.pronunciation}</p>
+              )}
+              <button onClick={() => speak(current.phrase)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}>
                 🔊 発音
               </button>
             </div>
 
-            {/* 回答エリア */}
             {step === 'question' && (
               <div className="space-y-3">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={answer}
+                <input ref={inputRef} type="text" value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   placeholder="日本語で意味を入力..."
                   className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 transition-colors"
                 />
-                <button
-                  onClick={handleSubmit}
-                  disabled={!answer.trim()}
-                  className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
+                <button onClick={handleSubmit} disabled={!answer.trim()}
+                  className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                   判定する
                 </button>
               </div>
             )}
 
-            {/* 判定中 */}
             {step === 'judging' && (
-              <div className="text-center py-4">
-                <p className="text-slate-400 text-sm animate-pulse">AIが判定中...</p>
-              </div>
+              <p className="text-center text-slate-400 text-sm animate-pulse py-4">AIが判定中...</p>
             )}
 
-            {/* 結果 */}
             {step === 'result' && judgment && (
               <div className="space-y-3">
-                {/* 判定バナー */}
                 <div className={`rounded-2xl p-4 text-center ${judgment.correct ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-red-500/20 border border-red-500/30'}`}>
                   <p className={`text-lg font-bold ${judgment.correct ? 'text-emerald-400' : 'text-red-400'}`}>
                     {judgment.correct ? '✓ 正解！' : '✗ 不正解'}
                   </p>
-                  {judgment.feedback && (
-                    <p className="text-xs text-slate-300 mt-1">{judgment.feedback}</p>
-                  )}
+                  {judgment.feedback && <p className="text-xs text-slate-300 mt-1">{judgment.feedback}</p>}
                 </div>
 
-                {/* 正解 */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
-                  <p className="text-xs text-slate-500 uppercase tracking-wider">正解</p>
-                  <p className="text-white font-semibold">{current.meaning_ja}</p>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">正解の意味</p>
+                    <p className="text-white font-semibold">{current.meaning_ja}</p>
+                  </div>
                   {current.original_context && (
-                    <p className="text-xs text-slate-400 italic leading-relaxed border-t border-white/10 pt-2 mt-2">
-                      &quot;{current.original_context}&quot;
-                    </p>
+                    <div className="border-t border-white/10 pt-3 space-y-2">
+                      <p className="text-xs text-slate-500 uppercase tracking-wider">使用例</p>
+                      <p className="text-sm text-slate-200 italic leading-relaxed">
+                        &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
+                      </p>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        ※{' '}
+                        <mark className="bg-amber-400/20 text-amber-300 not-italic rounded px-0.5 font-semibold">{current.phrase}</mark>
+                        {' '}={' '}
+                        <mark className="bg-amber-400/20 text-amber-300 not-italic rounded px-0.5">{current.meaning_ja}</mark>
+                      </p>
+                    </div>
                   )}
                 </div>
 
-                <button
-                  onClick={handleNext}
-                  className="w-full py-3.5 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors"
-                >
+                <button onClick={handleNext}
+                  className="w-full py-3.5 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors">
                   {index + 1 >= total ? '結果を見る' : '次のフレーズ →'}
                 </button>
               </div>

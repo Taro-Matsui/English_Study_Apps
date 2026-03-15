@@ -46,6 +46,8 @@ export async function POST(req: NextRequest) {
         source_date: source_date || null,
         original_context: p.original_context || null,
         difficulty: p.difficulty ?? 3,
+        usage_scene: p.usage_scene || 'other',
+        engineer_level: p.engineer_level || 'mid',
       }))
 
     const skipped = phraseTexts.length - newRows.length
