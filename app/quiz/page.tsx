@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
 import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
-import type { JudgeResponse } from '../api/quiz/judge/route'
+import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
 
 interface QuizPhrase {
   id: string
@@ -42,6 +42,12 @@ const LEVEL_CLS: Record<EngineerLevel, string> = {
   senior: 'bg-red-500/20 text-red-400',
 }
 
+const STATUS_CONFIG: Record<JudgeStatus, { label: string; cls: string; textCls: string }> = {
+  correct:   { label: '✓ 正解！',  cls: 'bg-emerald-500/20 border-emerald-500/30', textCls: 'text-emerald-400' },
+  partial:   { label: '△ 惜しい', cls: 'bg-amber-500/20 border-amber-500/30',   textCls: 'text-amber-400'   },
+  incorrect: { label: '✗ 不正解',  cls: 'bg-red-500/20 border-red-500/30',       textCls: 'text-red-400'     },
+}
+
 function highlightPhrase(text: string, phrase: string): React.ReactNode {
   if (!phrase || !text) return <>{text}</>
   const idx = text.toLowerCase().indexOf(phrase.toLowerCase())
@@ -61,13 +67,14 @@ export default function QuizPage() {
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
   const [index, setIndex] = useState(0)
   const [step, setStep] = useState<Step>('loading')
-  const [score, setScore] = useState({ correct: 0, incorrect: 0 })
+  const [score, setScore] = useState({ correct: 0, partial: 0, incorrect: 0 })
   const [answer, setAnswer] = useState('')
   const [judgment, setJudgment] = useState<JudgeResponse | null>(null)
   const [answers, setAnswers] = useState<QuizAnswerRecord[]>([])
-  const [speaking, setSpeaking] = useState<string | null>(null)  // 'phrase' | 'context' | null
+  const [speaking, setSpeaking] = useState<string | null>(null)
   const [speed, setSpeed] = useState<Speed>('normal')
   const inputRef = useRef<HTMLInputElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
     setStep('loading'); setAnswers([])
@@ -76,18 +83,21 @@ export default function QuizPage() {
       const data: QuizPhrase[] = await res.json()
       if (!data.length) { setStep('empty'); return }
       setPhrases(shuffle(data).slice(0, 10))
-      setIndex(0); setScore({ correct: 0, incorrect: 0 }); setStep('question')
+      setIndex(0); setScore({ correct: 0, partial: 0, incorrect: 0 }); setStep('question')
     } catch { setStep('empty') }
   }, [])
 
   useEffect(() => { load() }, [load])
   useEffect(() => {
-    if (step === 'question') setTimeout(() => inputRef.current?.focus(), 100)
+    if (step === 'question') {
+      scrollAreaRef.current && (scrollAreaRef.current.scrollTop = 0)
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
   }, [step, index])
 
   const current = phrases[index]
   const total = phrases.length
-  const answered = score.correct + score.incorrect
+  const answered = score.correct + score.partial + score.incorrect
 
   function speak(text: string, key: string) {
     if (!window.speechSynthesis) return
@@ -113,8 +123,13 @@ export default function QuizPage() {
         }),
       })
       const data: JudgeResponse = await res.json()
-      setJudgment(data)
-      setScore((s) => ({ correct: s.correct + (data.correct ? 1 : 0), incorrect: s.incorrect + (data.correct ? 0 : 1) }))
+      const status = data.status ?? (data.correct ? 'correct' : 'incorrect')
+      setJudgment({ ...data, status })
+      setScore((s) => ({
+        correct:   s.correct   + (status === 'correct'   ? 1 : 0),
+        partial:   s.partial   + (status === 'partial'   ? 1 : 0),
+        incorrect: s.incorrect + (status === 'incorrect' ? 1 : 0),
+      }))
       setAnswers((prev) => [...prev, {
         phrase_id: current.id, phrase: current.phrase, meaning_ja: current.meaning_ja ?? '',
         user_answer: answer, is_correct: data.correct, ai_feedback: data.feedback,
@@ -125,7 +140,6 @@ export default function QuizPage() {
 
   function handleNext() {
     window.speechSynthesis?.cancel(); setSpeaking(null)
-    window.scrollTo({ top: 0, behavior: 'instant' })
     const next = index + 1
     if (next >= total) {
       setStep('done')
@@ -177,8 +191,9 @@ export default function QuizPage() {
           <div className="text-center space-y-2">
             <p className="text-5xl">{grade}</p>
             <p className="text-5xl font-bold text-white">{pct}<span className="text-2xl text-slate-400">%</span></p>
-            <div className="flex justify-center gap-8 pt-2">
+            <div className="flex justify-center gap-6 pt-2">
               <div><p className="text-3xl font-bold text-emerald-400">{score.correct}</p><p className="text-xs text-slate-500 mt-1">正解</p></div>
+              <div><p className="text-3xl font-bold text-amber-400">{score.partial}</p><p className="text-xs text-slate-500 mt-1">惜しい</p></div>
               <div><p className="text-3xl font-bold text-red-400">{score.incorrect}</p><p className="text-xs text-slate-500 mt-1">不正解</p></div>
             </div>
           </div>
@@ -206,20 +221,25 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col">
-      <div className="px-4 pt-safe-top pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto w-full">
+      {/* ヘッダー */}
+      <div className="flex-shrink-0 px-4 pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto w-full">
         <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
         <div className="flex items-center gap-3">
           <span className="text-xs text-emerald-400 font-semibold">✓ {score.correct}</span>
+          <span className="text-xs text-amber-400 font-semibold">△ {score.partial}</span>
           <span className="text-xs text-red-400 font-semibold">✗ {score.incorrect}</span>
           <span className="text-xs text-slate-500">{answered + 1}/{total}</span>
         </div>
       </div>
-      <div className="px-4 max-w-lg mx-auto w-full">
+      <div className="flex-shrink-0 px-4 max-w-lg mx-auto w-full">
         <Progress value={(answered / total) * 100} className="h-1" />
       </div>
-      <div className="flex-1 px-4 pt-4 pb-8 max-w-lg mx-auto w-full">
+
+      {/* スクロール可能コンテンツエリア */}
+      <div ref={scrollAreaRef} className="flex-1 overflow-y-auto px-4 pt-4 max-w-lg mx-auto w-full">
         {current && (
-          <div className="space-y-3">
+          <div className="space-y-3 pb-3">
+            {/* フレーズカード */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-3">
               <div className="flex justify-center gap-2 flex-wrap">
                 {current.usage_scene && (
@@ -246,79 +266,95 @@ export default function QuizPage() {
               </div>
             </div>
 
-            {step === 'question' && (
-              <div className="space-y-3">
-                <input ref={inputRef} type="text" value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  placeholder="日本語で意味を入力..."
-                  style={{ fontSize: '16px' }}
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-                />
-                <button onClick={handleSubmit} disabled={!answer.trim()}
-                  className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700">
-                  判定する
-                </button>
-              </div>
-            )}
-
+            {/* 判定中 */}
             {step === 'judging' && (
               <p className="text-center text-slate-400 text-sm animate-pulse py-4">AIが判定中...</p>
             )}
 
-            {step === 'result' && judgment && (
-              <div className="space-y-3">
-                <div className={`rounded-2xl p-4 text-center ${judgment.correct ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-red-500/20 border border-red-500/30'}`}>
-                  <p className={`text-lg font-bold ${judgment.correct ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {judgment.correct ? '✓ 正解！' : '✗ 不正解'}
-                  </p>
-                  {judgment.feedback && <p className="text-xs text-slate-300 mt-1">{judgment.feedback}</p>}
-                </div>
-
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
-                  <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">正解の意味</p>
-                    <p className="text-white font-semibold">{current.meaning_ja}</p>
+            {/* 結果 */}
+            {step === 'result' && judgment && (() => {
+              const status = judgment.status ?? (judgment.correct ? 'correct' : 'incorrect')
+              const cfg = STATUS_CONFIG[status]
+              return (
+                <div className="space-y-3">
+                  <div className={`rounded-2xl p-4 text-center border ${cfg.cls}`}>
+                    <p className={`text-lg font-bold ${cfg.textCls}`}>{cfg.label}</p>
+                    {judgment.feedback && <p className="text-xs text-slate-300 mt-1">{judgment.feedback}</p>}
                   </div>
-                  {current.original_context && (
-                    <div className="border-t border-white/10 pt-3 space-y-2">
-                      <p className="text-xs text-slate-500 uppercase tracking-wider">使用例</p>
-                      {/* 英文 + 発音ボタン */}
-                      <div className="flex items-start gap-2">
-                        <p className="flex-1 text-sm text-slate-200 italic leading-relaxed">
-                          &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
-                        </p>
-                        <button
-                          onClick={() => speak(current.original_context!, 'context')}
-                          className={`flex-shrink-0 mt-0.5 px-2 py-1 rounded-full text-[10px] transition-colors ${speaking === 'context' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}
-                        >
-                          🔊
-                        </button>
-                      </div>
-                      {/* 日本語全訳 */}
-                      {judgment.context_ja && (
-                        <p className="text-xs text-slate-400 leading-relaxed bg-white/5 rounded-xl px-3 py-2">
-                          {judgment.context_ja}
-                        </p>
-                      )}
-                      {/* フレーズハイライト注釈 */}
-                      <p className="text-xs text-slate-500 leading-relaxed">
-                        ※{' '}
-                        <mark className="bg-amber-400/20 text-amber-300 not-italic rounded px-0.5 font-semibold">{current.phrase}</mark>
-                        {' '}={' '}
-                        <mark className="bg-amber-400/20 text-amber-300 not-italic rounded px-0.5">{current.meaning_ja}</mark>
-                      </p>
-                    </div>
-                  )}
-                </div>
 
-                <button onClick={handleNext}
-                  className="w-full py-3.5 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors">
-                  {index + 1 >= total ? '結果を見る' : '次のフレーズ →'}
-                </button>
-              </div>
-            )}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+                    <div>
+                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">正解の意味</p>
+                      <p className="text-white font-semibold">{current.meaning_ja}</p>
+                    </div>
+                    {current.original_context && (
+                      <div className="border-t border-white/10 pt-3 space-y-2">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider">使用例</p>
+                        <div className="flex items-start gap-2">
+                          <p className="flex-1 text-sm text-slate-200 italic leading-relaxed">
+                            &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
+                          </p>
+                          <button
+                            onClick={() => speak(current.original_context!, 'context')}
+                            className={`flex-shrink-0 mt-0.5 px-2 py-1 rounded-full text-[10px] transition-colors ${speaking === 'context' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}
+                          >
+                            🔊
+                          </button>
+                        </div>
+                        {judgment.context_ja && (
+                          <p className="text-xs text-slate-400 leading-relaxed bg-white/5 rounded-xl px-3 py-2">
+                            {judgment.context_ja}
+                          </p>
+                        )}
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          ※{' '}
+                          <mark className="bg-amber-400/20 text-amber-300 not-italic rounded px-0.5 font-semibold">{current.phrase}</mark>
+                          {' '}={' '}
+                          <mark className="bg-amber-400/20 text-amber-300 not-italic rounded px-0.5">{current.meaning_ja}</mark>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
+        )}
+      </div>
+
+      {/* 下部アクションエリア（常時表示） */}
+      <div className="flex-shrink-0 px-4 pb-6 pt-3 max-w-lg mx-auto w-full bg-slate-900 border-t border-white/5">
+        {step === 'question' && (
+          <div className="space-y-3">
+            <input
+              ref={inputRef}
+              type="text"
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              placeholder="日本語で意味を入力..."
+              style={{ fontSize: '16px' }}
+              className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={!answer.trim()}
+              className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700"
+            >
+              判定する
+            </button>
+          </div>
+        )}
+        {step === 'judging' && (
+          <div className="h-[112px]" /> /* input+button と同じ高さを確保してレイアウトシフトを防ぐ */
+        )}
+        {step === 'result' && (
+          <button
+            onClick={handleNext}
+            className="w-full py-3.5 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors active:bg-white/30"
+          >
+            {index + 1 >= total ? '結果を見る' : '次のフレーズ →'}
+          </button>
         )}
       </div>
     </div>

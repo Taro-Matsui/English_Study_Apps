@@ -7,8 +7,11 @@ export interface JudgeRequest {
   original_context?: string
 }
 
+export type JudgeStatus = 'correct' | 'partial' | 'incorrect'
+
 export interface JudgeResponse {
-  correct: boolean
+  correct: boolean       // backward compat: true = correct only
+  status: JudgeStatus   // 3-way: correct / partial / incorrect
   feedback: string
   context_ja?: string
   error?: string
@@ -46,11 +49,14 @@ export async function POST(req: NextRequest) {
 ユーザーの回答: "${user_answer}"${contextLine}
 
 以下を行ってください：
-1. ユーザーの回答が正解の意味と概ね一致しているか判定する（完全一致不要、核心を理解していれば正解）
+1. ユーザーの回答を以下の3段階で評価する:
+   - "correct": 正解の核心を正しく理解している（完全一致不要）
+   - "partial": 方向性は合っているが重要な要素が不足・不正確
+   - "incorrect": 正解と大きく異なる、または見当違い
 2. 判定理由またはヒントを20字以内で作成する${contextInstruction}
 
 以下のJSONのみを返してください（説明不要）：
-{"correct": true, "feedback": "正解の理由を一言（20字以内）"${contextField}}`
+{"status": "correct", "feedback": "理由を一言（20字以内）"${contextField}}`
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -72,18 +78,22 @@ export async function POST(req: NextRequest) {
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     const parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : null
 
-    if (parsed && typeof parsed.correct === 'boolean') {
+    const status: JudgeStatus =
+      parsed?.status === 'correct' ? 'correct' :
+      parsed?.status === 'partial' ? 'partial' : 'incorrect'
+    if (parsed && parsed.status) {
       return NextResponse.json<JudgeResponse>({
-        correct: parsed.correct,
+        correct: status === 'correct',
+        status,
         feedback: parsed.feedback ?? '',
         context_ja: parsed.context_ja,
       })
     }
-    return NextResponse.json<JudgeResponse>({ correct: false, feedback: '判定できませんでした' })
+    return NextResponse.json<JudgeResponse>({ correct: false, status: 'incorrect', feedback: '判定できませんでした' })
   } catch (err) {
     const message = err instanceof Error ? err.message : '不明なエラー'
     return NextResponse.json<JudgeResponse>(
-      { correct: false, feedback: '', error: message },
+      { correct: false, status: 'incorrect', feedback: '', error: message },
       { status: 500 }
     )
   }
