@@ -109,6 +109,13 @@ ANTHROPIC_API_KEY
 - `admin/import`: テキスト → Claude 抽出のみ (DB 保存は /save に分離)
 - `stats`: anon key で phrase_count, source_count を返す (ホーム画面用)
 
+## PWA
+- `app/manifest.ts` で PWAマニフェスト定義（Next.js 14 App Router）
+- `app/icon.tsx` / `app/apple-icon.tsx` でアイコン自動生成（ImageResponse）
+- **必須**: `export const runtime = 'edge'` を icon ファイルに追加すること
+  （Node.js runtime だと Windows ビルド時に `@vercel/og` が `Invalid URL` エラーを起こす）
+- manifest の `icons[].purpose` は `'any'` と `'maskable'` を別エントリに分ける（`'any maskable'` は型エラー）
+
 ## デプロイ
 ```bash
 git add <files> && git commit -m "..." && git push origin master
