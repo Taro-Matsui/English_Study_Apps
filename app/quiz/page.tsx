@@ -155,13 +155,13 @@ export default function QuizPage() {
   )
 
   if (step === 'loading') return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+    <div className="min-h-[100dvh] bg-slate-900 flex items-center justify-center">
       <p className="text-slate-500 text-sm animate-pulse">読み込み中...</p>
     </div>
   )
 
   if (step === 'empty') return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4 p-8 text-center">
+    <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
       <p className="text-slate-400 text-sm">フレーズが登録されていません</p>
       <Link href="/admin/import" className="text-sm text-blue-400 hover:underline">インポートして追加 →</Link>
@@ -172,7 +172,7 @@ export default function QuizPage() {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col p-4">
+      <div className="min-h-[100dvh] bg-slate-900 flex flex-col p-4">
         <div className="max-w-lg mx-auto w-full pt-8 space-y-5">
           <div className="text-center space-y-2">
             <p className="text-5xl">{grade}</p>
@@ -205,9 +205,9 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
-      <div className="px-4 pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto w-full">
-        <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg">‹</Link>
+    <div className="min-h-[100dvh] bg-slate-900 flex flex-col">
+      <div className="px-4 pt-safe-top pt-4 pb-2 flex items-center justify-between max-w-lg mx-auto w-full">
+        <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
         <div className="flex items-center gap-3">
           <span className="text-xs text-emerald-400 font-semibold">✓ {score.correct}</span>
           <span className="text-xs text-red-400 font-semibold">✗ {score.incorrect}</span>
@@ -217,10 +217,10 @@ export default function QuizPage() {
       <div className="px-4 max-w-lg mx-auto w-full">
         <Progress value={(answered / total) * 100} className="h-1" />
       </div>
-      <div className="flex-1 flex items-start justify-center px-4 pt-5 pb-8">
+      <div className="flex-1 px-4 pt-4 pb-8 max-w-lg mx-auto w-full">
         {current && (
-          <div className="w-full max-w-lg space-y-4">
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-7 text-center space-y-3">
+          <div className="space-y-3">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-3">
               <div className="flex justify-center gap-2 flex-wrap">
                 {current.usage_scene && (
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${SCENE_CLS[current.usage_scene]}`}>
@@ -233,7 +233,7 @@ export default function QuizPage() {
                   </span>
                 )}
               </div>
-              <p className="text-4xl font-bold text-white tracking-wide">{current.phrase}</p>
+              <p className="text-3xl sm:text-4xl font-bold text-white tracking-wide break-words">{current.phrase}</p>
               {step === 'result' && current.pronunciation && (
                 <p className="text-sm text-slate-500">{current.pronunciation}</p>
               )}
@@ -252,10 +252,10 @@ export default function QuizPage() {
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   placeholder="日本語で意味を入力..."
-                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3.5 text-white placeholder-slate-500 text-base focus:outline-none focus:border-blue-500 transition-colors"
                 />
                 <button onClick={handleSubmit} disabled={!answer.trim()}
-                  className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                  className="w-full py-3.5 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700">
                   判定する
                 </button>
               </div>
