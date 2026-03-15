@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     : undefined
 
   if (!user_answer?.trim()) {
-    return NextResponse.json<JudgeResponse>({ correct: false, feedback: '回答を入力してください' })
+    return NextResponse.json<JudgeResponse>({ correct: false, status: 'incorrect', feedback: '回答を入力してください' })
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
