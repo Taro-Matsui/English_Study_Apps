@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { log } from '@/lib/logger'
 import { SaveRequest, SaveResponse } from '@/types'
 
 export async function POST(req: NextRequest) {
@@ -77,7 +78,9 @@ export async function POST(req: NextRequest) {
       skipped_count: skipped,
     })
   } catch (err) {
-    console.error('[admin/save]', err instanceof Error ? err.message : err)
+    log({ level: 'error', endpoint: '/api/admin/save',
+      message: err instanceof Error ? err.message : 'unknown_error',
+      detail: { phrase_count: phrases.length } })
     return NextResponse.json<SaveResponse>(
       { success: false, inserted_count: 0, skipped_count: 0, error: 'フレーズの登録中にエラーが発生しました' },
       { status: 500 }

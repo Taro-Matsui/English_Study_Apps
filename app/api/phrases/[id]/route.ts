@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { log } from '@/lib/logger'
 
 const ALLOWED_REASONS = ['product_name', 'not_phrase'] as const
 type AllowedReason = typeof ALLOWED_REASONS[number]
@@ -38,6 +39,12 @@ export async function PATCH(
     .update({ deleted_at: new Date().toISOString(), delete_reason: delete_reason as AllowedReason })
     .eq('id', id)
 
-  if (error) return NextResponse.json({ error: 'データベースエラーが発生しました' }, { status: 500 })
+  if (error) {
+    log({ level: 'error', endpoint: '/api/phrases/[id]', message: 'delete_failed',
+      detail: { id, delete_reason } })
+    return NextResponse.json({ error: 'データベースエラーが発生しました' }, { status: 500 })
+  }
+  log({ level: 'info', endpoint: '/api/phrases/[id]', message: 'phrase_deleted',
+    detail: { id, delete_reason } })
   return NextResponse.json({ success: true })
 }

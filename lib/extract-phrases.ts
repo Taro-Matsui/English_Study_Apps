@@ -93,7 +93,16 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
   try {
     phrases = JSON.parse(jsonStr)
   } catch {
-    throw new Error(`レスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
+    // フォールバック: JSON 文字列値内の未エスケープ改行・タブを修正して再試行
+    // Claude がoriginal_context に複数行テキストをそのまま入れると JSON が不正になるため
+    try {
+      const sanitized = jsonStr.replace(/"((?:[^"\\]|\\.)*)"/g, (match) =>
+        match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+      )
+      phrases = JSON.parse(sanitized)
+    } catch {
+      throw new Error(`レスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
+    }
   }
 
   if (!Array.isArray(phrases)) throw new Error('レスポンスが配列ではありません')

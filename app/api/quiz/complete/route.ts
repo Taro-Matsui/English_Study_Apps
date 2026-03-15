@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
+import { log } from '@/lib/logger'
 import { CompleteRequest } from '@/types'
 
 export async function POST(req: NextRequest) {
@@ -39,7 +40,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, session_id: session.id })
   } catch (err) {
-    console.error('[quiz/complete]', err)
+    log({ level: 'error', endpoint: '/api/quiz/complete',
+      message: err instanceof Error ? err.message : 'unknown_error',
+      detail: { answer_count: answers.length } })
     return NextResponse.json({ success: false, error: 'セッション保存に失敗しました' }, { status: 500 })
   }
 }

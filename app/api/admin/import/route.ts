@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseTranscript } from '@/lib/parse-transcript'
 import { extractPhrasesWithClaude } from '@/lib/extract-phrases'
+import { log } from '@/lib/logger'
 import { ExtractResponse } from '@/types'
 
 export async function POST(req: NextRequest) {
@@ -25,6 +26,8 @@ export async function POST(req: NextRequest) {
   // ファイルサイズ制限: 2MB
   const MAX_FILE_SIZE = 2 * 1024 * 1024
   if (file.size > MAX_FILE_SIZE) {
+    log({ level: 'warn', endpoint: '/api/admin/import', message: 'file_too_large',
+      detail: { filename: file.name, size_bytes: file.size } })
     return NextResponse.json<ExtractResponse>(
       { success: false, phrases: [], error: `ファイルサイズが上限（2MB）を超えています（${(file.size / 1024 / 1024).toFixed(1)}MB）` },
       { status: 413 }
@@ -61,7 +64,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json<ExtractResponse>({ success: true, phrases })
   } catch (err) {
     const message = err instanceof Error ? err.message : '不明なエラーが発生しました'
-    console.error('[admin/import]', message)
+    log({ level: 'error', endpoint: '/api/admin/import', message, detail: { file: file.name } })
     return NextResponse.json<ExtractResponse>(
       { success: false, phrases: [], error: message },
       { status: 500 }
