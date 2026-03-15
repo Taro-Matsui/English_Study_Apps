@@ -13,7 +13,8 @@ const SYSTEM_PROMPT = `あなたはエンジニアの英語学習を支援する
 必ずJSON配列のみを返してください。説明文やコメントは不要です。`
 
 const USER_PROMPT_TEMPLATE = (text: string) => `
-以下のテキストから英語フレーズを30〜40個抽出してください。
+以下のテキストから英語フレーズを抽出してください。
+目安は40個以上ですが、良質なフレーズが多い場合は60〜80個以上抽出しても構いません。リストアップは多めに行ってください。
 
 テキスト:
 ---
@@ -60,7 +61,7 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
+      max_tokens: 8192,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: USER_PROMPT_TEMPLATE(text) }],
     }),
@@ -97,5 +98,7 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
 
   if (!Array.isArray(phrases)) throw new Error('レスポンスが配列ではありません')
 
-  return phrases.filter((p) => p.phrase && p.meaning_ja)
+  // 非英語フレーズを除外（CJK・アラビア文字等が phrase フィールドに含まれる場合）
+  const nonLatinRe = /[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06ff]/
+  return phrases.filter((p) => p.phrase && p.meaning_ja && !nonLatinRe.test(p.phrase))
 }

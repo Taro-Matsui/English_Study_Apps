@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   let query = db
     .from('phrases')
     .select('*')
+    .is('deleted_at', null)
     .order('added_date', { ascending: false })
 
   if (q) {

@@ -1,4 +1,9 @@
 export type SourceType = 'DSH_Event' | 'YouTube' | 'Podcast'
+export type DeleteReason = 'product_name' | 'not_phrase'
+export const DELETE_REASON_LABELS: Record<DeleteReason, string> = {
+  product_name: '特定の製品・機能名',
+  not_phrase: '慣用句ではない一般的な単語',
+}
 export type UsageScene = 'daily' | 'technical' | 'business' | 'other'
 export type EngineerLevel = 'junior' | 'mid' | 'senior'
 

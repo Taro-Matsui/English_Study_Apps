@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await db
     .from('phrases')
     .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title')
+    .is('deleted_at', null)
     .limit(limit * 3)
 
   if (error) {
