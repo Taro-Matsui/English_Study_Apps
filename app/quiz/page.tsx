@@ -19,6 +19,10 @@ interface QuizPhrase {
 }
 
 type Step = 'loading' | 'question' | 'judging' | 'result' | 'done' | 'empty'
+type Speed = 'fast' | 'normal' | 'slow'
+
+const SPEED_RATE: Record<Speed, number> = { fast: 1.3, normal: 0.88, slow: 0.6 }
+const SPEED_LABEL: Record<Speed, string> = { fast: '早口', normal: '普通', slow: 'ゆっくり' }
 
 function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5) }
 
@@ -61,7 +65,8 @@ export default function QuizPage() {
   const [answer, setAnswer] = useState('')
   const [judgment, setJudgment] = useState<JudgeResponse | null>(null)
   const [answers, setAnswers] = useState<QuizAnswerRecord[]>([])
-  const [speaking, setSpeaking] = useState(false)
+  const [speaking, setSpeaking] = useState<string | null>(null)  // 'phrase' | 'context' | null
+  const [speed, setSpeed] = useState<Speed>('normal')
   const inputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -84,13 +89,14 @@ export default function QuizPage() {
   const total = phrases.length
   const answered = score.correct + score.incorrect
 
-  function speak(phrase: string) {
+  function speak(text: string, key: string) {
     if (!window.speechSynthesis) return
     window.speechSynthesis.cancel()
-    const utt = new SpeechSynthesisUtterance(phrase)
-    utt.lang = 'en-US'; utt.rate = 0.85
-    utt.onend = () => setSpeaking(false)
-    setSpeaking(true); window.speechSynthesis.speak(utt)
+    if (speaking === key) { setSpeaking(null); return }
+    const utt = new SpeechSynthesisUtterance(text)
+    utt.lang = 'en-US'; utt.rate = SPEED_RATE[speed]
+    utt.onend = () => setSpeaking(null)
+    setSpeaking(key); window.speechSynthesis.speak(utt)
   }
 
   async function handleSubmit() {
@@ -99,7 +105,12 @@ export default function QuizPage() {
     try {
       const res = await fetch('/api/quiz/judge', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phrase: current.phrase, user_answer: answer, meaning_ja: current.meaning_ja }),
+        body: JSON.stringify({
+          phrase: current.phrase,
+          user_answer: answer,
+          meaning_ja: current.meaning_ja,
+          original_context: current.original_context ?? undefined,
+        }),
       })
       const data: JudgeResponse = await res.json()
       setJudgment(data)
@@ -108,11 +119,12 @@ export default function QuizPage() {
         phrase_id: current.id, phrase: current.phrase, meaning_ja: current.meaning_ja ?? '',
         user_answer: answer, is_correct: data.correct, ai_feedback: data.feedback,
       }])
-      speak(current.phrase); setStep('result')
+      speak(current.phrase, 'phrase'); setStep('result')
     } catch { setStep('question') }
   }
 
   function handleNext() {
+    window.speechSynthesis?.cancel(); setSpeaking(null)
     const next = index + 1
     if (next >= total) {
       setStep('done')
@@ -124,6 +136,22 @@ export default function QuizPage() {
     }
     setIndex(next); setAnswer(''); setJudgment(null); setStep('question')
   }
+
+  const SpeedSelector = () => (
+    <div className="flex items-center gap-0.5 bg-white/5 rounded-full px-1.5 py-1">
+      {(['slow', 'normal', 'fast'] as Speed[]).map((s) => (
+        <button
+          key={s}
+          onClick={() => setSpeed(s)}
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+            speed === s ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          {SPEED_LABEL[s]}
+        </button>
+      ))}
+    </div>
+  )
 
   if (step === 'loading') return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -208,10 +236,13 @@ export default function QuizPage() {
               {step === 'result' && current.pronunciation && (
                 <p className="text-sm text-slate-500">{current.pronunciation}</p>
               )}
-              <button onClick={() => speak(current.phrase)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}>
-                🔊 発音
-              </button>
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                <button onClick={() => speak(current.phrase, 'phrase')}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}>
+                  🔊 フレーズ
+                </button>
+                <SpeedSelector />
+              </div>
             </div>
 
             {step === 'question' && (
@@ -250,10 +281,26 @@ export default function QuizPage() {
                   {current.original_context && (
                     <div className="border-t border-white/10 pt-3 space-y-2">
                       <p className="text-xs text-slate-500 uppercase tracking-wider">使用例</p>
-                      <p className="text-sm text-slate-200 italic leading-relaxed">
-                        &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
-                      </p>
-                      <p className="text-xs text-slate-400 leading-relaxed">
+                      {/* 英文 + 発音ボタン */}
+                      <div className="flex items-start gap-2">
+                        <p className="flex-1 text-sm text-slate-200 italic leading-relaxed">
+                          &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
+                        </p>
+                        <button
+                          onClick={() => speak(current.original_context!, 'context')}
+                          className={`flex-shrink-0 mt-0.5 px-2 py-1 rounded-full text-[10px] transition-colors ${speaking === 'context' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}
+                        >
+                          🔊
+                        </button>
+                      </div>
+                      {/* 日本語全訳 */}
+                      {judgment.context_ja && (
+                        <p className="text-xs text-slate-400 leading-relaxed bg-white/5 rounded-xl px-3 py-2">
+                          {judgment.context_ja}
+                        </p>
+                      )}
+                      {/* フレーズハイライト注釈 */}
+                      <p className="text-xs text-slate-500 leading-relaxed">
                         ※{' '}
                         <mark className="bg-amber-400/20 text-amber-300 not-italic rounded px-0.5 font-semibold">{current.phrase}</mark>
                         {' '}={' '}

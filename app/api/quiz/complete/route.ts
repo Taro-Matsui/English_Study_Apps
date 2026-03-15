@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import { CompleteRequest } from '@/types'
 
 export async function POST(req: NextRequest) {
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   if (!answers?.length) return NextResponse.json({ success: false }, { status: 400 })
 
   try {
-    const db = getSupabaseAdmin()
+    const db = getSupabase()
     const correct = answers.filter((a) => a.is_correct).length
 
     const { data: session, error: sessionErr } = await db
