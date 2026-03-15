@@ -1,7 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { ExtractedPhrase } from '@/types'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const SYSTEM_PROMPT = `あなたはエンジニアの英語学習を支援するAIです。
 与えられた英語テキスト（エンジニアコミュニティの会話録・イベント記録など）から、
@@ -35,25 +32,38 @@ ${text}
 ]`
 
 export async function extractPhrasesWithClaude(text: string): Promise<ExtractedPhrase[]> {
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4096,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: 'user',
-        content: USER_PROMPT_TEMPLATE(text),
-      },
-    ],
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY が設定されていません')
+
+  // SDK の代わりに fetch を直接使用（Next.js 環境での接続問題を回避）
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 4096,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: USER_PROMPT_TEMPLATE(text) }],
+    }),
   })
 
-  const content = message.content[0]
-  if (content.type !== 'text') {
-    throw new Error('Claude APIから予期しないレスポンス形式が返されました')
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Anthropic API エラー (${res.status}): ${body.slice(0, 300)}`)
+  }
+
+  const data = await res.json()
+  const content = data.content?.[0]
+  if (!content || content.type !== 'text') {
+    throw new Error('Claude API から予期しないレスポンス形式が返されました')
   }
 
   // JSON部分を抽出（```json ... ``` ブロックにも対応）
-  const raw = content.text.trim()
+  const raw: string = content.text.trim()
   const jsonMatch = raw.match(/```json\s*([\s\S]*?)\s*```/) || raw.match(/(\[[\s\S]*\])/)
   const jsonStr = jsonMatch ? jsonMatch[1] : raw
 
@@ -61,13 +71,10 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
   try {
     phrases = JSON.parse(jsonStr)
   } catch {
-    throw new Error(`Claude APIのレスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
+    throw new Error(`レスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
   }
 
-  if (!Array.isArray(phrases)) {
-    throw new Error('Claude APIのレスポンスが配列ではありません')
-  }
+  if (!Array.isArray(phrases)) throw new Error('レスポンスが配列ではありません')
 
-  // バリデーション
   return phrases.filter((p) => p.phrase && p.meaning_ja)
 }
