@@ -27,7 +27,7 @@ ${text}
     "phrase": "フレーズ（英語）",
     "pronunciation": "発音記号（IPA）",
     "meaning_ja": "日本語での意味・説明",
-    "original_context": "元テキストでの使用例文（英語原文をそのまま引用）",
+    "original_context": "元テキストでの使用例文（英語原文から最大120文字で引用）",
     "difficulty": 3,
     "usage_scene": "daily|technical|business|other のいずれか",
     "engineer_level": "junior|mid|senior のいずれか"
@@ -95,13 +95,34 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
   } catch {
     // フォールバック: JSON 文字列値内の未エスケープ改行・タブを修正して再試行
     // Claude がoriginal_context に複数行テキストをそのまま入れると JSON が不正になるため
+    const sanitized = jsonStr.replace(/"((?:[^"\\]|\\.)*)"/g, (match) =>
+      match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+    )
     try {
-      const sanitized = jsonStr.replace(/"((?:[^"\\]|\\.)*)"/g, (match) =>
-        match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
-      )
       phrases = JSON.parse(sanitized)
     } catch {
-      throw new Error(`レスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
+      // フォールバック2: max_tokens 超過等で JSON が途中で切れた場合の部分回復
+      // 完結している { ... } オブジェクトを1つずつ取り出してパースする
+      const recovered: ExtractedPhrase[] = []
+      let depth = 0
+      let start = -1
+      for (let i = 0; i < sanitized.length; i++) {
+        const ch = sanitized[i]
+        if (ch === '{') {
+          if (depth === 0) start = i
+          depth++
+        } else if (ch === '}') {
+          depth--
+          if (depth === 0 && start !== -1) {
+            try { recovered.push(JSON.parse(sanitized.slice(start, i + 1))) } catch { /* skip */ }
+            start = -1
+          }
+        }
+      }
+      if (recovered.length === 0) {
+        throw new Error(`レスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
+      }
+      phrases = recovered
     }
   }
 

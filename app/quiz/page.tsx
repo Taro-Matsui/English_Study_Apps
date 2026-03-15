@@ -125,6 +125,7 @@ export default function QuizPage() {
 
   function handleNext() {
     window.speechSynthesis?.cancel(); setSpeaking(null)
+    window.scrollTo({ top: 0, behavior: 'instant' })
     const next = index + 1
     if (next >= total) {
       setStep('done')
