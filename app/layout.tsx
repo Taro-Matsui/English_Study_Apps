@@ -16,11 +16,17 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Engineer English",
   description: "エンジニアのための英語フレーズ学習アプリ",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "EngEng",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#0f172a",
 };
 
 export default function RootLayout({
