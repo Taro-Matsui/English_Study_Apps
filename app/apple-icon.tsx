@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 
+export const runtime = 'edge'
 export const size = { width: 180, height: 180 }
 export const contentType = 'image/png'
 
@@ -15,14 +16,40 @@ export default function AppleIcon() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '28px',
           gap: '2px',
         }}
       >
-        <div style={{ fontSize: '84px', color: '#ffffff', lineHeight: 1, fontWeight: 700 }}>
-          英
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '112px',
+            height: '112px',
+            background: '#1e293b',
+            borderRadius: '22px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '70px',
+              fontWeight: 800,
+              color: '#3b82f6',
+              lineHeight: 1,
+              letterSpacing: '-3px',
+            }}
+          >
+            EE
+          </div>
         </div>
-        <div style={{ fontSize: '26px', color: '#3b82f6', letterSpacing: '4px', fontWeight: 700 }}>
+        <div
+          style={{
+            fontSize: '20px',
+            fontWeight: 700,
+            color: '#64748b',
+            letterSpacing: '3px',
+          }}
+        >
           ENG
         </div>
       </div>

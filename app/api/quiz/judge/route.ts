@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return NextResponse.json<JudgeResponse>(
-      { correct: false, feedback: '', error: 'ANTHROPIC_API_KEY が設定されていません' },
+      { correct: false, status: 'incorrect', feedback: '', error: 'ANTHROPIC_API_KEY が設定されていません' },
       { status: 500 }
     )
   }

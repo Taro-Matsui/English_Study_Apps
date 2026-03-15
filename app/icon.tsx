@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og'
 
+export const runtime = 'edge'
 export const size = { width: 512, height: 512 }
 export const contentType = 'image/png'
 
@@ -15,14 +16,40 @@ export default function Icon() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '80px',
           gap: '8px',
         }}
       >
-        <div style={{ fontSize: '240px', color: '#ffffff', lineHeight: 1, fontWeight: 700 }}>
-          英
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '320px',
+            height: '320px',
+            background: '#1e293b',
+            borderRadius: '64px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '200px',
+              fontWeight: 800,
+              color: '#3b82f6',
+              lineHeight: 1,
+              letterSpacing: '-8px',
+            }}
+          >
+            EE
+          </div>
         </div>
-        <div style={{ fontSize: '72px', color: '#3b82f6', letterSpacing: '12px', fontWeight: 700 }}>
+        <div
+          style={{
+            fontSize: '56px',
+            fontWeight: 700,
+            color: '#64748b',
+            letterSpacing: '8px',
+          }}
+        >
           ENG
         </div>
       </div>
