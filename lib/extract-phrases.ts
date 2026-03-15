@@ -36,7 +36,9 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY が設定されていません')
 
   // SDK の代わりに fetch を直接使用（Next.js 環境での接続問題を回避）
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  let res: Response
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
@@ -50,6 +52,12 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
       messages: [{ role: 'user', content: USER_PROMPT_TEMPLATE(text) }],
     }),
   })
+  } catch (err) {
+    const cause = (err as NodeJS.ErrnoException)?.cause as NodeJS.ErrnoException | undefined
+    const detail = cause?.code ?? cause?.message ?? (err instanceof Error ? err.message : String(err))
+    console.error('[extract-phrases] fetch error:', detail)
+    throw new Error(`Anthropic API への接続に失敗しました: ${detail}`)
+  }
 
   if (!res.ok) {
     const body = await res.text()
