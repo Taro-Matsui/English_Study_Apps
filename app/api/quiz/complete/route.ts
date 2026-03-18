@@ -38,6 +38,8 @@ export async function POST(req: NextRequest) {
     const { error: answerErr } = await db.from('quiz_answers').insert(rows)
     if (answerErr) throw new Error('answer_insert_failed')
 
+    log({ level: 'info', endpoint: '/api/quiz/complete',
+      message: 'session_saved', detail: { session_id: session.id, answer_count: answers.length, correct_count: correct } })
     return NextResponse.json({ success: true, session_id: session.id })
   } catch (err) {
     log({ level: 'error', endpoint: '/api/quiz/complete',

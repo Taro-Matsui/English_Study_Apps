@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { log } from '@/lib/logger'
-import { SaveRequest, SaveResponse } from '@/types'
+import { SaveRequest, SaveResponse, SourceType, UsageScene, EngineerLevel } from '@/types'
+
+// H4: 許可値をallowlistで定義し、DB書き込み前にバリデーションする
+const ALLOWED_SOURCE_TYPES: SourceType[] = ['DSH_Event', 'YouTube', 'Podcast']
+const ALLOWED_USAGE_SCENES: UsageScene[] = ['daily', 'technical', 'business', 'other']
+const ALLOWED_ENGINEER_LEVELS: EngineerLevel[] = ['junior', 'mid', 'senior']
 
 export async function POST(req: NextRequest) {
   let body: SaveRequest
@@ -15,6 +20,14 @@ export async function POST(req: NextRequest) {
   }
 
   const { phrases, source_type, source_title, source_date } = body
+
+  // H4: source_type の allowlist バリデーション
+  if (source_type && !(ALLOWED_SOURCE_TYPES as string[]).includes(source_type)) {
+    return NextResponse.json<SaveResponse>(
+      { success: false, inserted_count: 0, skipped_count: 0, error: 'source_type が不正です' },
+      { status: 400 }
+    )
+  }
 
   // フレーズ件数上限（DoS対策）
   if (!phrases?.length) {
@@ -55,8 +68,9 @@ export async function POST(req: NextRequest) {
         source_date: source_date || null,
         original_context: p.original_context || null,
         difficulty: p.difficulty ?? 3,
-        usage_scene: p.usage_scene || 'other',
-        engineer_level: p.engineer_level || 'mid',
+        // H4: 許可値以外はデフォルト値にフォールバック
+        usage_scene: ALLOWED_USAGE_SCENES.includes(p.usage_scene) ? p.usage_scene : 'other',
+        engineer_level: ALLOWED_ENGINEER_LEVELS.includes(p.engineer_level) ? p.engineer_level : 'mid',
       }))
 
     const skipped = phraseTexts.length - newRows.length

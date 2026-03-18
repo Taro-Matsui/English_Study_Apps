@@ -70,12 +70,15 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
     const cause = (err as NodeJS.ErrnoException)?.cause as NodeJS.ErrnoException | undefined
     const detail = cause?.code ?? cause?.message ?? (err instanceof Error ? err.message : String(err))
     console.error('[extract-phrases] fetch error:', detail)
-    throw new Error(`Anthropic API への接続に失敗しました: ${detail}`)
+    // C2: 内部エラー詳細はログのみ。クライアントへは汎用メッセージを返す
+    throw new Error('Anthropic API への接続に失敗しました')
   }
 
   if (!res.ok) {
     const body = await res.text()
-    throw new Error(`Anthropic API エラー (${res.status}): ${body.slice(0, 300)}`)
+    // C2: APIレスポンス本文はサーバーログのみ。ステータスコードのみ伝播させる
+    console.error('[extract-phrases] API error response:', res.status, body.slice(0, 300))
+    throw new Error(`Anthropic API エラー (${res.status})`)
   }
 
   const data = await res.json()
@@ -122,6 +125,8 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
       if (recovered.length === 0) {
         throw new Error(`レスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
       }
+      // M3: 部分回復を使用した場合は警告ログを残す（サイレントデータ損失の検知用）
+      console.warn('[extract-phrases] JSON partial recovery activated, recovered:', recovered.length, 'phrases')
       phrases = recovered
     }
   }

@@ -1,3 +1,5 @@
+export type JudgeStatus = 'correct' | 'partial' | 'incorrect'
+
 export type SourceType = 'DSH_Event' | 'YouTube' | 'Podcast'
 export type DeleteReason = 'product_name' | 'not_phrase'
 export const DELETE_REASON_LABELS: Record<DeleteReason, string> = {
@@ -60,6 +62,8 @@ export interface QuizAnswerRecord {
   user_answer: string
   is_correct: boolean
   ai_feedback: string
+  /** 表示用のみ。DBには保存されない */
+  status?: JudgeStatus
 }
 
 export interface CompleteRequest {

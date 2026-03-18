@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
 import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
 import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
+import { useLanguage, LangToggle } from '@/lib/i18n'
 
 interface QuizPhrase {
   id: string
@@ -22,31 +23,31 @@ type Step = 'loading' | 'question' | 'judging' | 'result' | 'done' | 'empty'
 type Speed = 'fast' | 'normal' | 'slow'
 
 const SPEED_RATE: Record<Speed, number> = { fast: 1.3, normal: 0.88, slow: 0.6 }
-const SPEED_LABEL: Record<Speed, string> = { fast: '早口', normal: '普通', slow: 'ゆっくり' }
 
-function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5) }
-
-const SCENE_LABEL: Record<UsageScene, string> = {
-  daily: '日常会話', technical: 'テクニカル', business: 'ビジネス', other: 'その他',
-}
 const SCENE_CLS: Record<UsageScene, string> = {
   daily: 'bg-emerald-500/20 text-emerald-400',
   technical: 'bg-sky-500/20 text-sky-400',
   business: 'bg-violet-500/20 text-violet-400',
   other: 'bg-slate-500/20 text-slate-400',
 }
-const LEVEL_LABEL: Record<EngineerLevel, string> = { junior: '初級', mid: '中級', senior: '上級' }
 const LEVEL_CLS: Record<EngineerLevel, string> = {
   junior: 'bg-emerald-500/20 text-emerald-400',
   mid: 'bg-amber-500/20 text-amber-400',
   senior: 'bg-red-500/20 text-red-400',
 }
 
-const STATUS_CONFIG: Record<JudgeStatus, { label: string; cls: string; textCls: string }> = {
-  correct:   { label: '✓ 正解！',  cls: 'bg-emerald-500/20 border-emerald-500/30', textCls: 'text-emerald-400' },
-  partial:   { label: '△ 惜しい', cls: 'bg-amber-500/20 border-amber-500/30',   textCls: 'text-amber-400'   },
-  incorrect: { label: '✗ 不正解',  cls: 'bg-red-500/20 border-red-500/30',       textCls: 'text-red-400'     },
+const STATUS_CLS: Record<JudgeStatus, { cls: string; textCls: string }> = {
+  correct:   { cls: 'bg-emerald-500/20 border-emerald-500/30', textCls: 'text-emerald-400' },
+  partial:   { cls: 'bg-amber-500/20 border-amber-500/30',   textCls: 'text-amber-400'   },
+  incorrect: { cls: 'bg-red-500/20 border-red-500/30',       textCls: 'text-red-400'     },
 }
+const RESULT_CLS: Record<JudgeStatus, string> = {
+  correct: 'text-emerald-400',
+  partial: 'text-amber-400',
+  incorrect: 'text-red-400',
+}
+
+function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5) }
 
 function highlightPhrase(text: string, phrase: string): React.ReactNode {
   if (!phrase || !text) return <>{text}</>
@@ -64,6 +65,7 @@ function highlightPhrase(text: string, phrase: string): React.ReactNode {
 }
 
 export default function QuizPage() {
+  const { t } = useLanguage()
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
   const [index, setIndex] = useState(0)
   const [step, setStep] = useState<Step>('loading')
@@ -73,6 +75,7 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<QuizAnswerRecord[]>([])
   const [speaking, setSpeaking] = useState<string | null>(null)
   const [speed, setSpeed] = useState<Speed>('normal')
+  const [saveState, setSaveState] = useState<'saving' | 'saved' | 'failed' | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -88,13 +91,11 @@ export default function QuizPage() {
 
   useEffect(() => { load() }, [load])
 
-  // 問題表示: 画面トップに戻ってからフォーカス
   useEffect(() => {
     if (step === 'question') {
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
       setTimeout(() => inputRef.current?.focus(), 80)
     }
-    // 結果表示: 画面トップに戻る
     if (step === 'result') {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -128,7 +129,7 @@ export default function QuizPage() {
         }),
       })
       const data: JudgeResponse = await res.json()
-      const status = data.status ?? (data.correct ? 'correct' : 'incorrect')
+      const status: JudgeStatus = data.status ?? (data.correct ? 'correct' : 'incorrect')
       setJudgment({ ...data, status })
       setScore((s) => ({
         correct:   s.correct   + (status === 'correct'   ? 1 : 0),
@@ -138,6 +139,7 @@ export default function QuizPage() {
       setAnswers((prev) => [...prev, {
         phrase_id: current.id, phrase: current.phrase, meaning_ja: current.meaning_ja ?? '',
         user_answer: answer, is_correct: data.correct, ai_feedback: data.feedback,
+        status, // 表示用: done画面で正確なステータスを表示するために保持
       }])
       speak(current.phrase, 'phrase'); setStep('result')
     } catch { setStep('question') }
@@ -148,10 +150,14 @@ export default function QuizPage() {
     const next = index + 1
     if (next >= total) {
       setStep('done')
+      setSaveState('saving')
       fetch('/api/quiz/complete', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
-      }).catch(() => {})
+      })
+        .then((r) => r.json())
+        .then((d) => setSaveState(d.success ? 'saved' : 'failed'))
+        .catch(() => setSaveState('failed'))
       return
     }
     setIndex(next); setAnswer(''); setJudgment(null); setStep('question')
@@ -162,7 +168,7 @@ export default function QuizPage() {
       {(['slow', 'normal', 'fast'] as Speed[]).map((s) => (
         <button key={s} onClick={() => setSpeed(s)}
           className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${speed === s ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
-          {SPEED_LABEL[s]}
+          {t(`speed_${s}` as 'speed_fast' | 'speed_normal' | 'speed_slow')}
         </button>
       ))}
     </div>
@@ -170,15 +176,15 @@ export default function QuizPage() {
 
   if (step === 'loading') return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <p className="text-slate-500 text-sm animate-pulse">読み込み中...</p>
+      <p className="text-slate-500 text-sm animate-pulse">{t('quiz_loading')}</p>
     </div>
   )
 
   if (step === 'empty') return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
-      <p className="text-slate-400 text-sm">フレーズが登録されていません</p>
-      <Link href="/admin/import" className="text-sm text-blue-400 hover:underline">インポートして追加 →</Link>
+      <p className="text-slate-400 text-sm">{t('quiz_empty')}</p>
+      <Link href="/admin/import" className="text-sm text-blue-400 hover:underline">{t('quiz_empty_link')}</Link>
     </div>
   )
 
@@ -192,27 +198,49 @@ export default function QuizPage() {
             <p className="text-5xl">{grade}</p>
             <p className="text-5xl font-bold text-white">{pct}<span className="text-2xl text-slate-400">%</span></p>
             <div className="flex justify-center gap-6 pt-2">
-              <div><p className="text-3xl font-bold text-emerald-400">{score.correct}</p><p className="text-xs text-slate-500 mt-1">正解</p></div>
-              <div><p className="text-3xl font-bold text-amber-400">{score.partial}</p><p className="text-xs text-slate-500 mt-1">惜しい</p></div>
-              <div><p className="text-3xl font-bold text-red-400">{score.incorrect}</p><p className="text-xs text-slate-500 mt-1">不正解</p></div>
+              <div><p className="text-3xl font-bold text-emerald-400">{score.correct}</p><p className="text-xs text-slate-500 mt-1">{t('done_correct')}</p></div>
+              <div><p className="text-3xl font-bold text-amber-400">{score.partial}</p><p className="text-xs text-slate-500 mt-1">{t('done_partial')}</p></div>
+              <div><p className="text-3xl font-bold text-red-400">{score.incorrect}</p><p className="text-xs text-slate-500 mt-1">{t('done_incorrect')}</p></div>
             </div>
           </div>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-            {answers.map((a, i) => (
-              <div key={i} className={`rounded-xl p-3 border text-sm ${a.is_correct ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-white">{a.phrase}</span>
-                  <span className={`text-xs ${a.is_correct ? 'text-emerald-400' : 'text-red-400'}`}>{a.is_correct ? '✓ 正解' : '✗ 不正解'}</span>
+            {answers.map((a, i) => {
+              // バグ修正: status フィールドを使って partial を正確に表示
+              const st: JudgeStatus = a.status ?? (a.is_correct ? 'correct' : 'incorrect')
+              return (
+                <div key={i} className={`rounded-xl p-3 border text-sm ${st === 'correct' ? 'bg-emerald-500/10 border-emerald-500/20' : st === 'partial' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-white">{a.phrase}</span>
+                    <span className={`text-xs ${RESULT_CLS[st]}`}>
+                      {t(`result_${st}` as 'result_correct' | 'result_partial' | 'result_incorrect')}
+                    </span>
+                  </div>
+                  <p className="text-slate-400 text-xs mt-1">{t('quiz_your_answer')}{a.user_answer}</p>
+                  {st !== 'correct' && <p className="text-slate-300 text-xs mt-0.5">{t('quiz_correct_answer')}{a.meaning_ja}</p>}
                 </div>
-                <p className="text-slate-400 text-xs mt-1">回答: {a.user_answer}</p>
-                {!a.is_correct && <p className="text-slate-300 text-xs mt-0.5">正解: {a.meaning_ja}</p>}
-              </div>
-            ))}
+              )
+            })}
           </div>
+          {/* 保存状態インジケーター */}
+          {saveState === 'saving' && (
+            <p className="text-center text-xs text-slate-500 animate-pulse">記録を保存中...</p>
+          )}
+          {saveState === 'failed' && (
+            <p className="text-center text-xs text-red-400">記録の保存に失敗しました。ネットワーク状態を確認してください。</p>
+          )}
           <div className="flex gap-2">
-            <button onClick={load} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">もう一度</button>
-            <Link href="/history" className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors text-center">記録</Link>
-            <Link href="/" className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors text-center">ホーム</Link>
+            <button onClick={load} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">{t('done_again')}</button>
+            <Link
+              href="/history"
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors text-center ${
+                saveState === 'saving'
+                  ? 'bg-white/5 text-slate-600 pointer-events-none'
+                  : 'bg-white/10 text-white hover:bg-white/20'
+              }`}
+            >
+              {saveState === 'saving' ? '保存中...' : t('done_history')}
+            </Link>
+            <Link href="/" className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors text-center">{t('done_home')}</Link>
           </div>
         </div>
       </div>
@@ -221,7 +249,6 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* sticky ヘッダー: スクロール中も常に表示 */}
       <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm">
         <div className="px-4 pt-3 pb-1 flex items-center justify-between max-w-lg mx-auto">
           <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
@@ -230,6 +257,7 @@ export default function QuizPage() {
             <span className="text-xs text-amber-400 font-semibold">△ {score.partial}</span>
             <span className="text-xs text-red-400 font-semibold">✗ {score.incorrect}</span>
             <span className="text-xs text-slate-500">{answered + 1}/{total}</span>
+            <LangToggle />
           </div>
         </div>
         <div className="px-4 pb-2 max-w-lg mx-auto">
@@ -237,21 +265,19 @@ export default function QuizPage() {
         </div>
       </div>
 
-      {/* ページコンテンツ: 通常フロー */}
       <div className="px-4 pt-2 pb-10 max-w-lg mx-auto space-y-2">
         {current && (
           <>
-            {/* フレーズカード */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-center space-y-2">
               <div className="flex justify-center gap-2 flex-wrap">
                 {current.usage_scene && (
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${SCENE_CLS[current.usage_scene]}`}>
-                    {SCENE_LABEL[current.usage_scene]}
+                    {t(`scene_${current.usage_scene}` as 'scene_daily' | 'scene_technical' | 'scene_business' | 'scene_other')}
                   </span>
                 )}
                 {current.engineer_level && (
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${LEVEL_CLS[current.engineer_level]}`}>
-                    {LEVEL_LABEL[current.engineer_level]}
+                    {t(`level_${current.engineer_level}` as 'level_junior' | 'level_mid' | 'level_senior')}
                   </span>
                 )}
               </div>
@@ -259,13 +285,12 @@ export default function QuizPage() {
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <button onClick={() => speak(current.phrase, 'phrase')}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}>
-                  🔊 フレーズ
+                  {t('quiz_speak_phrase')}
                 </button>
                 <SpeedSelector />
               </div>
             </div>
 
-            {/* 入力エリア（問題カードのすぐ下） */}
             {step === 'question' && (
               <div className="space-y-2">
                 <input
@@ -274,41 +299,41 @@ export default function QuizPage() {
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  placeholder="日本語で意味を入力..."
+                  placeholder={t('quiz_placeholder')}
                   style={{ fontSize: '16px' }}
                   className="w-full bg-white/10 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
                 />
                 <button onClick={handleSubmit} disabled={!answer.trim()}
                   className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700">
-                  判定する
+                  {t('quiz_submit')}
                 </button>
               </div>
             )}
 
-            {/* 判定中 */}
             {step === 'judging' && (
-              <p className="text-center text-slate-400 text-sm animate-pulse py-3">AIが判定中...</p>
+              <p className="text-center text-slate-400 text-sm animate-pulse py-3">{t('quiz_judging')}</p>
             )}
 
-            {/* 結果 */}
             {step === 'result' && judgment && (() => {
-              const status = judgment.status ?? (judgment.correct ? 'correct' : 'incorrect')
-              const cfg = STATUS_CONFIG[status]
+              const status: JudgeStatus = judgment.status ?? (judgment.correct ? 'correct' : 'incorrect')
+              const { cls, textCls } = STATUS_CLS[status]
               return (
                 <>
-                  <div className={`rounded-2xl p-3 text-center border ${cfg.cls}`}>
-                    <p className={`text-base font-bold ${cfg.textCls}`}>{cfg.label}</p>
+                  <div className={`rounded-2xl p-3 text-center border ${cls}`}>
+                    <p className={`text-base font-bold ${textCls}`}>
+                      {t(`status_${status}` as 'status_correct' | 'status_partial' | 'status_incorrect')}
+                    </p>
                     {judgment.feedback && <p className="text-xs text-slate-300 mt-0.5">{judgment.feedback}</p>}
                   </div>
 
                   <div className="bg-white/5 border border-white/10 rounded-2xl p-3 space-y-2">
                     <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">正解の意味</p>
+                      <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">{t('quiz_correct_meaning')}</p>
                       <p className="text-white font-semibold text-sm">{current.meaning_ja}</p>
                     </div>
                     {current.original_context && (
                       <div className="border-t border-white/10 pt-2 space-y-1.5">
-                        <p className="text-xs text-slate-500 uppercase tracking-wider">使用例</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-wider">{t('quiz_usage_example')}</p>
                         <div className="flex items-start gap-2">
                           <p className="flex-1 text-sm text-slate-200 italic leading-relaxed">
                             &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
@@ -335,7 +360,7 @@ export default function QuizPage() {
 
                   <button onClick={handleNext}
                     className="w-full py-3 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors active:bg-white/30">
-                    {index + 1 >= total ? '結果を見る' : '次のフレーズ →'}
+                    {index + 1 >= total ? t('quiz_see_results') : t('quiz_next')}
                   </button>
                 </>
               )

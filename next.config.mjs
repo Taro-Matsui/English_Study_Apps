@@ -28,6 +28,21 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
           },
+          // M2: CSP — XSS防止。Next.js App Router は inline script を使うため unsafe-inline が必要
+          // connect-src: ブラウザからは自アプリの /api/* のみ呼び出す（Supabase/Anthropic はサーバーサイドのみ）
+          // frame-ancestors: X-Frame-Options: DENY と同等（CSP版）
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob:",
+              "font-src 'self' data:",
+              "connect-src 'self'",
+              "frame-ancestors 'none'",
+            ].join('; '),
+          },
         ],
       },
     ]

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useLanguage, LangToggle } from '@/lib/i18n'
 
 interface AnswerRow {
   is_correct: boolean
@@ -20,16 +21,11 @@ interface AnswerRow {
 
 interface Session {
   id: string
-  started_at: string
+  completed_at: string
   total_questions: number
   correct_count: number
   quiz_answers: AnswerRow[]
 }
-
-const SCENE_LABEL: Record<string, string> = {
-  daily: '日常会話', technical: 'テクニカル', business: 'ビジネス', other: 'その他',
-}
-const LEVEL_LABEL: Record<string, string> = { junior: '初級', mid: '中級', senior: '上級' }
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -37,6 +33,7 @@ function formatDate(iso: string) {
 }
 
 export default function HistoryPage() {
+  const { lang, t } = useLanguage()
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState<string | null>(null)
@@ -52,27 +49,33 @@ export default function HistoryPage() {
   const totalCorrect = sessions.reduce((s, ses) => s + ses.correct_count, 0)
   const avgPct = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0
 
+  const stats = [
+    { label: t('history_total'), value: totalAnswered, unit: lang === 'ja' ? '問' : 'Q' },
+    { label: t('history_correct_count'), value: totalCorrect, unit: lang === 'ja' ? '問' : 'Q' },
+    { label: t('history_avg_score'), value: avgPct, unit: '%' },
+  ]
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-slate-100 px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/" className="text-slate-400 hover:text-slate-600 text-lg">‹</Link>
-            <h1 className="text-base font-bold text-slate-800">チャレンジ記録</h1>
+            <h1 className="text-base font-bold text-slate-800">{t('history_title')}</h1>
           </div>
-          <span className="text-xs text-slate-400">{sessions.length} セッション</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400">
+              {sessions.length} {t('history_sessions')}
+            </span>
+            <LangToggle />
+          </div>
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto p-4 space-y-4">
-        {/* 総合スタッツ */}
         {!loading && sessions.length > 0 && (
           <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: '総回答数', value: totalAnswered, unit: '問' },
-              { label: '正解数', value: totalCorrect, unit: '問' },
-              { label: '平均正解率', value: avgPct, unit: '%' },
-            ].map((s) => (
+            {stats.map((s) => (
               <div key={s.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
                 <p className="text-2xl font-bold text-slate-800">{s.value}<span className="text-sm text-slate-400 ml-0.5">{s.unit}</span></p>
                 <p className="text-xs text-slate-400 mt-1">{s.label}</p>
@@ -86,13 +89,17 @@ export default function HistoryPage() {
         ) : sessions.length === 0 ? (
           <div className="text-center py-20 space-y-3">
             <p className="text-4xl">📊</p>
-            <p className="text-sm text-slate-400">まだ記録がありません</p>
-            <Link href="/quiz" className="text-xs text-blue-500 hover:underline">クイズを始める →</Link>
+            <p className="text-sm text-slate-400">{t('history_empty')}</p>
+            <Link href="/quiz" className="text-xs text-blue-500 hover:underline">{t('history_start_quiz')}</Link>
           </div>
         ) : (
           sessions.map((ses) => {
             const pct = ses.total_questions ? Math.round((ses.correct_count / ses.total_questions) * 100) : 0
             const isOpen = open === ses.id
+            const dateStr = ses.completed_at ? formatDate(ses.completed_at) : '—'
+            const summaryStr = lang === 'ja'
+              ? `${ses.total_questions}問 / 正解 ${ses.correct_count}問`
+              : `${ses.total_questions}Q / ${ses.correct_count} correct`
             return (
               <div key={ses.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                 <button
@@ -106,10 +113,8 @@ export default function HistoryPage() {
                       {pct}%
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">{formatDate(ses.started_at)}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {ses.total_questions}問 / 正解 {ses.correct_count}問
-                      </p>
+                      <p className="text-sm font-semibold text-slate-800">{dateStr}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{summaryStr}</p>
                     </div>
                   </div>
                   <span className={`text-slate-300 transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
@@ -130,20 +135,20 @@ export default function HistoryPage() {
                               <span className="font-bold text-slate-800 text-sm">{a.phrases?.phrase}</span>
                               {a.phrases?.usage_scene && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
-                                  {SCENE_LABEL[a.phrases.usage_scene] ?? a.phrases.usage_scene}
+                                  {t(`scene_${a.phrases.usage_scene}` as 'scene_daily' | 'scene_technical' | 'scene_business' | 'scene_other')}
                                 </span>
                               )}
                               {a.phrases?.engineer_level && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">
-                                  {LEVEL_LABEL[a.phrases.engineer_level] ?? a.phrases.engineer_level}
+                                  {t(`level_${a.phrases.engineer_level}` as 'level_junior' | 'level_mid' | 'level_senior')}
                                 </span>
                               )}
                             </div>
                             <p className="text-xs text-slate-500 mt-0.5">
-                              回答: <span className="text-slate-700">{a.user_answer}</span>
+                              {t('history_your_answer')}<span className="text-slate-700">{a.user_answer}</span>
                             </p>
                             {!a.is_correct && a.phrases?.meaning_ja && (
-                              <p className="text-xs text-blue-600 mt-0.5">正解: {a.phrases.meaning_ja}</p>
+                              <p className="text-xs text-blue-600 mt-0.5">{t('history_correct')}{a.phrases.meaning_ja}</p>
                             )}
                             {a.ai_feedback && (
                               <p className="text-xs text-slate-400 mt-0.5 italic">{a.ai_feedback}</p>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import type { JudgeStatus } from '@/types'
 
 export interface JudgeRequest {
   phrase: string
@@ -7,7 +8,7 @@ export interface JudgeRequest {
   original_context?: string
 }
 
-export type JudgeStatus = 'correct' | 'partial' | 'incorrect'
+export type { JudgeStatus }
 
 export interface JudgeResponse {
   correct: boolean       // backward compat: true = correct only
@@ -20,12 +21,14 @@ export interface JudgeResponse {
 export async function POST(req: NextRequest) {
   const body: JudgeRequest = await req.json()
 
-  // 入力長制限（プロンプトインジェクション・DoS 対策）
-  const phrase = String(body.phrase ?? '').slice(0, 200)
-  const user_answer = String(body.user_answer ?? '').slice(0, 500)
-  const meaning_ja = String(body.meaning_ja ?? '').slice(0, 500)
+  // 入力長制限 + 改行サニタイズ（プロンプトインジェクション・DoS 対策）
+  // H1: 改行をスペースに置換することでプロンプト構造の破壊を防ぐ
+  const sanitizeInput = (s: string) => s.replace(/[\n\r]/g, ' ')
+  const phrase = sanitizeInput(String(body.phrase ?? '').slice(0, 200))
+  const user_answer = sanitizeInput(String(body.user_answer ?? '').slice(0, 500))
+  const meaning_ja = sanitizeInput(String(body.meaning_ja ?? '').slice(0, 500))
   const original_context = body.original_context
-    ? String(body.original_context).slice(0, 1000)
+    ? sanitizeInput(String(body.original_context).slice(0, 1000))
     : undefined
 
   if (!user_answer?.trim()) {
@@ -91,9 +94,10 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json<JudgeResponse>({ correct: false, status: 'incorrect', feedback: '判定できませんでした' })
   } catch (err) {
-    const message = err instanceof Error ? err.message : '不明なエラー'
+    // C2: 内部エラー詳細はログのみ。クライアントへは汎用メッセージを返す
+    console.error('[quiz/judge] error:', err instanceof Error ? err.message : String(err))
     return NextResponse.json<JudgeResponse>(
-      { correct: false, status: 'incorrect', feedback: '', error: message },
+      { correct: false, status: 'incorrect', feedback: '', error: 'AI判定サービスが一時的に利用できません' },
       { status: 500 }
     )
   }
