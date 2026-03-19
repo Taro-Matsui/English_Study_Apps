@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 
 export async function GET() {
-  const db = getSupabaseAdmin()
+  const db = getSupabase()
   const { data, error } = await db
     .from('import_jobs')
     .select('id, type, source_name, status, phrase_count, error_text, created_at, completed_at')

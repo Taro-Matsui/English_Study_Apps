@@ -29,13 +29,22 @@ function formatTime(iso: string) {
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   async function fetchJobs() {
     try {
       const res = await fetch('/api/admin/jobs')
       const data = await res.json()
-      setJobs(Array.isArray(data) ? data : [])
-    } catch {}
+      if (!res.ok || !Array.isArray(data)) {
+        setApiError(data?.error ?? `HTTP ${res.status}`)
+        setLoading(false)
+        return
+      }
+      setApiError(null)
+      setJobs(data)
+    } catch (e) {
+      setApiError(e instanceof Error ? e.message : 'ネットワークエラー')
+    }
     setLoading(false)
   }
 
@@ -74,7 +83,20 @@ export default function JobsPage() {
           <p className="text-slate-500 text-sm animate-pulse">読み込み中...</p>
         )}
 
-        {!loading && jobs.length === 0 && (
+        {!loading && apiError && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 space-y-2">
+            <p className="text-red-400 font-semibold text-sm">ジョブ一覧の取得に失敗しました</p>
+            <p className="text-red-300 text-xs">{apiError}</p>
+            <p className="text-slate-400 text-xs mt-2">
+              ⚠ <code className="bg-white/10 px-1 rounded">import_jobs</code> テーブルが未作成の可能性があります。<br />
+              Supabase SQL Editor で{' '}
+              <code className="bg-white/10 px-1 rounded">supabase/migrations/004_import_jobs.sql</code>{' '}
+              を実行してください。
+            </p>
+          </div>
+        )}
+
+        {!loading && !apiError && jobs.length === 0 && (
           <div className="text-center py-12">
             <p className="text-slate-500 text-sm">ジョブがありません</p>
             <Link href="/admin/import" className="text-blue-400 text-sm hover:underline mt-2 inline-block">
