@@ -43,7 +43,13 @@ usage_scene の選び方：
 engineer_level の選び方：
 - junior: 入門〜1年目の初級エンジニアでも理解できる表現
 - mid: 実務経験2〜4年の中級エンジニアが使いこなす表現
-- senior: シニア・リーダー層が多用する高度な表現`
+- senior: シニア・リーダー層が多用する高度な表現
+
+さらに、このテキストのドメイン・技術分野に関連し、**テキストには登場しないが実務で広く使われる重要な慣用句・コロケーション** を10〜15個追加してください。
+- エンジニアが日々の業務・MTG・コードレビュー等で頻繁に使う表現を優先
+- テキストから抽出したフレーズと重複しないこと
+- これらには必ず \`"suggested": true\` フィールドを追加（抽出フレーズには付けない）
+- original_context にはその表現の典型的な使用例文を英語で作成`
 
 export async function extractPhrasesWithClaude(text: string): Promise<ExtractedPhrase[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY

@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
 import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
+import { useSettings } from '@/lib/settings'
 
 interface QuizPhrase {
   id: string
@@ -66,6 +67,7 @@ function highlightPhrase(text: string, phrase: string): React.ReactNode {
 
 export default function QuizPage() {
   const { t } = useLanguage()
+  const { settings, markMastered } = useSettings()
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
   const [index, setIndex] = useState(0)
   const [step, setStep] = useState<Step>('loading')
@@ -80,8 +82,18 @@ export default function QuizPage() {
 
   const load = useCallback(async () => {
     setStep('loading'); setAnswers([])
+    setSaveState(null)
     try {
-      const res = await fetch('/api/quiz?limit=10')
+      // 正解済みスキップ設定はlocalStorageから直接読む（stale closure回避）
+      let url = '/api/quiz?limit=10'
+      try {
+        const saved = JSON.parse(localStorage.getItem('app_settings') ?? '{}')
+        if (saved.skipMastered && (saved.masteredIds as string[] | undefined)?.length) {
+          const ids = (saved.masteredIds as string[]).slice(0, 200).join(',')
+          url += `&exclude=${ids}`
+        }
+      } catch {}
+      const res = await fetch(url)
       const data: QuizPhrase[] = await res.json()
       if (!data.length) { setStep('empty'); return }
       setPhrases(shuffle(data).slice(0, 10))
@@ -111,6 +123,12 @@ export default function QuizPage() {
     if (speaking === key) { setSpeaking(null); return }
     const utt = new SpeechSynthesisUtterance(text)
     utt.lang = 'en-US'; utt.rate = SPEED_RATE[speed]
+    // 設定で選択した音声を使用（nullの場合はブラウザ既定）
+    if (settings.voiceURI) {
+      const voices = window.speechSynthesis.getVoices()
+      const v = voices.find((v) => v.voiceURI === settings.voiceURI)
+      if (v) utt.voice = v
+    }
     utt.onend = () => setSpeaking(null)
     setSpeaking(key); window.speechSynthesis.speak(utt)
   }
@@ -141,6 +159,8 @@ export default function QuizPage() {
         user_answer: answer, is_correct: data.correct, ai_feedback: data.feedback,
         status, // 表示用: done画面で正確なステータスを表示するために保持
       }])
+      // 正解したフレーズを習得済みとしてマーク（スキップ設定が有効な場合に次回クイズで除外）
+      if (status === 'correct') markMastered(current.id)
       speak(current.phrase, 'phrase'); setStep('result')
     } catch { setStep('question') }
   }

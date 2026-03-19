@@ -90,7 +90,10 @@ export function HomeContent({ phraseCount, sourceCount }: Props) {
             </Link>
           ))}
         </div>
-        <div className="flex justify-center">
+        <div className="flex justify-center items-center gap-3">
+          <Link href="/settings" className="text-xs px-2.5 py-0.5 rounded-full border border-slate-600 text-slate-400 hover:bg-white/10 transition-colors font-medium">
+            ⚙ {lang === 'ja' ? '設定' : 'Settings'}
+          </Link>
           <LangToggle className="text-slate-400 border-slate-600 hover:bg-white/10" />
         </div>
       </div>

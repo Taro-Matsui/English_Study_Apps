@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 // ランダムにフレーズを取得（クイズ用）
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -8,14 +10,27 @@ export async function GET(req: NextRequest) {
   const rawLimit = parseInt(searchParams.get('limit') ?? '10', 10)
   const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 50) : 10
 
+  // 除外するphrase_id（正解済みスキップ用）- UUID形式のみ受け付ける
+  const rawExclude = searchParams.get('exclude') ?? ''
+  const excludeIds = rawExclude
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => UUID_RE.test(s))
+    .slice(0, 500)
+
   const db = getSupabase()
 
   // ランダム取得（Supabase は ORDER BY random() を直接サポートしないため件数多めに取得してシャッフル）
-  const { data, error } = await db
+  let query = db
     .from('phrases')
-    .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title')
+    .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, usage_scene, engineer_level')
     .is('deleted_at', null)
-    .limit(limit * 3)
+
+  if (excludeIds.length > 0) {
+    query = query.not('id', 'in', `(${excludeIds.join(',')})`)
+  }
+
+  const { data, error } = await query.limit(limit * 5)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

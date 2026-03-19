@@ -1,6 +1,6 @@
 export type JudgeStatus = 'correct' | 'partial' | 'incorrect'
 
-export type SourceType = 'DSH_Event' | 'YouTube' | 'Podcast'
+export type SourceType = 'DSH_Event' | 'YouTube' | 'Podcast' | 'Article'
 export type DeleteReason = 'product_name' | 'not_phrase'
 export const DELETE_REASON_LABELS: Record<DeleteReason, string> = {
   product_name: '特定の製品・機能名',
@@ -32,6 +32,8 @@ export interface ExtractedPhrase {
   difficulty: number
   usage_scene: UsageScene
   engineer_level: EngineerLevel
+  /** Claude による関連慣用句の提案フレーズ。DB保存後は通常フレーズと同じ扱い */
+  suggested?: boolean
 }
 
 export interface ExtractResponse {
