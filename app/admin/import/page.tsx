@@ -235,27 +235,24 @@ export default function AdminImportPage() {
         {step === 'submitted' && jobId && (
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="pt-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">⚙</span>
-                <div>
-                  <p className="text-blue-800 font-semibold">ジョブを受け付けました</p>
-                  <p className="text-sm text-blue-600 mt-0.5">
-                    Claudeがバックグラウンドでフレーズを抽出中です。ジョブ一覧から進捗を確認してください。
-                  </p>
-                </div>
+              <div className="space-y-1">
+                <p className="text-blue-800 font-semibold text-base">処理を受け付けました</p>
+                <p className="text-sm text-blue-700">
+                  ジョブの実行には数分かかります。後ほどジョブ一覧を確認してください。
+                </p>
               </div>
-              <div className="flex gap-2">
-                <Link
-                  href={`/admin/jobs/${jobId}`}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-                >
-                  このジョブの状況を確認 →
-                </Link>
+              <div className="flex flex-wrap gap-2">
                 <Link
                   href="/admin/jobs"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                >
+                  ジョブ一覧を確認する →
+                </Link>
+                <Link
+                  href={`/admin/jobs/${jobId}`}
                   className="rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors"
                 >
-                  ジョブ一覧
+                  このジョブの詳細
                 </Link>
                 <button
                   onClick={handleReset}

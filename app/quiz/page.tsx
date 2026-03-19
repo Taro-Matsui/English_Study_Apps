@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress'
 import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
 import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
-import { useSettings } from '@/lib/settings'
+import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 
 interface QuizPhrase {
   id: string
@@ -67,7 +67,7 @@ function highlightPhrase(text: string, phrase: string): React.ReactNode {
 
 export default function QuizPage() {
   const { t } = useLanguage()
-  const { settings, markMastered } = useSettings()
+  const { settings, markMastered, setVoicePreset } = useSettings()
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
   const [index, setIndex] = useState(0)
   const [step, setStep] = useState<Step>('loading')
@@ -122,16 +122,37 @@ export default function QuizPage() {
     window.speechSynthesis.cancel()
     if (speaking === key) { setSpeaking(null); return }
     const utt = new SpeechSynthesisUtterance(text)
-    utt.lang = 'en-US'; utt.rate = SPEED_RATE[speed]
-    // 設定で選択した音声を使用（nullの場合はブラウザ既定）
-    if (settings.voiceURI) {
-      const voices = window.speechSynthesis.getVoices()
-      const v = voices.find((v) => v.voiceURI === settings.voiceURI)
-      if (v) utt.voice = v
+    utt.rate = SPEED_RATE[speed]
+    const voice = getVoiceForPreset(settings.voicePreset, settings.voiceURI)
+    if (voice) {
+      utt.voice = voice
+      utt.lang = voice.lang
+    } else {
+      utt.lang = 'en-US'
     }
     utt.onend = () => setSpeaking(null)
     setSpeaking(key); window.speechSynthesis.speak(utt)
   }
+
+  const VOICE_PRESETS: { key: VoicePreset; label: string }[] = [
+    { key: 'default',    label: '既定' },
+    { key: 'us-female',  label: '♀ US' },
+    { key: 'us-male',    label: '♂ US' },
+    { key: 'indian',     label: '🇮🇳 IN' },
+  ]
+
+  const VoiceSelector = () => (
+    <div className="flex items-center gap-0.5 bg-white/5 rounded-full px-1.5 py-1">
+      {VOICE_PRESETS.map(({ key, label }) => (
+        <button key={key} onClick={() => setVoicePreset(key)}
+          className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+            settings.voicePreset === key ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-slate-200'
+          }`}>
+          {label}
+        </button>
+      ))}
+    </div>
+  )
 
   async function handleSubmit() {
     if (!answer.trim() || !current) return
@@ -308,6 +329,7 @@ export default function QuizPage() {
                   {t('quiz_speak_phrase')}
                 </button>
                 <SpeedSelector />
+                <VoiceSelector />
               </div>
             </div>
 
