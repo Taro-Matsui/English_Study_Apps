@@ -4,7 +4,7 @@ import { log } from '@/lib/logger'
 import { SaveRequest, SaveResponse, SourceType, UsageScene, EngineerLevel } from '@/types'
 
 // H4: 許可値をallowlistで定義し、DB書き込み前にバリデーションする
-const ALLOWED_SOURCE_TYPES: SourceType[] = ['DSH_Event', 'YouTube', 'Podcast']
+const ALLOWED_SOURCE_TYPES: SourceType[] = ['DSH_Event', 'YouTube', 'Podcast', 'Article']
 const ALLOWED_USAGE_SCENES: UsageScene[] = ['daily', 'technical', 'business', 'other']
 const ALLOWED_ENGINEER_LEVELS: EngineerLevel[] = ['junior', 'mid', 'senior']
 
