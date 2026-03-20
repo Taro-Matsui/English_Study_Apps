@@ -52,7 +52,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LanguageProvider><SettingsProvider><ThemeProvider><UserProvider>{children}<BottomNav /></UserProvider></ThemeProvider></SettingsProvider></LanguageProvider>
+        <LanguageProvider>
+          <SettingsProvider>
+            <ThemeProvider>
+              <UserProvider>
+                {children}
+                <BottomNav />
+              </UserProvider>
+            </ThemeProvider>
+          </SettingsProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

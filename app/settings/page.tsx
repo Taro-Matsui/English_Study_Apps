@@ -60,8 +60,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     try {
-      const seen: string[] = JSON.parse(localStorage.getItem('seen_announcements') ?? '[]')
-      setUnreadCount(ANNOUNCEMENTS.filter((a) => !seen.includes(a.id)).length)
+      const seen = new Set<string>(JSON.parse(localStorage.getItem('seen_announcements') ?? '[]'))
+      setUnreadCount(ANNOUNCEMENTS.filter((a) => !seen.has(a.id)).length)
     } catch {
       setUnreadCount(0)
     }

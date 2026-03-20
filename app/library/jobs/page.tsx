@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { formatTime } from '@/lib/utils'
 
 interface Job {
   id: string
@@ -21,10 +22,6 @@ const STATUS_CONFIG = {
   error:      { label: 'エラー',  cls: 'bg-red-500/20 text-red-400' },
 }
 
-function formatTime(iso: string) {
-  const d = new Date(iso)
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
 
 export default function LibraryJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([])

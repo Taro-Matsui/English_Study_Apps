@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ExtractedPhrase, SourceType, SaveResponse } from '@/types'
+import { formatTime } from '@/lib/utils'
 
 interface Job {
   id: string
@@ -26,10 +27,6 @@ const STATUS_CONFIG = {
   error:      { label: 'エラー',  cls: 'text-red-400',     icon: '✗' },
 }
 
-function formatTime(iso: string) {
-  const d = new Date(iso)
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
 
 export default function LibraryJobDetailPage() {
   const { id } = useParams<{ id: string }>()
