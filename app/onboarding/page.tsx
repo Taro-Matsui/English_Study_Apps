@@ -1,31 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 
 type StudyPurpose = 'meeting' | 'review' | 'reading' | 'interview' | 'general'
 type StudyLevel = 'beginner' | 'intermediate' | 'advanced'
 
 const PURPOSES: { value: StudyPurpose; icon: string; label: string; desc: string }[] = [
-  { value: 'meeting',   icon: '💬', label: 'ミーティング・日常会話',        desc: 'チームとのやり取りやスタンドアップで使う表現' },
-  { value: 'review',    icon: '👨‍💻', label: 'コードレビュー・Slack',        desc: 'レビューコメントやSlackで使う技術的表現' },
-  { value: 'reading',   icon: '📚', label: '技術ドキュメント読解',           desc: '英語のドキュメントや論文をスムーズに読む' },
-  { value: 'interview', icon: '🎤', label: '採用面接・プレゼン',             desc: 'フォーマルな場で使えるビジネス英語' },
-  { value: 'general',   icon: '🌐', label: '総合的に学びたい',               desc: 'バランスよくエンジニア英語全般を習得' },
+  { value: 'meeting',   icon: '💬', label: 'ミーティング・日常会話',  desc: 'チームとのやり取りやスタンドアップで使う表現' },
+  { value: 'review',    icon: '👨‍💻', label: 'コードレビュー・Slack',  desc: 'レビューコメントやSlackで使う技術的表現' },
+  { value: 'reading',   icon: '📚', label: '技術ドキュメント読解',     desc: '英語のドキュメントや論文をスムーズに読む' },
+  { value: 'interview', icon: '🎤', label: '採用面接・プレゼン',       desc: 'フォーマルな場で使えるビジネス英語' },
+  { value: 'general',   icon: '🌐', label: '総合的に学びたい',         desc: 'バランスよくエンジニア英語全般を習得' },
 ]
 
 const LEVELS: { value: StudyLevel; label: string; desc: string }[] = [
-  { value: 'beginner',     label: '初級',   desc: '英語をほぼ使ったことがない。単語は分かるが文章は難しい' },
-  { value: 'intermediate', label: '中級',   desc: '読める・聞けるが、会話や文章で使いこなすのが難しい' },
-  { value: 'advanced',     label: '上級',   desc: 'ある程度使えるが、よりビジネス・技術英語を洗練させたい' },
+  { value: 'beginner',     label: '初級', desc: '英語をほぼ使ったことがない' },
+  { value: 'intermediate', label: '中級', desc: '読めるが会話・作文が難しい' },
+  { value: 'advanced',     label: '上級', desc: 'ビジネス英語を洗練させたい' },
 ]
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [purpose, setPurpose] = useState<StudyPurpose | null>(null)
   const [level, setLevel] = useState<StudyLevel | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const isEdit = !!user?.user_metadata?.onboarding_complete
+
+  // 編集モード: ユーザーメタデータから現在値を取得して初期値に設定
+  useEffect(() => {
+    if (!user) return
+    const p = user.user_metadata?.study_purpose as StudyPurpose | undefined
+    const l = user.user_metadata?.study_level as StudyLevel | undefined
+    if (p && PURPOSES.some((x) => x.value === p)) setPurpose(p)
+    if (l && LEVELS.some((x) => x.value === l)) setLevel(l)
+  }, [user])
 
   async function handleSubmit() {
     if (!purpose || !level) return
@@ -43,7 +56,8 @@ export default function OnboardingPage() {
         setLoading(false)
         return
       }
-      router.push('/')
+      // 編集モードは設定ページへ戻る、初回はホームへ
+      router.push(isEdit ? '/settings' : '/')
       router.refresh()
     } catch {
       setError('ネットワークエラーが発生しました')
@@ -57,9 +71,19 @@ export default function OnboardingPage() {
 
         {/* ヘッダー */}
         <div className="text-center space-y-2">
-          <p className="text-4xl">🧑‍💻</p>
-          <h1 className="text-xl font-bold">Engineer English へようこそ</h1>
-          <p className="text-slate-400 text-sm">あなたの学習スタイルを教えてください。<br />フレーズ抽出や出題をカスタマイズします。</p>
+          {isEdit ? (
+            <>
+              <p className="text-3xl">⚙️</p>
+              <h1 className="text-xl font-bold">学習設定を変更</h1>
+              <p className="text-slate-400 text-sm">設定はフレーズ抽出のプロンプトに反映されます。</p>
+            </>
+          ) : (
+            <>
+              <p className="text-4xl">🧑‍💻</p>
+              <h1 className="text-xl font-bold">Engineer English へようこそ</h1>
+              <p className="text-slate-400 text-sm">あなたの学習スタイルを教えてください。<br />フレーズ抽出や出題をカスタマイズします。</p>
+            </>
+          )}
         </div>
 
         {/* 学習目的 */}
@@ -77,15 +101,13 @@ export default function OnboardingPage() {
                 }`}
               >
                 <span className="text-xl flex-shrink-0 mt-0.5">{p.icon}</span>
-                <div>
+                <div className="flex-1">
                   <p className={`text-sm font-medium ${purpose === p.value ? 'text-blue-300' : 'text-white'}`}>
                     {p.label}
                   </p>
                   <p className="text-xs text-slate-500 mt-0.5">{p.desc}</p>
                 </div>
-                {purpose === p.value && (
-                  <span className="ml-auto text-blue-400 flex-shrink-0">✓</span>
-                )}
+                {purpose === p.value && <span className="ml-auto text-blue-400 flex-shrink-0">✓</span>}
               </button>
             ))}
           </div>
@@ -120,17 +142,27 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        <button
-          onClick={handleSubmit}
-          disabled={!purpose || !level || loading}
-          className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          {loading ? '設定中...' : 'はじめる →'}
-        </button>
+        <div className="space-y-2">
+          <button
+            onClick={handleSubmit}
+            disabled={!purpose || !level || loading}
+            className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? '保存中...' : isEdit ? '設定を更新する' : 'はじめる →'}
+          </button>
+          {isEdit && (
+            <button
+              onClick={() => router.back()}
+              className="w-full py-2 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              キャンセル
+            </button>
+          )}
+        </div>
 
-        <p className="text-center text-xs text-slate-600">
-          設定はあとから変更できます
-        </p>
+        {!isEdit && (
+          <p className="text-center text-xs text-slate-600">設定はあとから変更できます</p>
+        )}
       </div>
     </div>
   )

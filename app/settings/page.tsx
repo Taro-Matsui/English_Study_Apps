@@ -4,6 +4,20 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
+import { useAuth } from '@/lib/auth-context'
+
+const PURPOSE_LABELS: Record<string, string> = {
+  meeting:   '💬 ミーティング・日常会話',
+  review:    '👨‍💻 コードレビュー・Slack',
+  reading:   '📚 技術ドキュメント読解',
+  interview: '🎤 採用面接・プレゼン',
+  general:   '🌐 総合的に学びたい',
+}
+const LEVEL_LABELS: Record<string, string> = {
+  beginner:     '初級',
+  intermediate: '中級',
+  advanced:     '上級',
+}
 
 const PRESET_CONFIG: { key: VoicePreset; label: string; desc_ja: string; desc_en: string }[] = [
   { key: 'default',   label: 'ブラウザ既定', desc_ja: 'OS・ブラウザの既定音声', desc_en: 'System default voice' },
@@ -26,6 +40,9 @@ function guessGender(voice: SpeechSynthesisVoice): '♀' | '♂' | '' {
 export default function SettingsPage() {
   const { lang } = useLanguage()
   const { settings, setVoicePreset, setVoice, setSkipMastered, clearMastered } = useSettings()
+  const { user } = useAuth()
+  const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
+  const studyLevel = user?.user_metadata?.study_level as string | undefined
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [testingKey, setTestingKey] = useState<string | null>(null)
   const [showCustom, setShowCustom] = useState(settings.voicePreset === 'custom')
@@ -74,6 +91,37 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 pt-5 pb-12 max-w-lg mx-auto space-y-8">
+
+        {/* 学習プロフィール */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            {ja ? '学習プロフィール' : 'Learning Profile'}
+          </h2>
+          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">{ja ? '目的' : 'Purpose'}</span>
+                  <span className="text-sm text-white">
+                    {studyPurpose ? PURPOSE_LABELS[studyPurpose] ?? studyPurpose : '—'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">{ja ? 'レベル' : 'Level'}</span>
+                  <span className="text-sm text-white">
+                    {studyLevel ? LEVEL_LABELS[studyLevel] ?? studyLevel : '—'}
+                  </span>
+                </div>
+              </div>
+              <Link
+                href="/onboarding"
+                className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors flex-shrink-0"
+              >
+                {ja ? '変更' : 'Edit'}
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {/* 音声プリセット */}
         <section className="space-y-3">

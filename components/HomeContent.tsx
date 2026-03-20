@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
+import { TutorialGuide } from './TutorialGuide'
 
 interface Props {
   phraseCount: number | null
@@ -90,6 +91,7 @@ export function HomeContent({ phraseCount, sourceCount }: Props) {
             </Link>
           ))}
         </div>
+        <TutorialGuide />
         <div className="flex justify-center items-center gap-3">
           <Link href="/settings" className="text-xs px-2.5 py-0.5 rounded-full border border-slate-600 text-slate-400 hover:bg-white/10 transition-colors font-medium">
             ⚙ {lang === 'ja' ? '設定' : 'Settings'}
