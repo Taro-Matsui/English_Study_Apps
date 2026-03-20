@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 import { log } from '@/lib/logger'
 import { CompleteRequest } from '@/types'
 
 export async function POST(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ success: false, error: 'ログインが必要です' }, { status: 401 })
+
   const body: CompleteRequest = await req.json()
   const { answers } = body
   if (!answers?.length) return NextResponse.json({ success: false }, { status: 400 })
@@ -11,12 +15,13 @@ export async function POST(req: NextRequest) {
   if (answers.length > 100) return NextResponse.json({ success: false, error: '回答数が上限を超えています' }, { status: 400 })
 
   try {
-    const db = getSupabase()
+    const db = getSupabaseAdmin()
     const correct = answers.filter((a) => a.is_correct).length
 
     const { data: session, error: sessionErr } = await db
       .from('quiz_sessions')
       .insert({
+        user_id: user.id,
         total_questions: answers.length,
         correct_count: correct,
         completed_at: new Date().toISOString(),

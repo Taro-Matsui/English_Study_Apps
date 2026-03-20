@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+
   const { id } = params
   if (!UUID_RE.test(id))
     return NextResponse.json({ error: 'IDが不正です' }, { status: 400 })

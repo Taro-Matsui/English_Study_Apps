@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 import { log } from '@/lib/logger'
 import { SaveRequest, SaveResponse, SourceType, UsageScene, EngineerLevel } from '@/types'
 
@@ -9,6 +10,12 @@ const ALLOWED_USAGE_SCENES: UsageScene[] = ['daily', 'technical', 'business', 'o
 const ALLOWED_ENGINEER_LEVELS: EngineerLevel[] = ['junior', 'mid', 'senior']
 
 export async function POST(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json<SaveResponse>(
+    { success: false, inserted_count: 0, updated_count: 0, skipped_count: 0, error: 'ログインが必要です' },
+    { status: 401 }
+  )
+
   let body: SaveRequest
   try {
     body = await req.json()
@@ -46,10 +53,11 @@ export async function POST(req: NextRequest) {
   try {
     const db = getSupabaseAdmin()
 
-    // 既存フレーズを取得して新規/更新に分類（大文字小文字を区別しない）
+    // 既存フレーズを取得して新規/更新に分類（自分のフレーズのみ・大文字小文字を区別しない）
     const { data: existing } = await db
       .from('phrases')
       .select('id, phrase')
+      .eq('user_id', user.id)
       .in('phrase', phrases.map((p) => p.phrase))
 
     const existingMap = new Map(
@@ -68,6 +76,7 @@ export async function POST(req: NextRequest) {
     }
 
     const buildRow = (p: typeof phrases[0]) => ({
+      user_id: user.id,
       phrase: p.phrase,
       pronunciation: p.pronunciation || null,
       meaning_ja: p.meaning_ja || null,

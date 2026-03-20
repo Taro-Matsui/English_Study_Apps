@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 import { log } from '@/lib/logger'
 
 const ALLOWED_REASONS = ['product_name', 'not_phrase'] as const
@@ -12,6 +13,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+
   const { id } = params
 
   if (!UUID_RE.test(id)) {

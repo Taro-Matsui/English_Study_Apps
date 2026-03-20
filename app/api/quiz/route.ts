@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // ランダムにフレーズを取得（クイズ用）
 export async function GET(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+
   const { searchParams } = new URL(req.url)
   // limit を 1〜50 に制限（未指定・不正値は 10 に正規化）
   const rawLimit = parseInt(searchParams.get('limit') ?? '10', 10)
@@ -25,6 +29,7 @@ export async function GET(req: NextRequest) {
     .from('phrases')
     .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, usage_scene, engineer_level')
     .is('deleted_at', null)
+    .eq('user_id', user.id)
 
   if (excludeIds.length > 0) {
     query = query.not('id', 'in', `(${excludeIds.join(',')})`)

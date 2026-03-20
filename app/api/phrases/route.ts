@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 
 const ALLOWED_SOURCE_TYPES = ['DSH_Event', 'YouTube', 'Podcast']
 
 export async function GET(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+
   const { searchParams } = new URL(req.url)
   // 検索文字列: 100文字以内に制限し、PostgRESTメタ文字をエスケープ
   const rawQ = searchParams.get('q')?.trim() ?? ''
@@ -20,6 +24,7 @@ export async function GET(req: NextRequest) {
     .from('phrases')
     .select('*')
     .is('deleted_at', null)
+    .eq('user_id', user.id)
     .order('added_date', { ascending: false })
 
   if (q) {

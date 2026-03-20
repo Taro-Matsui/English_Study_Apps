@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 import { parseTranscript } from '@/lib/parse-transcript'
 import { extractPhrasesWithClaude } from '@/lib/extract-phrases'
 import { log } from '@/lib/logger'
@@ -101,6 +102,9 @@ async function processJobFromUrl(jobId: string, rawUrl: string) {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ success: false, error: 'ログインが必要です' }, { status: 401 })
+
   const db = getSupabaseAdmin()
   const contentType = req.headers.get('content-type') ?? ''
 
@@ -129,7 +133,7 @@ export async function POST(req: NextRequest) {
     // ジョブ作成
     const { data: job, error: jobErr } = await db
       .from('import_jobs')
-      .insert({ type: 'file', source_name: file.name, status: 'processing' })
+      .insert({ type: 'file', source_name: file.name, status: 'processing', user_id: user.id })
       .select('id').single()
     if (jobErr || !job)
       return NextResponse.json({ success: false, error: 'ジョブの作成に失敗しました' }, { status: 500 })
@@ -163,7 +167,7 @@ export async function POST(req: NextRequest) {
     // ジョブ作成
     const { data: job, error: jobErr } = await db
       .from('import_jobs')
-      .insert({ type: 'url', source_name: parsed.hostname, status: 'processing' })
+      .insert({ type: 'url', source_name: parsed.hostname, status: 'processing', user_id: user.id })
       .select('id').single()
     if (jobErr || !job)
       return NextResponse.json({ success: false, error: 'ジョブの作成に失敗しました' }, { status: 500 })

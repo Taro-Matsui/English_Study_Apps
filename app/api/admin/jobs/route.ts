@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 
 export async function GET() {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+
   const db = getSupabase()
   const { data, error } = await db
     .from('import_jobs')

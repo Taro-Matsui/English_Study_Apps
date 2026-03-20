@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 
 export async function GET() {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
+
   const db = getSupabase()
 
   const { data: sessions, error } = await db
@@ -14,7 +18,7 @@ export async function GET() {
         phrases ( phrase, meaning_ja, original_context, usage_scene, engineer_level )
       )
     `)
-    // completed_at はスキーマに明記されている確実なカラム
+    .eq('user_id', user.id)
     .order('completed_at', { ascending: false })
     .limit(30)
 
