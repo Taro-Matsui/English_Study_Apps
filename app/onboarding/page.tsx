@@ -79,7 +79,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-white flex items-center justify-center p-4">
       <div className="w-full max-w-lg space-y-8">
 
         {/* ヘッダー */}
@@ -88,20 +88,20 @@ export default function OnboardingPage() {
             <>
               <p className="text-3xl">⚙️</p>
               <h1 className="text-xl font-bold">学習設定を変更</h1>
-              <p className="text-slate-400 text-sm">設定はフレーズ抽出のプロンプトに反映されます。</p>
+              <p className="text-gray-500 dark:text-slate-400 text-sm">設定はフレーズ抽出のプロンプトに反映されます。</p>
             </>
           ) : (
             <>
               <p className="text-4xl">🧑‍💻</p>
               <h1 className="text-xl font-bold">Engineer English へようこそ</h1>
-              <p className="text-slate-400 text-sm">あなたの学習スタイルを教えてください。<br />フレーズ抽出や出題をカスタマイズします。</p>
+              <p className="text-gray-500 dark:text-slate-400 text-sm">あなたの学習スタイルを教えてください。<br />フレーズ抽出や出題をカスタマイズします。</p>
             </>
           )}
         </div>
 
         {/* 学習目的 */}
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-300">英語を使う主な目的は？</h2>
+          <h2 className="text-sm font-semibold text-gray-600 dark:text-slate-300">英語を使う主な目的は？</h2>
           <div className="space-y-2">
             {PURPOSES.map((p) => (
               <button
@@ -109,18 +109,18 @@ export default function OnboardingPage() {
                 onClick={() => setPurpose(p.value)}
                 className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl border text-left transition-colors ${
                   purpose === p.value
-                    ? 'border-blue-500 bg-blue-500/15'
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/15'
+                    : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10'
                 }`}
               >
                 <span className="text-xl flex-shrink-0 mt-0.5">{p.icon}</span>
                 <div className="flex-1">
-                  <p className={`text-sm font-medium ${purpose === p.value ? 'text-blue-300' : 'text-white'}`}>
+                  <p className={`text-sm font-medium ${purpose === p.value ? 'text-blue-600 dark:text-blue-300' : 'text-gray-900 dark:text-white'}`}>
                     {p.label}
                   </p>
-                  <p className="text-xs text-slate-500 mt-0.5">{p.desc}</p>
+                  <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{p.desc}</p>
                 </div>
-                {purpose === p.value && <span className="ml-auto text-blue-400 flex-shrink-0">✓</span>}
+                {purpose === p.value && <span className="ml-auto text-blue-500 dark:text-blue-400 flex-shrink-0">✓</span>}
               </button>
             ))}
           </div>
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
 
         {/* 英語レベル */}
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-300">現在の英語レベルは？</h2>
+          <h2 className="text-sm font-semibold text-gray-600 dark:text-slate-300">現在の英語レベルは？</h2>
           <div className="flex gap-2">
             {LEVELS.map((l) => (
               <button
@@ -136,14 +136,14 @@ export default function OnboardingPage() {
                 onClick={() => setLevel(l.value)}
                 className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 rounded-xl border text-center transition-colors ${
                   level === l.value
-                    ? 'border-blue-500 bg-blue-500/15'
-                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/15'
+                    : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10'
                 }`}
               >
-                <span className={`text-sm font-bold ${level === l.value ? 'text-blue-300' : 'text-white'}`}>
+                <span className={`text-sm font-bold ${level === l.value ? 'text-blue-600 dark:text-blue-300' : 'text-gray-900 dark:text-white'}`}>
                   {l.label}
                 </span>
-                <span className="text-xs text-slate-500 leading-tight">{l.desc}</span>
+                <span className="text-xs text-gray-400 dark:text-slate-500 leading-tight">{l.desc}</span>
               </button>
             ))}
           </div>
@@ -152,8 +152,8 @@ export default function OnboardingPage() {
         {/* 専門領域（任意） */}
         <div className="space-y-3">
           <div className="flex items-baseline gap-2">
-            <h2 className="text-sm font-semibold text-slate-300">専門領域・興味（任意）</h2>
-            <span className="text-xs text-slate-600">フレーズ抽出の優先度に反映されます</span>
+            <h2 className="text-sm font-semibold text-gray-600 dark:text-slate-300">専門領域・興味（任意）</h2>
+            <span className="text-xs text-gray-400 dark:text-slate-600">フレーズ抽出の優先度に反映されます</span>
           </div>
           {/* プリセットチップ */}
           <div className="flex flex-wrap gap-2">
@@ -164,8 +164,8 @@ export default function OnboardingPage() {
                 onClick={() => setDomain((prev) => prev === preset ? '' : preset)}
                 className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                   domain === preset
-                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                    : 'border-white/15 bg-white/5 text-slate-400 hover:bg-white/10'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300'
+                    : 'border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-white/10'
                 }`}
               >
                 {preset}
@@ -179,13 +179,13 @@ export default function OnboardingPage() {
             onChange={(e) => setDomain(e.target.value.slice(0, 100))}
             placeholder="または自由に入力（例: 機械学習、クラウドインフラ、DX推進）"
             style={{ fontSize: '16px' }}
-            className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors text-sm"
+            className="w-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/15 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors text-sm"
           />
         </div>
 
         {error && (
-          <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3">
+            <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
           </div>
         )}
 
@@ -200,7 +200,7 @@ export default function OnboardingPage() {
           {isEdit && (
             <button
               onClick={() => router.back()}
-              className="w-full py-2 text-sm text-slate-500 hover:text-slate-300 transition-colors"
+              className="w-full py-2 text-sm text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors"
             >
               キャンセル
             </button>
@@ -208,7 +208,7 @@ export default function OnboardingPage() {
         </div>
 
         {!isEdit && (
-          <p className="text-center text-xs text-slate-600">設定はあとから変更できます</p>
+          <p className="text-center text-xs text-gray-400 dark:text-slate-600">設定はあとから変更できます</p>
         )}
       </div>
     </div>

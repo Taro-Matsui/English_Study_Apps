@@ -84,5 +84,7 @@ export async function GET() {
     .map(([scene, v]) => ({ scene, ...v }))
     .sort((a, b) => b.total - a.total)
 
-  return NextResponse.json({ sessions: rows, daily_accuracy, by_difficulty, by_scene })
+  return NextResponse.json({ sessions: rows, daily_accuracy, by_difficulty, by_scene }, {
+    headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' },
+  })
 }

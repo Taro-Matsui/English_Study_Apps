@@ -54,8 +54,8 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       icon: '📊',
       title: t('nav_history'),
       desc: t('nav_history_desc'),
-      bg: 'bg-amber-50 hover:bg-amber-100',
-      border: 'border-amber-200',
+      bg: 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/20 dark:hover:bg-amber-900/20',
+      border: 'border-amber-200 dark:border-amber-800/30',
       iconBg: 'from-amber-500 to-amber-600',
       badge: null as string | null,
     },
@@ -64,8 +64,8 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       icon: '📚',
       title: t('nav_phrases'),
       desc: t('nav_phrases_desc'),
-      bg: 'bg-blue-50 hover:bg-blue-100',
-      border: 'border-blue-200',
+      bg: 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/20 dark:hover:bg-blue-900/20',
+      border: 'border-blue-200 dark:border-blue-800/30',
       iconBg: 'from-blue-500 to-blue-600',
       badge: phraseCount !== null
         ? lang === 'ja' ? `${phraseCount}件` : `${phraseCount} phrases`
@@ -76,8 +76,8 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       icon: '⚙️',
       title: t('nav_import'),
       desc: t('nav_import_desc'),
-      bg: 'bg-violet-50 hover:bg-violet-100',
-      border: 'border-violet-200',
+      bg: 'bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/20 dark:hover:bg-violet-900/20',
+      border: 'border-violet-200 dark:border-violet-800/30',
       iconBg: 'from-violet-500 to-violet-600',
       badge: sourceCount !== null
         ? lang === 'ja' ? `${sourceCount}ファイル` : `${sourceCount} files`
@@ -86,29 +86,29 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-6 pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex flex-col items-center justify-center p-6 pb-24">
       <div className="w-full max-w-sm space-y-5">
 
         {/* ヘッダー */}
         <div className="text-center space-y-1">
-          <div className="inline-flex items-center justify-center gap-1 px-5 h-14 rounded-2xl bg-white/10 backdrop-blur-sm mb-1">
+          <div className="inline-flex items-center justify-center gap-1 px-5 h-14 rounded-2xl bg-indigo-100 dark:bg-white/10 backdrop-blur-sm mb-1">
             <span className="text-xl">👩‍💻</span>
             <span className="text-lg">💬</span>
             <span className="text-xl">👨‍💻</span>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Engineer English</h1>
-          <p className="text-slate-400 text-sm">{t('tagline')}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Engineer English</h1>
+          <p className="text-gray-500 dark:text-slate-400 text-sm">{t('tagline')}</p>
         </div>
 
         {/* ストリーク表示 */}
         {streak > 0 && (
           <div className="flex items-center justify-center gap-2.5">
             <span className="text-lg">🔥</span>
-            <span className="text-white font-bold text-base">
+            <span className="text-gray-800 dark:text-white font-bold text-base">
               {streak}{lang === 'ja' ? '日連続' : '-day streak'}
             </span>
             {todayDone && (
-              <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">
                 ✓ {lang === 'ja' ? '今日完了' : 'Done today'}
               </span>
             )}
@@ -144,13 +144,13 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
         {/* 弱点フォーカス */}
         {weakCount > 0 && (
           <Link href="/quiz?mode=focus"
-            className="flex items-center gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/15 transition-colors">
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/15 transition-colors">
             <span className="text-xl flex-shrink-0">⚠️</span>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-red-300">
+              <p className="text-sm font-semibold text-red-600 dark:text-red-300">
                 {lang === 'ja' ? `弱点フレーズ ${weakCount}件` : `${weakCount} weak phrases`}
               </p>
-              <p className="text-xs text-red-400/70 mt-0.5">
+              <p className="text-xs text-red-400 dark:text-red-400/70 mt-0.5">
                 {lang === 'ja' ? '苦手なフレーズを重点的に復習' : 'Focus on phrases you often miss'}
               </p>
             </div>
@@ -168,15 +168,15 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
                   {c.icon}
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-slate-800">{c.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{c.desc}</p>
+                  <p className="font-semibold text-gray-800 dark:text-white">{c.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{c.desc}</p>
                 </div>
                 {c.badge && (
-                  <span className="text-xs font-medium text-slate-500 bg-white/60 px-2 py-0.5 rounded-full flex-shrink-0">
+                  <span className="text-xs font-medium text-gray-500 dark:text-slate-400 bg-white/60 dark:bg-white/10 px-2 py-0.5 rounded-full flex-shrink-0">
                     {c.badge}
                   </span>
                 )}
-                <span className="text-slate-300 group-hover:translate-x-0.5 transition-transform flex-shrink-0">›</span>
+                <span className="text-gray-300 dark:text-slate-500 group-hover:translate-x-0.5 transition-transform flex-shrink-0">›</span>
               </Link>
             )
 
@@ -203,16 +203,16 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
         {/* フッター: 設定・ベル・言語・X */}
         <div className="flex justify-center items-center gap-2 flex-wrap">
-          <Link href="/settings" className="text-xs px-2.5 py-0.5 rounded-full border border-slate-600 text-slate-400 hover:bg-white/10 transition-colors font-medium">
+          <Link href="/settings" className="text-xs px-2.5 py-0.5 rounded-full border border-gray-300 dark:border-slate-600 text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors font-medium">
             ⚙ {lang === 'ja' ? '設定' : 'Settings'}
           </Link>
-          <LangToggle className="text-slate-400 border-slate-600 hover:bg-white/10" />
+          <LangToggle className="text-gray-500 dark:text-slate-400 border-gray-300 dark:border-slate-600 hover:bg-gray-100 dark:hover:bg-white/10" />
           <AnnouncementBell />
           <a
             href={X_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-slate-500 hover:text-slate-300 text-sm font-bold"
+            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-sm font-bold"
             aria-label="X (Twitter)"
           >
             𝕏

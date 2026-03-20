@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useLanguage, LangToggle } from '@/lib/i18n'
-import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
+import { useSettings, getVoiceForPreset, VoicePreset, ColorTheme } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
 import { resetTutorialAndHints } from '@/components/HintBubble'
 import { resetAnnouncements } from '@/components/AnnouncementBell'
@@ -32,6 +32,12 @@ const PRESET_CONFIG: { key: VoicePreset; label: string; desc_ja: string; desc_en
   { key: 'custom',    label: '🎛 カスタム',  desc_ja: '一覧から音声を選ぶ',       desc_en: 'Choose from voice list' },
 ]
 
+const THEME_OPTIONS: { key: ColorTheme; label_ja: string; label_en: string; icon: string }[] = [
+  { key: 'light',  label_ja: 'ライト',        label_en: 'Light',  icon: '☀️' },
+  { key: 'dark',   label_ja: 'ダーク',        label_en: 'Dark',   icon: '🌙' },
+  { key: 'system', label_ja: 'システム設定',  label_en: 'System', icon: '⚙️' },
+]
+
 /** 既知の声名から性別を推定（カスタム音声リスト表示用） */
 function guessGender(voice: SpeechSynthesisVoice): '♀' | '♂' | '' {
   const n = voice.name.toLowerCase()
@@ -45,7 +51,7 @@ function guessGender(voice: SpeechSynthesisVoice): '♀' | '♂' | '' {
 export default function SettingsPage() {
   const router = useRouter()
   const { lang } = useLanguage()
-  const { settings, setVoicePreset, setVoice, setSkipMastered, setContextHint, setShowPronunciation, clearMastered } = useSettings()
+  const { settings, setVoicePreset, setVoice, setSkipMastered, setContextHint, setShowPronunciation, setColorTheme, clearMastered } = useSettings()
   const { user } = useAuth()
 
   const [deleteInput, setDeleteInput] = useState('')
@@ -138,11 +144,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-white">
       {/* ヘッダー */}
-      <div className="sticky top-0 z-10 bg-slate-900/95 backdrop-blur-sm border-b border-white/5">
+      <div className="sticky top-0 z-10 bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-white/5">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-lg mx-auto">
-          <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
+          <Link href="/" className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
           <h1 className="flex-1 text-sm font-semibold">{ja ? '設定' : 'Settings'}</h1>
           <LangToggle />
         </div>
@@ -152,34 +158,34 @@ export default function SettingsPage() {
 
         {/* 学習プロフィール */}
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
             {ja ? '学習プロフィール' : 'Learning Profile'}
           </h2>
-          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
+          <div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">{ja ? '目的' : 'Purpose'}</span>
-                  <span className="text-sm text-white">
+                  <span className="text-xs text-gray-400 dark:text-slate-500">{ja ? '目的' : 'Purpose'}</span>
+                  <span className="text-sm text-gray-900 dark:text-white">
                     {studyPurpose ? PURPOSE_LABELS[studyPurpose] ?? studyPurpose : '—'}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">{ja ? 'レベル' : 'Level'}</span>
-                  <span className="text-sm text-white">
+                  <span className="text-xs text-gray-400 dark:text-slate-500">{ja ? 'レベル' : 'Level'}</span>
+                  <span className="text-sm text-gray-900 dark:text-white">
                     {studyLevel ? LEVEL_LABELS[studyLevel] ?? studyLevel : '—'}
                   </span>
                 </div>
                 {studyDomain && (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500">{ja ? '領域' : 'Domain'}</span>
-                    <span className="text-sm text-white">{studyDomain}</span>
+                    <span className="text-xs text-gray-400 dark:text-slate-500">{ja ? '領域' : 'Domain'}</span>
+                    <span className="text-sm text-gray-900 dark:text-white">{studyDomain}</span>
                   </div>
                 )}
               </div>
               <Link
                 href="/onboarding"
-                className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-colors flex-shrink-0"
+                className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-colors flex-shrink-0"
               >
                 {ja ? '変更' : 'Edit'}
               </Link>
@@ -187,9 +193,36 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* 外観 */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
+            {ja ? '外観' : 'Appearance'}
+          </h2>
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map(({ key, label_ja, label_en, icon }) => {
+              const isSel = (settings.colorTheme ?? 'light') === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setColorTheme(key)}
+                  className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-sm font-medium transition-colors ${
+                    isSel
+                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                      : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <span className="text-xl">{icon}</span>
+                  <span className="text-xs">{ja ? label_ja : label_en}</span>
+                  {isSel && <span className="text-indigo-500 text-[10px] font-bold">✓</span>}
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
         {/* 音声プリセット */}
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
             {ja ? '読み上げ音声' : 'Pronunciation Voice'}
           </h2>
 
@@ -199,29 +232,29 @@ export default function SettingsPage() {
               const isTesting = testingKey === `preset-${key}`
               const isCustomEntry = key === 'custom'
 
-              // カスタムは選択時に展開するだけ
               if (isCustomEntry) {
                 return (
                   <div key={key}>
                     <div
                       onClick={() => { setVoicePreset('custom'); setShowCustom(true) }}
                       className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                        isSel ? 'border-blue-500/50 bg-blue-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'
+                        isSel
+                          ? 'border-blue-500/50 bg-blue-50 dark:bg-blue-500/10'
+                          : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10'
                       }`}
                     >
                       <div className="flex-1">
                         <p className="text-sm font-medium">{label}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{ja ? desc_ja : desc_en}</p>
+                        <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{ja ? desc_ja : desc_en}</p>
                       </div>
-                      {isSel && <span className="text-blue-400 text-xs font-bold">✓</span>}
-                      <span className="text-slate-500 text-xs">{showCustom ? '▲' : '▼'}</span>
+                      {isSel && <span className="text-blue-500 dark:text-blue-400 text-xs font-bold">✓</span>}
+                      <span className="text-gray-400 dark:text-slate-500 text-xs">{showCustom ? '▲' : '▼'}</span>
                     </div>
 
-                    {/* カスタム音声リスト */}
                     {showCustom && (
                       <div className="mt-1 ml-3 space-y-1.5 max-h-64 overflow-y-auto pr-1">
                         {voices.length === 0 && (
-                          <p className="text-xs text-slate-500 py-2">
+                          <p className="text-xs text-gray-400 dark:text-slate-500 py-2">
                             {ja ? '音声リストを読み込み中...' : 'Loading voices...'}
                           </p>
                         )}
@@ -233,21 +266,25 @@ export default function SettingsPage() {
                             <div
                               key={v.voiceURI}
                               className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
-                                isSelVoice ? 'border-blue-500/40 bg-blue-500/10' : 'border-white/5 bg-white/3 hover:bg-white/8'
+                                isSelVoice
+                                  ? 'border-blue-500/40 bg-blue-50 dark:bg-blue-500/10'
+                                  : 'border-gray-100 dark:border-white/5 bg-white dark:bg-white/3 hover:bg-gray-50 dark:hover:bg-white/8'
                               }`}
                             >
                               <div className="flex-1 cursor-pointer" onClick={() => setVoice(v.voiceURI)}>
                                 <p className="text-xs font-medium">
-                                  {gender && <span className={`mr-1 ${gender === '♀' ? 'text-pink-400' : 'text-sky-400'}`}>{gender}</span>}
+                                  {gender && <span className={`mr-1 ${gender === '♀' ? 'text-pink-500 dark:text-pink-400' : 'text-sky-500 dark:text-sky-400'}`}>{gender}</span>}
                                   {v.name}
-                                  <span className="ml-1.5 text-slate-600 font-normal">{v.lang}</span>
+                                  <span className="ml-1.5 text-gray-400 dark:text-slate-600 font-normal">{v.lang}</span>
                                 </p>
                               </div>
-                              {isSelVoice && <span className="text-blue-400 text-[10px] font-bold">✓</span>}
+                              {isSelVoice && <span className="text-blue-500 dark:text-blue-400 text-[10px] font-bold">✓</span>}
                               <button
                                 onClick={() => testCustomVoice(v)}
                                 className={`text-[10px] px-2 py-0.5 rounded transition-colors ${
-                                  isTestingV ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'
+                                  isTestingV
+                                    ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                                    : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20'
                                 }`}
                               >
                                 {isTestingV ? '▶' : '🔊'}
@@ -265,20 +302,24 @@ export default function SettingsPage() {
                 <div
                   key={key}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                    isSel ? 'border-blue-500/50 bg-blue-500/10' : 'border-white/10 bg-white/5'
+                    isSel
+                      ? 'border-blue-500/50 bg-blue-50 dark:bg-blue-500/10'
+                      : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5'
                   }`}
                 >
                   <div className="flex-1 cursor-pointer" onClick={() => { setVoicePreset(key); setShowCustom(false) }}>
                     <p className="text-sm font-medium">{label}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{ja ? desc_ja : desc_en}</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{ja ? desc_ja : desc_en}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {isSel && <span className="text-blue-400 text-xs font-bold">✓</span>}
+                    {isSel && <span className="text-blue-500 dark:text-blue-400 text-xs font-bold">✓</span>}
                     {key !== 'default' && (
                       <button
                         onClick={() => testPreset(key)}
                         className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
-                          isTesting ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'
+                          isTesting
+                            ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                            : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20'
                         }`}
                       >
                         {isTesting ? '▶' : '🔊'}
@@ -290,9 +331,8 @@ export default function SettingsPage() {
             })}
           </div>
 
-          {/* インド英語が利用可能かチェック */}
           {voices.length > 0 && !voices.some((v) => v.lang.startsWith('en-IN') || v.lang.startsWith('en_IN')) && (
-            <p className="text-xs text-amber-500/80">
+            <p className="text-xs text-amber-600 dark:text-amber-500/80">
               {ja
                 ? '⚠ このデバイスにはインド英語音声がインストールされていません。OSの言語設定から追加できます。'
                 : '⚠ Indian English voice not found on this device. Install via OS language settings.'}
@@ -302,11 +342,11 @@ export default function SettingsPage() {
 
         {/* クイズ設定 */}
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
             {ja ? 'クイズ設定' : 'Quiz Settings'}
           </h2>
 
-          <label className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+          <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/10 transition-colors">
             <input
               type="checkbox"
               checked={settings.skipMastered}
@@ -317,13 +357,13 @@ export default function SettingsPage() {
               <p className="text-sm font-medium">
                 {ja ? '正解済みフレーズをスキップ' : 'Skip already-correct phrases'}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
                 {ja ? '一度正解したフレーズはクイズに出なくなります' : 'Phrases answered correctly will not appear again'}
               </p>
             </div>
           </label>
 
-          <label className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+          <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/10 transition-colors">
             <input
               type="checkbox"
               checked={settings.contextHint}
@@ -334,13 +374,13 @@ export default function SettingsPage() {
               <p className="text-sm font-medium">
                 {ja ? 'コンテキストヒントを表示' : 'Show context hint'}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
                 {ja ? 'クイズ中に例文（フレーズ部分をマスク）を表示します' : 'Show example sentence with phrase masked during quiz'}
               </p>
             </div>
           </label>
 
-          <label className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+          <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/10 transition-colors">
             <input
               type="checkbox"
               checked={settings.showPronunciation}
@@ -351,23 +391,23 @@ export default function SettingsPage() {
               <p className="text-sm font-medium">
                 {ja ? '発音（カタカナ）を表示' : 'Show pronunciation (katakana)'}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
                 {ja ? 'フレーズ一覧にカタカナ読みを表示します' : 'Show katakana reading in the phrase list'}
               </p>
             </div>
           </label>
 
-          <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5">
+          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5">
             <div>
               <p className="text-sm font-medium">{ja ? '習得済みフレーズ' : 'Mastered phrases'}</p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
                 {settings.masteredIds.length}{ja ? ' 件' : ' phrases'}
               </p>
             </div>
             <button
               onClick={clearMastered}
               disabled={settings.masteredIds.length === 0}
-              className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               {ja ? 'リセット' : 'Reset'}
             </button>
@@ -376,23 +416,23 @@ export default function SettingsPage() {
 
         {/* チュートリアル・ヒント */}
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
             {ja ? 'チュートリアル・ヒント' : 'Tutorial & Hints'}
           </h2>
-          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-2">
+          <div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 space-y-2">
             <button
               onClick={handleResetTutorial}
-              className="w-full py-2.5 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors text-left px-3"
+              className="w-full py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-left px-3"
             >
               🎓 {ja ? 'チュートリアルと操作ヒントを再表示' : 'Show tutorial & hints again'}
             </button>
             <button
               onClick={handleResetAnnouncements}
-              className="w-full py-2.5 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors text-left px-3"
+              className="w-full py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-left px-3"
             >
               🔔 {ja ? `お知らせを未読にリセット` : 'Mark all announcements unread'}
               {unreadCount > 0 && (
-                <span className="ml-2 text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded-full">
                   {ja ? `${unreadCount}件未読` : `${unreadCount} unread`}
                 </span>
               )}
@@ -402,18 +442,18 @@ export default function SettingsPage() {
 
         {/* サービス情報 */}
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
             {ja ? 'サービス情報' : 'About'}
           </h2>
-          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
-            <p className="text-xs text-slate-500">
+          <div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 space-y-3">
+            <p className="text-xs text-gray-400 dark:text-slate-500">
               {ja ? 'アップデート情報はXでお知らせしています。' : 'Follow us on X for updates.'}
             </p>
             <a
               href={X_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 py-2 px-4 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors"
+              className="inline-flex items-center gap-2 py-2 px-4 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
             >
               <span className="font-bold text-base">𝕏</span>
               {ja ? 'フォローする' : 'Follow on X'}
@@ -423,30 +463,30 @@ export default function SettingsPage() {
 
         {/* アカウント */}
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
             {ja ? 'アカウント' : 'Account'}
           </h2>
-          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
+          <div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 space-y-3">
             {user?.email && (
-              <p className="text-xs text-slate-500 break-all">{user.email}</p>
+              <p className="text-xs text-gray-400 dark:text-slate-500 break-all">{user.email}</p>
             )}
             <button
               onClick={handleExport}
-              className="w-full py-2.5 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors"
+              className="w-full py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-slate-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
             >
               {ja ? 'データをエクスポート (JSON)' : 'Export my data (JSON)'}
             </button>
             <button
               onClick={handleSignOut}
-              className="w-full py-2.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors"
+              className="w-full py-2.5 rounded-lg border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 text-sm font-medium hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
             >
               {ja ? 'ログアウト' : 'Sign out'}
             </button>
-            <div className="border-t border-white/5 pt-3 space-y-2">
-              <p className="text-xs text-slate-600">
+            <div className="border-t border-gray-100 dark:border-white/5 pt-3 space-y-2">
+              <p className="text-xs text-gray-400 dark:text-slate-600">
                 {ja ? 'アカウントを削除するとすべてのデータが完全に消去されます。' : 'Deleting your account permanently removes all your data.'}
               </p>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-gray-500 dark:text-slate-500">
                 {ja ? '確認のため「削除する」と入力してください' : 'Type "削除する" to confirm deletion'}
               </p>
               <input
@@ -455,12 +495,12 @@ export default function SettingsPage() {
                 onChange={(e) => setDeleteInput(e.target.value)}
                 placeholder="削除する"
                 style={{ fontSize: '16px' }}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-colors"
+                className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-slate-600 focus:outline-none focus:border-red-400 dark:focus:border-red-500/50 transition-colors"
               />
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleting || deleteInput !== '削除する'}
-                className="w-full py-2.5 rounded-lg border border-red-600/40 bg-red-600/10 text-red-400 text-sm font-medium hover:bg-red-600/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-2.5 rounded-lg border border-red-300 dark:border-red-600/40 bg-red-50 dark:bg-red-600/10 text-red-500 dark:text-red-400 text-sm font-medium hover:bg-red-100 dark:hover:bg-red-600/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
               >
                 {deleting
                   ? (ja ? '削除中...' : 'Deleting...')

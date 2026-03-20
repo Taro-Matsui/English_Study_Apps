@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 
 export type VoicePreset = 'default' | 'us-female' | 'us-male' | 'indian' | 'custom'
+export type ColorTheme = 'light' | 'dark' | 'system'
 
 interface Settings {
   voicePreset: VoicePreset  // 音声プリセット
@@ -11,6 +12,7 @@ interface Settings {
   masteredIds: string[]
   contextHint: boolean        // クイズ中にコンテキスト文（フレーズマスク済み）を表示
   showPronunciation: boolean  // フレーズ一覧でカタカナ発音を表示（デフォルト OFF）
+  colorTheme: ColorTheme      // 外観テーマ
 }
 
 interface SettingsContextType {
@@ -20,6 +22,7 @@ interface SettingsContextType {
   setSkipMastered: (v: boolean) => void
   setContextHint: (v: boolean) => void
   setShowPronunciation: (v: boolean) => void
+  setColorTheme: (theme: ColorTheme) => void
   markMastered: (phraseId: string) => void
   clearMastered: () => void
 }
@@ -31,6 +34,7 @@ const DEFAULT: Settings = {
   masteredIds: [],
   contextHint: false,
   showPronunciation: false,
+  colorTheme: 'light',
 }
 const KEY = 'app_settings'
 
@@ -41,6 +45,7 @@ const SettingsContext = createContext<SettingsContextType>({
   setSkipMastered: () => {},
   setContextHint: () => {},
   setShowPronunciation: () => {},
+  setColorTheme: () => {},
   markMastered: () => {},
   clearMastered: () => {},
 })
@@ -146,6 +151,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setSkipMastered: (v) => update((p) => ({ ...p, skipMastered: v })),
       setContextHint: (v) => update((p) => ({ ...p, contextHint: v })),
       setShowPronunciation: (v) => update((p) => ({ ...p, showPronunciation: v })),
+      setColorTheme: (theme) => update((p) => ({ ...p, colorTheme: theme })),
       markMastered: (id) => {
         update((p) => ({
           ...p,

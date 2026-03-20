@@ -110,23 +110,23 @@ export default function LibraryImportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 pb-24">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 p-4 md:p-8 pb-24">
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* ヘッダー */}
         <div className="flex items-start gap-3">
-          <Link href="/" className="mt-1 text-sm text-gray-500 hover:text-gray-700 transition-colors flex-shrink-0">
+          <Link href="/" className="mt-1 text-sm text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 transition-colors flex-shrink-0">
             ← ホーム
           </Link>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-900">フレーズ一括インポート</h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">フレーズ一括インポート</h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
               字幕・テキストファイルまたはURLから英語フレーズを非同期で抽出しDBに登録します
             </p>
           </div>
           <Link
             href="/library/jobs"
-            className="text-xs text-blue-600 hover:text-blue-700 border border-blue-200 rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors"
+            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors"
           >
             ジョブ一覧 →
           </Link>
@@ -142,14 +142,14 @@ export default function LibraryImportPage() {
             <CardContent className="space-y-4">
 
               {/* モード切り替えタブ */}
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit flex-wrap">
+              <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit flex-wrap">
                 {([['file', '📄 ファイル'], ['url', '🌐 URL'], ['text', '📋 テキスト貼り付け']] as [ImportMode, string][]).map(([m, label]) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
                     disabled={isSubmitting}
                     className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                      mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                      mode === m ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
                     }`}
                   >
                     {label}
@@ -160,9 +160,9 @@ export default function LibraryImportPage() {
               {/* ファイル入力 */}
               {mode === 'file' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                     ファイル <span className="text-red-500">*</span>
-                    <span className="text-gray-400 font-normal ml-1">(.txt / .vtt / .srt)</span>
+                    <span className="text-gray-400 dark:text-slate-500 font-normal ml-1">(.txt / .vtt / .srt)</span>
                   </label>
                   <input
                     ref={fileInputRef}
@@ -170,10 +170,10 @@ export default function LibraryImportPage() {
                     accept={ACCEPT}
                     onChange={handleFileChange}
                     disabled={isSubmitting}
-                    className="block w-full text-sm text-gray-700 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                    className="block w-full text-sm text-gray-700 dark:text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50 cursor-pointer"
                   />
                   {file && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
                       選択中: {file.name} ({(file.size / 1024).toFixed(1)} KB)
                     </p>
                   )}
@@ -181,7 +181,7 @@ export default function LibraryImportPage() {
                     type="button"
                     onClick={handleSampleText}
                     disabled={isSubmitting}
-                    className="mt-2 text-xs px-3 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition-colors"
+                    className="mt-2 text-xs px-3 py-1.5 rounded-md border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-50 transition-colors"
                   >
                     💡 サンプルテキストを試す
                   </button>
@@ -191,9 +191,9 @@ export default function LibraryImportPage() {
               {/* テキスト貼り付け */}
               {mode === 'text' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                     テキストを貼り付け <span className="text-red-500">*</span>
-                    <span className="text-gray-400 font-normal ml-1">（100文字以上）</span>
+                    <span className="text-gray-400 dark:text-slate-500 font-normal ml-1">（100文字以上）</span>
                   </label>
                   <textarea
                     value={pasteText}
@@ -201,11 +201,11 @@ export default function LibraryImportPage() {
                     placeholder="会議録、Slack メッセージ、技術ドキュメントなどを貼り付けてください..."
                     disabled={isSubmitting}
                     rows={8}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                     style={{ fontSize: '16px' }}
                   />
                   <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-slate-500">
                       {pasteText.length.toLocaleString()} / {TEXT_MAX.toLocaleString()} 文字
                       {pasteText.trim().length < 100 && pasteText.length > 0 && (
                         <span className="text-red-400 ml-2">あと {100 - pasteText.trim().length} 文字以上入力してください</span>
@@ -215,7 +215,7 @@ export default function LibraryImportPage() {
                       type="button"
                       onClick={() => { setPasteText(SAMPLE_TEXT); setSourceTitle('サンプル会議録'); setSourceType('DSH_Event') }}
                       disabled={isSubmitting}
-                      className="text-xs px-3 py-1 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition-colors"
+                      className="text-xs px-3 py-1 rounded-md border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-50 transition-colors"
                     >
                       💡 サンプルを試す
                     </button>
@@ -226,9 +226,9 @@ export default function LibraryImportPage() {
               {/* URL入力 */}
               {mode === 'url' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                     URL <span className="text-red-500">*</span>
-                    <span className="text-gray-400 font-normal ml-1">（記事・ブログ・ドキュメントなど）</span>
+                    <span className="text-gray-400 dark:text-slate-500 font-normal ml-1">（記事・ブログ・ドキュメントなど）</span>
                   </label>
                   <input
                     type="url"
@@ -236,10 +236,10 @@ export default function LibraryImportPage() {
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://example.com/article"
                     disabled={isSubmitting}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     style={{ fontSize: '16px' }}
                   />
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                     ※ YouTubeの字幕は .vtt/.srt ファイルをダウンロードしてファイルモードでご利用ください
                   </p>
                 </div>
@@ -247,7 +247,7 @@ export default function LibraryImportPage() {
 
               {/* ソース種別 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ソース種別</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">ソース種別</label>
                 <div className="flex gap-2 flex-wrap">
                   {SOURCE_TYPES.map((type) => (
                     <button
@@ -257,7 +257,7 @@ export default function LibraryImportPage() {
                       className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                         sourceType === type
                           ? 'bg-blue-600 text-white'
-                          : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                          : 'bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                       }`}
                     >
                       {type}
@@ -268,9 +268,9 @@ export default function LibraryImportPage() {
 
               {/* タイトル */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
                   ソースタイトル
-                  <span className="text-gray-400 font-normal ml-1">（省略時はファイル名またはURL）</span>
+                  <span className="text-gray-400 dark:text-slate-500 font-normal ml-1">（省略時はファイル名またはURL）</span>
                 </label>
                 <input
                   type="text"
@@ -278,21 +278,21 @@ export default function LibraryImportPage() {
                   onChange={(e) => setSourceTitle(e.target.value)}
                   placeholder="例: Snowflake DataSuperhero Summit 2024"
                   disabled={isSubmitting}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               {/* 日付 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  開催日・公開日<span className="text-gray-400 font-normal ml-1">（任意）</span>
+                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+                  開催日・公開日<span className="text-gray-400 dark:text-slate-500 font-normal ml-1">（任意）</span>
                 </label>
                 <input
                   type="date"
                   value={sourceDate}
                   onChange={(e) => setSourceDate(e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -312,11 +312,11 @@ export default function LibraryImportPage() {
 
         {/* 送信完了 */}
         {step === 'submitted' && jobId && (
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30">
             <CardContent className="pt-6 space-y-4">
               <div className="space-y-1">
-                <p className="text-blue-800 font-semibold text-base">処理を受け付けました</p>
-                <p className="text-sm text-blue-700">
+                <p className="text-blue-800 dark:text-blue-300 font-semibold text-base">処理を受け付けました</p>
+                <p className="text-sm text-blue-700 dark:text-blue-400">
                   ジョブの実行には数分かかります。後ほどジョブ一覧を確認してください。
                 </p>
               </div>
@@ -329,19 +329,19 @@ export default function LibraryImportPage() {
                 </Link>
                 <Link
                   href={`/library/jobs/${jobId}`}
-                  className="rounded-md border border-blue-300 bg-white px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50 transition-colors"
+                  className="rounded-md border border-blue-300 dark:border-blue-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   このジョブの詳細
                 </Link>
                 <button
                   onClick={handleReset}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   続けてインポート
                 </button>
                 <Link
                   href="/quiz"
-                  className="rounded-md border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+                  className="rounded-md border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-950/50 transition-colors"
                 >
                   今すぐクイズで確認する →
                 </Link>
@@ -352,13 +352,13 @@ export default function LibraryImportPage() {
 
         {/* エラー */}
         {step === 'error' && error && (
-          <Card className="border-red-200 bg-red-50">
+          <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
             <CardContent className="pt-6 space-y-3">
-              <p className="text-sm font-medium text-red-700">エラーが発生しました</p>
-              <p className="text-sm text-red-600 whitespace-pre-wrap">{error}</p>
+              <p className="text-sm font-medium text-red-700 dark:text-red-400">エラーが発生しました</p>
+              <p className="text-sm text-red-600 dark:text-red-400 whitespace-pre-wrap">{error}</p>
               <button
                 onClick={handleReset}
-                className="rounded-md border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                className="rounded-md border border-red-300 dark:border-red-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
               >
                 最初からやり直す
               </button>

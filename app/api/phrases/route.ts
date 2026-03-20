@@ -53,5 +53,7 @@ export async function GET(req: NextRequest) {
     console.error('[phrases]', error.message)
     return NextResponse.json({ error: 'データ取得に失敗しました' }, { status: 500 })
   }
-  return NextResponse.json(data)
+  return NextResponse.json(data, {
+    headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' },
+  })
 }

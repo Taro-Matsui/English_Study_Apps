@@ -13,7 +13,11 @@
   - 抽出: `claude-sonnet-4-6`, max_tokens: 8192
   - 判定: `claude-haiku-4-5-20251001`, max_tokens: 300
   - 解説: `claude-haiku-4-5-20251001`, max_tokens: 600
-- **UI**: Tailwind CSS + shadcn/ui (dark: `bg-slate-900`)
+- **UI**: Tailwind CSS + shadcn/ui
+  - ライト（デフォルト）/ ダーク / システム設定 の3択テーマ切り替え対応
+  - ライト: `bg-slate-50` / `bg-white`、ダーク: `dark:bg-gray-900` / `dark:bg-gray-800`
+  - `darkMode: ["class"]` — `.dark` を `<html>` に付与して切り替え
+  - FOUC 防止: `app/layout.tsx` の `<head>` 内インラインスクリプトで localStorage を先読み
 - **Deploy**: Railway (master push → 自動デプロイ)
 
 ## ディレクトリ構成
@@ -28,7 +32,7 @@ app/
   settings/page.tsx           # 設定（音声/クイズ/学習プロフィール）
   library/
     import/page.tsx           # テキストインポート（サンプルテキスト付き）
-    jobs/page.tsx             # ジョブ一覧（5秒ポーリング）
+    jobs/page.tsx             # ジョブ一覧（アクティブジョブあり時のみ5秒ポーリング、完了後停止）
     jobs/[id]/page.tsx        # ジョブ詳細 + フレーズ保存 + クイズ導線
   admin/                      # 旧パス (redirect stub のみ、削除不可)
     import/page.tsx           # → /library/import にリダイレクト
@@ -61,12 +65,14 @@ lib/
   logger.ts             # 構造化ログ (console + app_logs テーブル)
   parse-transcript.ts   # テキスト前処理
   i18n.tsx              # JA/EN 言語切り替え
-  settings.tsx          # 音声・クイズ設定 (localStorage)
+  settings.tsx          # 音声・クイズ・テーマ設定 (localStorage)
                         #   voicePreset, voice, skipMastered, contextHint, showPronunciation
+                        #   colorTheme: 'light' | 'dark' | 'system'
 
 components/
   HomeContent.tsx       # ホーム画面 (Client Component, TutorialGuide を含む)
                         #   streak 🔥, today_done, weak_count → フォーカスクイズ導線
+  ThemeProvider.tsx     # settings.colorTheme を監視し <html> に .dark を付与/除去
   TutorialGuide.tsx     # 初回チュートリアルポップアップ (localStorage で既読管理)
   BottomNav.tsx         # モバイル固定タブバー (phrases/history/library 画面のみ表示)
 
@@ -235,6 +241,8 @@ ANTHROPIC_API_KEY
   - `by_difficulty`: 難易度別 `{ difficulty, correct, total }`
   - `by_scene`: シーン別 `{ scene, correct, total }`
 - `phrases` GET クエリパラメータ: `?q=`, `?difficulty=1-5`, `?scene=daily|technical|business|other`, `?source=`
+  - Cache-Control: `private, max-age=30, stale-while-revalidate=60`
+- `history` GET — 同上 Cache-Control 設定済み
 
 ## PWA
 - `app/manifest.ts` で PWA マニフェスト定義（Next.js 14 App Router）
