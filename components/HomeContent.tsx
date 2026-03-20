@@ -2,7 +2,11 @@
 
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
+import { useAuth } from '@/lib/auth-context'
 import { TutorialGuide } from './TutorialGuide'
+import { AnnouncementBell } from './AnnouncementBell'
+import { HintBubble } from './HintBubble'
+import { X_URL } from '@/lib/social'
 
 interface Props {
   phraseCount: number | null
@@ -14,6 +18,7 @@ interface Props {
 
 export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakCount }: Props) {
   const { lang, t } = useLanguage()
+  const { user } = useAuth()
 
   const subCards = [
     {
@@ -83,23 +88,30 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
         )}
 
         {/* メインクイズ CTA */}
-        <Link href="/quiz"
-          className="block p-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-emerald-500/20">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">
-              🎯
+        <HintBubble
+          hintId="home-quiz"
+          message={'🎯 まずここをタップ！\nフレーズの意味を日本語で答えるクイズです'}
+          userId={user?.id}
+          position="bottom"
+        >
+          <Link href="/quiz"
+            className="block p-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-emerald-500/20">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">
+                🎯
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-white text-lg">{t('nav_quiz')}</p>
+                <p className="text-emerald-100 text-sm mt-0.5">
+                  {!todayDone
+                    ? (lang === 'ja' ? '今日はまだ学習していません' : "You haven't studied today")
+                    : (lang === 'ja' ? '今日のクイズを続ける' : "Continue today's quiz")}
+                </p>
+              </div>
+              <span className="text-emerald-200 text-xl flex-shrink-0">›</span>
             </div>
-            <div className="flex-1">
-              <p className="font-bold text-white text-lg">{t('nav_quiz')}</p>
-              <p className="text-emerald-100 text-sm mt-0.5">
-                {!todayDone
-                  ? (lang === 'ja' ? '今日はまだ学習していません' : "You haven't studied today")
-                  : (lang === 'ja' ? '今日のクイズを続ける' : "Continue today's quiz")}
-              </p>
-            </div>
-            <span className="text-emerald-200 text-xl flex-shrink-0">›</span>
-          </div>
-        </Link>
+          </Link>
+        </HintBubble>
 
         {/* 弱点フォーカス */}
         {weakCount > 0 && (
@@ -120,32 +132,63 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
         {/* サブカード */}
         <div className="space-y-2.5">
-          {subCards.map((c) => (
-            <Link key={c.href} href={c.href}
-              className={`flex items-center gap-4 p-4 rounded-2xl border ${c.border} ${c.bg} transition-all duration-150 group`}>
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.iconBg} flex items-center justify-center text-lg shadow-sm flex-shrink-0`}>
-                {c.icon}
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-slate-800">{c.title}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{c.desc}</p>
-              </div>
-              {c.badge && (
-                <span className="text-xs font-medium text-slate-500 bg-white/60 px-2 py-0.5 rounded-full flex-shrink-0">
-                  {c.badge}
-                </span>
-              )}
-              <span className="text-slate-300 group-hover:translate-x-0.5 transition-transform flex-shrink-0">›</span>
-            </Link>
-          ))}
+          {subCards.map((c) => {
+            const cardContent = (
+              <Link href={c.href}
+                className={`flex items-center gap-4 p-4 rounded-2xl border ${c.border} ${c.bg} transition-all duration-150 group`}>
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.iconBg} flex items-center justify-center text-lg shadow-sm flex-shrink-0`}>
+                  {c.icon}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-slate-800">{c.title}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{c.desc}</p>
+                </div>
+                {c.badge && (
+                  <span className="text-xs font-medium text-slate-500 bg-white/60 px-2 py-0.5 rounded-full flex-shrink-0">
+                    {c.badge}
+                  </span>
+                )}
+                <span className="text-slate-300 group-hover:translate-x-0.5 transition-transform flex-shrink-0">›</span>
+              </Link>
+            )
+
+            if (c.href === '/library/import') {
+              return (
+                <HintBubble
+                  key={c.href}
+                  hintId="home-import"
+                  message={'⚙️ 会議録やドキュメントを貼り付けるとAIがフレーズを自動抽出します'}
+                  userId={user?.id}
+                  position="top"
+                  prerequisiteHintId="home-quiz"
+                >
+                  {cardContent}
+                </HintBubble>
+              )
+            }
+
+            return <div key={c.href}>{cardContent}</div>
+          })}
         </div>
 
         <TutorialGuide />
-        <div className="flex justify-center items-center gap-3">
+
+        {/* フッター: 設定・ベル・言語・X */}
+        <div className="flex justify-center items-center gap-2 flex-wrap">
           <Link href="/settings" className="text-xs px-2.5 py-0.5 rounded-full border border-slate-600 text-slate-400 hover:bg-white/10 transition-colors font-medium">
             ⚙ {lang === 'ja' ? '設定' : 'Settings'}
           </Link>
           <LangToggle className="text-slate-400 border-slate-600 hover:bg-white/10" />
+          <AnnouncementBell />
+          <a
+            href={X_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-slate-500 hover:text-slate-300 text-sm font-bold"
+            aria-label="X (Twitter)"
+          >
+            𝕏
+          </a>
         </div>
       </div>
     </div>

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { DEMO_PHRASES, type DemoPhrase } from '../phrases'
 
-type Step = 'question' | 'judging' | 'result' | 'done'
+type Step = 'question' | 'result' | 'done'
 
 interface JudgeResult {
   correct: boolean
@@ -27,6 +27,50 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
+/** 正規化: 全角→半角、句読点・スペース除去、小文字化 */
+function normalize(s: string): string {
+  return s.trim()
+    .toLowerCase()
+    .replace(/[、。　！？!?,.\s・]/g, '')
+    .replace(/[\uff01-\uff60]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+}
+
+/** LLM不使用のローカル判定 */
+function judgeLocal(userAnswer: string, meaning: string): JudgeResult {
+  const a = normalize(userAnswer)
+  const m = normalize(meaning)
+
+  if (!a) return { correct: false, status: 'incorrect', feedback: `正解: ${meaning}` }
+  if (a === m) return { correct: true, status: 'correct', feedback: '完全一致！' }
+
+  // 部分一致（参照が回答を含む、または逆）
+  if (m.includes(a) && a.length >= m.length * 0.55) {
+    return { correct: true, status: 'correct', feedback: '正解！' }
+  }
+  if (a.includes(m) && m.length >= a.length * 0.55) {
+    return { correct: true, status: 'correct', feedback: '正解！' }
+  }
+
+  // 文字ベースの類似度
+  const aSet = new Set(a.split(''))
+  const overlap = m.split('').filter((c) => aSet.has(c)).length
+  const similarity = overlap / Math.max(a.length, m.length)
+
+  if (similarity >= 0.65) {
+    return { correct: false, status: 'partial', feedback: `惜しい！正解: ${meaning}` }
+  }
+  return { correct: false, status: 'incorrect', feedback: `正解: ${meaning}` }
+}
+
+function speak(text: string) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return
+  window.speechSynthesis.cancel()
+  const utt = new SpeechSynthesisUtterance(text)
+  utt.lang = 'en-US'
+  utt.rate = 0.85
+  window.speechSynthesis.speak(utt)
+}
+
 const DIFF_LABELS: Record<number, { label: string; cls: string }> = {
   1: { label: 'Lv.1', cls: 'bg-emerald-100 text-emerald-700' },
   2: { label: 'Lv.2', cls: 'bg-blue-100 text-blue-700' },
@@ -42,30 +86,33 @@ export default function DemoQuizPage() {
   const [answer, setAnswer] = useState('')
   const [judgment, setJudgment] = useState<JudgeResult | null>(null)
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
+  const [speaking, setSpeaking] = useState(false)
 
   const current = phrases[index]
 
-  const handleSubmit = useCallback(async () => {
-    if (!answer.trim() || step !== 'question') return
-    setStep('judging')
+  // 問題が変わったら読み上げ停止
+  useEffect(() => {
+    return () => { window.speechSynthesis?.cancel() }
+  }, [index])
 
-    try {
-      const res = await fetch('/api/demo/judge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phrase: current.phrase,
-          user_answer: answer,
-          meaning_ja: current.meaning_ja,
-        }),
-      })
-      const data: JudgeResult = await res.json()
-      setJudgment(data)
-      setStep('result')
-    } catch {
-      setJudgment({ correct: false, status: 'incorrect', feedback: '通信エラー' })
-      setStep('result')
-    }
+  function handleSpeak() {
+    setSpeaking(true)
+    speak(current.phrase)
+    // Web Speech API は onend が不安定なことがあるためタイムアウトで戻す
+    const t = setTimeout(() => setSpeaking(false), 3000)
+    const utt = new SpeechSynthesisUtterance(current.phrase)
+    utt.lang = 'en-US'
+    utt.rate = 0.85
+    utt.onend = () => { setSpeaking(false); clearTimeout(t) }
+    window.speechSynthesis.cancel()
+    window.speechSynthesis.speak(utt)
+  }
+
+  const handleSubmit = useCallback(() => {
+    if (!answer.trim() || step !== 'question') return
+    const result = judgeLocal(answer, current.meaning_ja)
+    setJudgment(result)
+    setStep('result')
   }, [answer, current, step])
 
   function handleNext() {
@@ -99,6 +146,9 @@ export default function DemoQuizPage() {
               <span className="text-amber-400">惜しい {partial}</span>
               <span className="text-slate-400">不正解 {allAnswers.length - correct - partial}</span>
             </div>
+            <p className="text-[11px] text-slate-600 pt-1">
+              ※デモ版は文字列マッチングで判定。登録するとAIによる柔軟な採点になります。
+            </p>
           </div>
 
           <div className="bg-gradient-to-r from-emerald-600 to-blue-600 rounded-2xl p-5 space-y-2">
@@ -154,7 +204,7 @@ export default function DemoQuizPage() {
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 rounded-full transition-all"
-              style={{ width: `${((index) / phrases.length) * 100}%` }}
+              style={{ width: `${(index / phrases.length) * 100}%` }}
             />
           </div>
         </div>
@@ -165,12 +215,25 @@ export default function DemoQuizPage() {
             <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${diff.cls}`}>{diff.label}</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-slate-400">{current.usage_scene}</span>
           </div>
-          <p className="text-2xl font-bold text-white tracking-wide">{current.phrase}</p>
+          <div className="flex items-center justify-center gap-3">
+            <p className="text-2xl font-bold text-white tracking-wide">{current.phrase}</p>
+            <button
+              onClick={handleSpeak}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-colors flex-shrink-0 ${
+                speaking
+                  ? 'bg-blue-500/30 text-blue-300'
+                  : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
+              }`}
+              title="読み上げ"
+            >
+              🔊
+            </button>
+          </div>
           <p className="text-xs text-slate-400">日本語の意味を入力してください</p>
         </div>
 
         {/* 回答入力 */}
-        {(step === 'question' || step === 'judging') && (
+        {step === 'question' && (
           <div className="space-y-3">
             <input
               type="text"
@@ -178,17 +241,16 @@ export default function DemoQuizPage() {
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="意味を日本語で入力…"
-              disabled={step === 'judging'}
-              className="w-full bg-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
+              className="w-full bg-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               style={{ fontSize: '16px' }}
               autoFocus
             />
             <button
               onClick={handleSubmit}
-              disabled={!answer.trim() || step === 'judging'}
+              disabled={!answer.trim()}
               className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors"
             >
-              {step === 'judging' ? 'AI判定中…' : '回答する'}
+              回答する
             </button>
           </div>
         )}

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
+import { X_URL } from '@/lib/social'
 
 type Mode = 'signin' | 'signup'
 
@@ -200,13 +201,23 @@ export default function LoginPage() {
         </form>
 
         {/* デモモードリンク */}
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center space-y-2">
           <p className="text-xs text-slate-600">
             登録なしで試してみたい方は
           </p>
           <a href="/demo" className="text-sm text-slate-400 hover:text-white underline">
             → デモモードで体験する
           </a>
+          <div className="pt-2">
+            <a
+              href={X_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+            >
+              𝕏 アップデート情報はXで
+            </a>
+          </div>
         </div>
 
       </div>

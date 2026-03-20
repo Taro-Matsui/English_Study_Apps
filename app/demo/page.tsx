@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { X_URL } from '@/lib/social'
 
 export default function DemoPage() {
   return (
@@ -73,6 +74,22 @@ export default function DemoPage() {
             登録するとクイズ履歴の保存・自分のテキストのインポートが可能になります
           </p>
         </div>
+        {/* フッター */}
+        <div className="flex justify-center items-center gap-4 pt-2">
+          <Link href="/login" className="text-xs text-slate-600 hover:text-slate-400 transition-colors">
+            ログイン / 新規登録
+          </Link>
+          <span className="text-slate-700">·</span>
+          <a
+            href={X_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+          >
+            𝕏 フォロー
+          </a>
+        </div>
+
       </div>
     </div>
   )

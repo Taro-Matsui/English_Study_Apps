@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
+import { resetTutorialAndHints } from '@/components/HintBubble'
+import { resetAnnouncements } from '@/components/AnnouncementBell'
+import { ANNOUNCEMENTS } from '@/lib/announcements'
+import { X_URL } from '@/lib/social'
 
 const PURPOSE_LABELS: Record<string, string> = {
   meeting:   '💬 ミーティング・日常会話',
@@ -46,6 +50,28 @@ export default function SettingsPage() {
 
   const [deleteInput, setDeleteInput] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  useEffect(() => {
+    try {
+      const seen: string[] = JSON.parse(localStorage.getItem('seen_announcements') ?? '[]')
+      setUnreadCount(ANNOUNCEMENTS.filter((a) => !seen.includes(a.id)).length)
+    } catch {
+      setUnreadCount(0)
+    }
+  }, [])
+
+  function handleResetTutorial() {
+    if (!user?.id) return
+    resetTutorialAndHints(user.id)
+    alert('チュートリアルと操作ヒントをリセットしました。ホームページに戻ると再表示されます。')
+  }
+
+  function handleResetAnnouncements() {
+    resetAnnouncements()
+    setUnreadCount(ANNOUNCEMENTS.length)
+    alert('お知らせをすべて未読にリセットしました。')
+  }
 
   async function handleSignOut() {
     await fetch('/api/auth/signout', { method: 'POST' })
@@ -345,6 +371,53 @@ export default function SettingsPage() {
             >
               {ja ? 'リセット' : 'Reset'}
             </button>
+          </div>
+        </section>
+
+        {/* チュートリアル・ヒント */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            {ja ? 'チュートリアル・ヒント' : 'Tutorial & Hints'}
+          </h2>
+          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-2">
+            <button
+              onClick={handleResetTutorial}
+              className="w-full py-2.5 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors text-left px-3"
+            >
+              🎓 {ja ? 'チュートリアルと操作ヒントを再表示' : 'Show tutorial & hints again'}
+            </button>
+            <button
+              onClick={handleResetAnnouncements}
+              className="w-full py-2.5 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors text-left px-3"
+            >
+              🔔 {ja ? `お知らせを未読にリセット` : 'Mark all announcements unread'}
+              {unreadCount > 0 && (
+                <span className="ml-2 text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full">
+                  {ja ? `${unreadCount}件未読` : `${unreadCount} unread`}
+                </span>
+              )}
+            </button>
+          </div>
+        </section>
+
+        {/* サービス情報 */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            {ja ? 'サービス情報' : 'About'}
+          </h2>
+          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
+            <p className="text-xs text-slate-500">
+              {ja ? 'アップデート情報はXでお知らせしています。' : 'Follow us on X for updates.'}
+            </p>
+            <a
+              href={X_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 py-2 px-4 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors"
+            >
+              <span className="font-bold text-base">𝕏</span>
+              {ja ? 'フォローする' : 'Follow on X'}
+            </a>
           </div>
         </section>
 
