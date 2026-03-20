@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     body = await req.json()
   } catch {
     return NextResponse.json<SaveResponse>(
-      { success: false, inserted_count: 0, skipped_count: 0, error: 'リクエストボディが不正です' },
+      { success: false, inserted_count: 0, updated_count: 0, skipped_count: 0, error: 'リクエストボディが不正です' },
       { status: 400 }
     )
   }
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   // H4: source_type の allowlist バリデーション
   if (source_type && !(ALLOWED_SOURCE_TYPES as string[]).includes(source_type)) {
     return NextResponse.json<SaveResponse>(
-      { success: false, inserted_count: 0, skipped_count: 0, error: 'source_type が不正です' },
+      { success: false, inserted_count: 0, updated_count: 0, skipped_count: 0, error: 'source_type が不正です' },
       { status: 400 }
     )
   }
@@ -32,71 +32,88 @@ export async function POST(req: NextRequest) {
   // フレーズ件数上限（DoS対策）
   if (!phrases?.length) {
     return NextResponse.json<SaveResponse>(
-      { success: false, inserted_count: 0, skipped_count: 0, error: '登録するフレーズがありません' },
+      { success: false, inserted_count: 0, updated_count: 0, skipped_count: 0, error: '登録するフレーズがありません' },
       { status: 400 }
     )
   }
   if (phrases.length > 200) {
     return NextResponse.json<SaveResponse>(
-      { success: false, inserted_count: 0, skipped_count: 0, error: '一度に登録できるフレーズは200件までです' },
+      { success: false, inserted_count: 0, updated_count: 0, skipped_count: 0, error: '一度に登録できるフレーズは200件までです' },
       { status: 400 }
     )
   }
 
   try {
     const db = getSupabaseAdmin()
-    const phraseTexts = phrases.map((p) => p.phrase.toLowerCase())
 
-    // 既存フレーズを取得して重複チェック
+    // 既存フレーズを取得して新規/更新に分類（大文字小文字を区別しない）
     const { data: existing } = await db
       .from('phrases')
-      .select('phrase')
+      .select('id, phrase')
       .in('phrase', phrases.map((p) => p.phrase))
 
-    const existingSet = new Set(
-      (existing ?? []).map((e: { phrase: string }) => e.phrase.toLowerCase())
+    const existingMap = new Map(
+      (existing ?? []).map((e: { id: string; phrase: string }) => [e.phrase.toLowerCase(), e.id])
     )
 
-    const newRows = phrases
-      .filter((p) => !existingSet.has(p.phrase.toLowerCase()))
-      .map((p) => ({
-        phrase: p.phrase,
-        pronunciation: p.pronunciation || null,
-        meaning_ja: p.meaning_ja || null,
-        source_type: source_type || null,
-        source_title: source_title || null,
-        source_date: source_date || null,
-        original_context: p.original_context || null,
-        difficulty: p.difficulty ?? 3,
-        // H4: 許可値以外はデフォルト値にフォールバック
-        usage_scene: ALLOWED_USAGE_SCENES.includes(p.usage_scene) ? p.usage_scene : 'other',
-        engineer_level: ALLOWED_ENGINEER_LEVELS.includes(p.engineer_level) ? p.engineer_level : 'mid',
-      }))
+    const toInsert: typeof phrases = []
+    const toUpdate: typeof phrases = []
 
-    const skipped = phraseTexts.length - newRows.length
-
-    if (newRows.length === 0) {
-      return NextResponse.json<SaveResponse>({
-        success: true,
-        inserted_count: 0,
-        skipped_count: skipped,
-      })
+    for (const p of phrases) {
+      if (existingMap.has(p.phrase.toLowerCase())) {
+        toUpdate.push(p)
+      } else {
+        toInsert.push(p)
+      }
     }
 
-    const { data, error } = await db.from('phrases').insert(newRows).select()
-    if (error) throw new Error('フレーズの挿入に失敗しました')
+    const buildRow = (p: typeof phrases[0]) => ({
+      phrase: p.phrase,
+      pronunciation: p.pronunciation || null,
+      meaning_ja: p.meaning_ja || null,
+      source_type: source_type || null,
+      source_title: source_title || null,
+      source_date: source_date || null,
+      original_context: p.original_context || null,
+      difficulty: p.difficulty ?? 3,
+      // H4: 許可値以外はデフォルト値にフォールバック
+      usage_scene: ALLOWED_USAGE_SCENES.includes(p.usage_scene) ? p.usage_scene : 'other',
+      engineer_level: ALLOWED_ENGINEER_LEVELS.includes(p.engineer_level) ? p.engineer_level : 'mid',
+    })
+
+    let inserted_count = 0
+    let updated_count = 0
+
+    // 新規フレーズを一括 INSERT
+    if (toInsert.length > 0) {
+      const { data, error } = await db.from('phrases').insert(toInsert.map(buildRow)).select()
+      if (error) throw new Error('フレーズの挿入に失敗しました')
+      inserted_count = data?.length ?? 0
+    }
+
+    // 既存フレーズを個別 UPDATE（pronunciation / meaning_ja / difficulty 等を刷新）
+    for (const p of toUpdate) {
+      const id = existingMap.get(p.phrase.toLowerCase())!
+      const { error } = await db
+        .from('phrases')
+        .update(buildRow(p))
+        .eq('id', id)
+      if (error) throw new Error(`フレーズの更新に失敗しました: ${p.phrase}`)
+      updated_count++
+    }
 
     return NextResponse.json<SaveResponse>({
       success: true,
-      inserted_count: data?.length ?? 0,
-      skipped_count: skipped,
+      inserted_count,
+      updated_count,
+      skipped_count: 0,
     })
   } catch (err) {
     log({ level: 'error', endpoint: '/api/admin/save',
       message: err instanceof Error ? err.message : 'unknown_error',
       detail: { phrase_count: phrases.length } })
     return NextResponse.json<SaveResponse>(
-      { success: false, inserted_count: 0, skipped_count: 0, error: 'フレーズの登録中にエラーが発生しました' },
+      { success: false, inserted_count: 0, updated_count: 0, skipped_count: 0, error: 'フレーズの登録中にエラーが発生しました' },
       { status: 500 }
     )
   }

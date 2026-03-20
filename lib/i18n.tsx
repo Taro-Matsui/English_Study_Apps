@@ -55,6 +55,8 @@ export const TRANSLATIONS = {
     done_again: 'もう一度',
     done_history: '記録',
     done_home: 'ホーム',
+    quiz_explain: '💡 詳しく解説',
+    quiz_explaining: 'AI解説中...',
 
     // history
     history_title: 'チャレンジ記録',
@@ -133,6 +135,8 @@ export const TRANSLATIONS = {
     done_again: 'Try again',
     done_history: 'Records',
     done_home: 'Home',
+    quiz_explain: '💡 Explain more',
+    quiz_explaining: 'AI explaining...',
 
     // history
     history_title: 'Challenge Records',

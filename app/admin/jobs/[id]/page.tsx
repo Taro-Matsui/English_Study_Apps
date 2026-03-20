@@ -43,7 +43,7 @@ export default function JobDetailPage() {
   const [sourceTitle, setSourceTitle] = useState('')
   const [sourceDate, setSourceDate] = useState('')
   const [saving, setSaving] = useState(false)
-  const [saveResult, setSaveResult] = useState<{ inserted: number; skipped: number } | null>(null)
+  const [saveResult, setSaveResult] = useState<{ inserted: number; updated: number; skipped: number } | null>(null)
 
   const fetchJob = useCallback(async () => {
     try {
@@ -88,7 +88,7 @@ export default function JobDetailPage() {
       })
       const data: SaveResponse = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error ?? `HTTP ${res.status}`)
-      setSaveResult({ inserted: data.inserted_count, skipped: data.skipped_count ?? 0 })
+      setSaveResult({ inserted: data.inserted_count, updated: data.updated_count ?? 0, skipped: data.skipped_count ?? 0 })
       setPhrases([])
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存に失敗しました')
@@ -162,10 +162,11 @@ export default function JobDetailPage() {
         {saveResult && (
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 space-y-2">
             <p className="text-emerald-400 font-semibold text-sm">
-              ✓ {saveResult.inserted}件のフレーズを登録しました
+              ✓ {saveResult.inserted}件を新規登録
+              {saveResult.updated > 0 && `、${saveResult.updated}件を更新`}
             </p>
             {saveResult.skipped > 0 && (
-              <p className="text-slate-400 text-xs">{saveResult.skipped}件は重複スキップ</p>
+              <p className="text-slate-400 text-xs">{saveResult.skipped}件はスキップ</p>
             )}
             <div className="flex gap-2 mt-1">
               <Link href="/admin/import" className="text-xs text-blue-400 hover:underline">続けてインポート →</Link>

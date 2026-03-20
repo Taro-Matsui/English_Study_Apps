@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Progress } from '@/components/ui/progress'
 import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
 import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
+import type { ExplainResponse } from '../api/quiz/explain/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 
@@ -72,6 +74,7 @@ function highlightPhrase(text: string, phrase: string): React.ReactNode {
 }
 
 export default function QuizPage() {
+  const router = useRouter()
   const { t } = useLanguage()
   const { settings, markMastered, setVoicePreset } = useSettings()
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
@@ -84,6 +87,8 @@ export default function QuizPage() {
   const [speaking, setSpeaking] = useState<string | null>(null)
   const [speed, setSpeed] = useState<Speed>('normal')
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'failed' | null>(null)
+  const [explanation, setExplanation] = useState<string | null>(null)
+  const [explaining, setExplaining] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -192,8 +197,29 @@ export default function QuizPage() {
     } catch { setStep('question') }
   }
 
+  async function handleExplain() {
+    if (!current || explaining) return
+    setExplaining(true)
+    try {
+      const res = await fetch('/api/quiz/explain', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phrase: current.phrase,
+          meaning_ja: current.meaning_ja,
+          original_context: current.original_context ?? undefined,
+        }),
+      })
+      const data: ExplainResponse = await res.json()
+      setExplanation(data.explanation || data.error || '解説を取得できませんでした')
+    } catch {
+      setExplanation('通信エラーが発生しました')
+    }
+    setExplaining(false)
+  }
+
   function handleNext() {
     window.speechSynthesis?.cancel(); setSpeaking(null)
+    setExplanation(null)
     const next = index + 1
     if (next >= total) {
       setStep('done')
@@ -277,17 +303,23 @@ export default function QuizPage() {
           )}
           <div className="flex gap-2">
             <button onClick={load} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">{t('done_again')}</button>
-            <Link
-              href="/history"
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors text-center ${
+            <button
+              onClick={() => router.push('/history')}
+              disabled={saveState === 'saving'}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors ${
                 saveState === 'saving'
-                  ? 'bg-white/5 text-slate-600 pointer-events-none'
+                  ? 'bg-white/5 text-slate-600 cursor-not-allowed'
                   : 'bg-white/10 text-white hover:bg-white/20'
               }`}
             >
               {saveState === 'saving' ? '保存中...' : t('done_history')}
-            </Link>
-            <Link href="/" className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors text-center">{t('done_home')}</Link>
+            </button>
+            <button
+              onClick={() => router.push('/')}
+              className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors"
+            >
+              {t('done_home')}
+            </button>
           </div>
         </div>
       </div>
@@ -408,6 +440,27 @@ export default function QuizPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* AI解説 */}
+                  {!explanation && (
+                    <button
+                      onClick={handleExplain}
+                      disabled={explaining}
+                      className={`w-full py-2.5 rounded-2xl text-sm font-medium transition-colors border ${
+                        explaining
+                          ? 'border-amber-500/20 bg-amber-500/10 text-amber-400 animate-pulse'
+                          : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                      }`}
+                    >
+                      {explaining ? t('quiz_explaining') : t('quiz_explain')}
+                    </button>
+                  )}
+                  {explanation && (
+                    <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-3 space-y-1.5">
+                      <p className="text-xs text-blue-400 font-semibold uppercase tracking-wider">💡 AI解説</p>
+                      <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{explanation}</p>
+                    </div>
+                  )}
 
                   <button onClick={handleNext}
                     className="w-full py-3 rounded-2xl bg-white/10 text-white font-bold text-sm hover:bg-white/20 transition-colors active:bg-white/30">

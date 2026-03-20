@@ -52,6 +52,7 @@ export interface SaveRequest {
 export interface SaveResponse {
   success: boolean
   inserted_count: number
+  updated_count: number
   skipped_count: number
   error?: string
 }
