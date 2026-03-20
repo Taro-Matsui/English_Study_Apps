@@ -13,6 +13,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [signupEmail, setSignupEmail] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -47,11 +49,30 @@ export default function LoginPage() {
       if (error) {
         setError(translateError(error.message))
       } else {
+        setSignupEmail(email)
         setMessage('確認メールを送信しました。メールのリンクをクリックしてログインしてください。')
       }
     }
 
     setLoading(false)
+  }
+
+  async function handleResend() {
+    if (!signupEmail) return
+    setResending(true)
+    setError(null)
+    const supabase = createBrowserSupabaseClient()
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: signupEmail,
+      options: { emailRedirectTo: `${location.origin}/auth/callback` },
+    })
+    if (error) {
+      setError(translateError(error.message))
+    } else {
+      setMessage('確認メールを再送しました。')
+    }
+    setResending(false)
   }
 
   return (
@@ -139,8 +160,18 @@ export default function LoginPage() {
             </div>
           )}
           {message && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3">
+            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 space-y-2">
               <p className="text-emerald-400 text-sm">{message}</p>
+              {signupEmail && (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="text-xs text-slate-400 hover:text-slate-200 underline disabled:opacity-50"
+                >
+                  {resending ? '送信中...' : '確認メールを再送する'}
+                </button>
+              )}
             </div>
           )}
 
