@@ -9,7 +9,8 @@ interface Settings {
   voiceURI: string | null   // voicePreset === 'custom' のときのみ使用
   skipMastered: boolean
   masteredIds: string[]
-  contextHint: boolean      // クイズ中にコンテキスト文（フレーズマスク済み）を表示
+  contextHint: boolean        // クイズ中にコンテキスト文（フレーズマスク済み）を表示
+  showPronunciation: boolean  // フレーズ一覧でカタカナ発音を表示（デフォルト OFF）
 }
 
 interface SettingsContextType {
@@ -18,6 +19,7 @@ interface SettingsContextType {
   setVoice: (uri: string | null) => void
   setSkipMastered: (v: boolean) => void
   setContextHint: (v: boolean) => void
+  setShowPronunciation: (v: boolean) => void
   markMastered: (phraseId: string) => void
   clearMastered: () => void
 }
@@ -28,6 +30,7 @@ const DEFAULT: Settings = {
   skipMastered: false,
   masteredIds: [],
   contextHint: false,
+  showPronunciation: false,
 }
 const KEY = 'app_settings'
 
@@ -37,6 +40,7 @@ const SettingsContext = createContext<SettingsContextType>({
   setVoice: () => {},
   setSkipMastered: () => {},
   setContextHint: () => {},
+  setShowPronunciation: () => {},
   markMastered: () => {},
   clearMastered: () => {},
 })
@@ -141,6 +145,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setVoice: (uri) => update((p) => ({ ...p, voiceURI: uri, voicePreset: uri ? 'custom' : 'default' })),
       setSkipMastered: (v) => update((p) => ({ ...p, skipMastered: v })),
       setContextHint: (v) => update((p) => ({ ...p, contextHint: v })),
+      setShowPronunciation: (v) => update((p) => ({ ...p, showPronunciation: v })),
       markMastered: (id) => {
         update((p) => ({
           ...p,

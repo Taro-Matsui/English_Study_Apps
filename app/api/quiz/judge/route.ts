@@ -51,6 +51,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json<JudgeResponse>({ correct: false, status: 'incorrect', feedback: '回答を入力してください' })
   }
 
+  // ローカル完全一致チェック — Claude API 呼び出しなしで即時返却
+  const normalize = (s: string) =>
+    s.trim()
+      .toLowerCase()
+      .replace(/[、。　！？!?,. ・]/g, '')
+      .replace(/[\u3000-\u303f\uff01-\uff60]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+  if (normalize(user_answer) === normalize(meaning_ja)) {
+    return NextResponse.json<JudgeResponse>({ correct: true, status: 'correct', feedback: '完全一致' })
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return NextResponse.json<JudgeResponse>(

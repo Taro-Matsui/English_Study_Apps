@@ -41,7 +41,7 @@ function guessGender(voice: SpeechSynthesisVoice): '♀' | '♂' | '' {
 export default function SettingsPage() {
   const router = useRouter()
   const { lang } = useLanguage()
-  const { settings, setVoicePreset, setVoice, setSkipMastered, setContextHint, clearMastered } = useSettings()
+  const { settings, setVoicePreset, setVoice, setSkipMastered, setContextHint, setShowPronunciation, clearMastered } = useSettings()
   const { user } = useAuth()
 
   const [deleteInput, setDeleteInput] = useState('')
@@ -310,6 +310,23 @@ export default function SettingsPage() {
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
                 {ja ? 'クイズ中に例文（フレーズ部分をマスク）を表示します' : 'Show example sentence with phrase masked during quiz'}
+              </p>
+            </div>
+          </label>
+
+          <label className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+            <input
+              type="checkbox"
+              checked={settings.showPronunciation}
+              onChange={(e) => setShowPronunciation(e.target.checked)}
+              className="w-4 h-4 accent-blue-500 flex-shrink-0"
+            />
+            <div>
+              <p className="text-sm font-medium">
+                {ja ? '発音（カタカナ）を表示' : 'Show pronunciation (katakana)'}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {ja ? 'フレーズ一覧にカタカナ読みを表示します' : 'Show katakana reading in the phrase list'}
               </p>
             </div>
           </label>

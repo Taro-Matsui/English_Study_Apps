@@ -26,17 +26,21 @@ app/
   quiz/page.tsx               # クイズ (Client Component)
   history/page.tsx            # チャレンジ記録
   settings/page.tsx           # 設定（音声/クイズ/学習プロフィール）
-  admin/
-    import/page.tsx           # テキストインポート
-    jobs/page.tsx             # ジョブ一覧
-    jobs/[id]/page.tsx        # ジョブ詳細 + フレーズ保存
+  library/
+    import/page.tsx           # テキストインポート（サンプルテキスト付き）
+    jobs/page.tsx             # ジョブ一覧（5秒ポーリング）
+    jobs/[id]/page.tsx        # ジョブ詳細 + フレーズ保存 + クイズ導線
+  admin/                      # 旧パス (redirect stub のみ、削除不可)
+    import/page.tsx           # → /library/import にリダイレクト
+    jobs/page.tsx             # → /library/jobs にリダイレクト
+    jobs/[id]/page.tsx        # → /library/jobs/[id] にリダイレクト
   auth/callback/route.ts      # メール確認コールバック
   api/
     auth/signout/route.ts     # サインアウト
     user/onboarding/route.ts  # 学習設定保存 + シードフレーズ挿入
-    phrases/route.ts          # GET: 一覧 (user_id フィルタ)
+    phrases/route.ts          # GET: 一覧 (?q, ?difficulty=1-5, ?scene, ?source フィルタ)
     phrases/[id]/route.ts     # PATCH: 論理削除 (user_id 一致チェック)
-    quiz/route.ts             # GET: ランダム出題 (user_id フィルタ)
+    quiz/route.ts             # POST: 出題 (mode: 'normal'|'focus', 弱点フォーカス対応)
     quiz/judge/route.ts       # POST: AI判定
     quiz/complete/route.ts    # POST: セッション保存
     quiz/explain/route.ts     # POST: フレーズ詳細解説 (Claude Haiku)
@@ -44,8 +48,8 @@ app/
     admin/save/route.ts          # POST: フレーズ DB 登録 (upsert)
     admin/jobs/route.ts          # GET: ジョブ一覧 (user_id フィルタ)
     admin/jobs/[id]/route.ts     # GET: ジョブ詳細
-    history/route.ts             # GET: クイズ履歴 (user_id フィルタ)
-    stats/route.ts               # GET: ユーザー別 phrase/source 件数
+    history/route.ts             # GET: { sessions, daily_accuracy[], by_difficulty[], by_scene[] }
+    stats/route.ts               # GET: { phrase_count, source_count, streak, today_done, weak_count }
 
 lib/
   supabase.ts           # getSupabase() / getSupabaseAdmin()
@@ -58,14 +62,17 @@ lib/
   parse-transcript.ts   # テキスト前処理
   i18n.tsx              # JA/EN 言語切り替え
   settings.tsx          # 音声・クイズ設定 (localStorage)
+                        #   voicePreset, voice, skipMastered, contextHint, showPronunciation
 
 components/
   HomeContent.tsx       # ホーム画面 (Client Component, TutorialGuide を含む)
+                        #   streak 🔥, today_done, weak_count → フォーカスクイズ導線
   TutorialGuide.tsx     # 初回チュートリアルポップアップ (localStorage で既読管理)
+  BottomNav.tsx         # モバイル固定タブバー (phrases/history/library 画面のみ表示)
 
 middleware.ts           # セッションリフレッシュ + ルート保護 + オンボーディング誘導
 types/index.ts          # 全型定義
-supabase/migrations/    # 001〜008 SQL (手動実行)
+supabase/migrations/    # 001〜012 SQL (手動実行)
 ```
 
 ## DB スキーマ（主要カラム）
@@ -74,7 +81,8 @@ phrases:       id, user_id, phrase, meaning_ja, original_context, pronunciation,
                source_type, source_title, source_date, difficulty(1-5),
                usage_scene(daily|technical|business|other),
                engineer_level(junior|mid|senior),
-               deleted_at, delete_reason(product_name|not_phrase), added_date
+               deleted_at, delete_reason(product_name|not_phrase), added_date,
+               explanation TEXT  -- AI解説キャッシュ (migration 012)
 
 quiz_sessions: id, user_id, total_questions, correct_count, completed_at
 quiz_answers:  session_id, phrase_id, user_answer, is_correct, ai_feedback, answered_at
@@ -93,6 +101,10 @@ app_logs:      level, endpoint, message, detail(JSONB), created_at
 | 006 | quiz_sessions/answers に user_id + RLS | Supabase SQL Editor |
 | 007 | import_jobs に user_id + RLS | Supabase SQL Editor |
 | 008 | user_progress に user_id + is_mastered + RLS | Supabase SQL Editor |
+| 009 | indexes_and_fk — パフォーマンスインデックス | Supabase SQL Editor |
+| 010 | app_logs_ttl — ログ自動削除ポリシー | Supabase SQL Editor |
+| 011 | rate_limits — `api_rate_limits` テーブル + `check_and_increment_rate_limit()` RPC | Supabase SQL Editor |
+| 012 | phrase_explanation — `phrases.explanation TEXT` カラム追加 | Supabase SQL Editor |
 
 ## Supabase クライアント使い分け
 
@@ -206,11 +218,23 @@ ANTHROPIC_API_KEY
 - `min-h-screen` (100vh) は iOS では keyboard 表示で変化しないので安定
 
 ## API 設計メモ
+- `quiz` POST body: `{ limit?, exclude?: string[], mode?: 'normal'|'focus' }`
+  - `mode=focus`: 直近5セッションで2回以上不正解のフレーズを優先出題（不足時は normal にフォールバック）
 - `quiz/judge` レスポンス: `{ correct, status: 'correct'|'partial'|'incorrect', feedback, context_ja? }`
+  - レート制限: 60/hr per user。完全一致はローカルチェックで即時返却（Claude 呼び出しなし）
 - `quiz/explain` レスポンス: `{ explanation: string }` — 語源・ニュアンス・使用場面・注意点
+  - レート制限: 20/hr per user。`phrases.explanation` にキャッシュ（2回目以降は DB から即時返却）
 - `admin/import-async`: ジョブ作成後 `processJob()` を fire-and-forget で実行
 - `user/onboarding` POST: アンケート保存 + フレーズ0件時のみシード10問挿入
-- `stats`: 認証ユーザーの phrases 件数を返す（未認証は 0 を返す）
+- `stats` GET: `{ phrase_count, source_count, streak, today_done, weak_count }`
+  - `streak`: 連続学習日数（UTC 日付ベース）
+  - `today_done`: 今日クイズ完了済みフラグ
+  - `weak_count`: 直近20セッションで2回以上不正解のフレーズ数
+- `history` GET: `{ sessions[], daily_accuracy[], by_difficulty[], by_scene[] }`
+  - `daily_accuracy`: 直近14日の日別 `{ date, correct, total }`
+  - `by_difficulty`: 難易度別 `{ difficulty, correct, total }`
+  - `by_scene`: シーン別 `{ scene, correct, total }`
+- `phrases` GET クエリパラメータ: `?q=`, `?difficulty=1-5`, `?scene=daily|technical|business|other`, `?source=`
 
 ## PWA
 - `app/manifest.ts` で PWA マニフェスト定義（Next.js 14 App Router）

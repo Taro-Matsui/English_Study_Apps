@@ -52,11 +52,6 @@ const RESULT_CLS: Record<JudgeStatus, string> = {
 
 function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5) }
 
-/** 日本語カタカナ/ひらがなを含む場合のみ表示（IPA記号は非表示）*/
-function isKanaPronunciation(s: string | null): s is string {
-  if (!s) return false
-  return /[\u3040-\u30ff]/.test(s)
-}
 
 function highlightPhrase(text: string, phrase: string): React.ReactNode {
   if (!phrase || !text) return <>{text}</>
@@ -221,6 +216,7 @@ function QuizContent() {
       const res = await fetch('/api/quiz/explain', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          phrase_id: current.id,
           phrase: current.phrase,
           meaning_ja: current.meaning_ja,
           original_context: current.original_context ?? undefined,
@@ -431,10 +427,6 @@ function QuizContent() {
                 )}
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-white tracking-wide break-words">{current.phrase}</p>
-              {isKanaPronunciation(current.pronunciation) && (
-                <p className="text-sm text-slate-400 tracking-widest">{current.pronunciation}</p>
-              )}
-
               {/* コンテキストヒント（設定 ON かつ original_context がある場合） */}
               {settings.contextHint && current.original_context && step === 'question' && (
                 <p className="text-xs text-slate-400 italic bg-white/5 rounded-xl px-3 py-2 leading-relaxed text-left">

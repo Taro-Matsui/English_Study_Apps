@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
+import { getSupabaseAdmin } from '@/lib/supabase'
 import { isRateLimited } from '@/lib/rate-limit'
 
 export interface ExplainRequest {
+  phrase_id?: string
   phrase: string
   meaning_ja: string
   original_context?: string
@@ -20,15 +22,33 @@ export async function POST(req: NextRequest) {
     { status: 401 }
   )
 
-  // レート制限: 1時間あたり20回
+  const body: ExplainRequest = await req.json()
+
+  // UUID v4 バリデーション
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  const phraseId = body.phrase_id && UUID_RE.test(body.phrase_id) ? body.phrase_id : null
+
+  // キャッシュチェック: phrases.explanation にすでに保存されていれば即返却（レート制限カウントなし）
+  if (phraseId) {
+    const db = getSupabaseAdmin()
+    const { data } = await db
+      .from('phrases')
+      .select('explanation')
+      .eq('id', phraseId)
+      .eq('user_id', user.id)
+      .single()
+    if (data?.explanation) {
+      return NextResponse.json<ExplainResponse>({ explanation: data.explanation })
+    }
+  }
+
+  // レート制限: 1時間あたり20回（キャッシュミス時のみカウント）
   if (await isRateLimited(user.id, 'quiz/explain', 20)) {
     return NextResponse.json<ExplainResponse>(
       { explanation: '', error: '1時間あたりの利用上限に達しました。しばらくしてから再度お試しください。' },
       { status: 429 }
     )
   }
-
-  const body: ExplainRequest = await req.json()
 
   const sanitize = (s: string) => s.replace(/[\n\r]/g, ' ')
   const phrase = sanitize(String(body.phrase ?? '').slice(0, 200))
@@ -80,6 +100,16 @@ export async function POST(req: NextRequest) {
 
     if (!explanation) {
       return NextResponse.json<ExplainResponse>({ explanation: '', error: '解説を生成できませんでした' })
+    }
+
+    // 解説を DB にキャッシュ（fire-and-forget、user_id チェック付き）
+    if (phraseId) {
+      const db = getSupabaseAdmin()
+      db.from('phrases')
+        .update({ explanation })
+        .eq('id', phraseId)
+        .eq('user_id', user.id)
+        .then(() => {})
     }
 
     return NextResponse.json<ExplainResponse>({ explanation })

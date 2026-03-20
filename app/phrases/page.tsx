@@ -220,7 +220,7 @@ export default function PhrasesPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-slate-900">{p.phrase}</span>
-                    {p.pronunciation && (
+                    {settings.showPronunciation && p.pronunciation && (
                       <span className="text-xs text-slate-400">{p.pronunciation}</span>
                     )}
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${diff(p.difficulty).cls}`}>
