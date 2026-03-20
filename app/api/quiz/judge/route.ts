@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getUser } from '@/lib/auth'
+import { isRateLimited } from '@/lib/rate-limit'
 import type { JudgeStatus } from '@/types'
 
 export interface JudgeRequest {
@@ -19,6 +21,20 @@ export interface JudgeResponse {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json<JudgeResponse>(
+    { correct: false, status: 'incorrect', feedback: '', error: 'Unauthorized' },
+    { status: 401 }
+  )
+
+  // レート制限: 1時間あたり60回（クイズ6セッション分）
+  if (await isRateLimited(user.id, 'quiz/judge', 60)) {
+    return NextResponse.json<JudgeResponse>(
+      { correct: false, status: 'incorrect', feedback: '', error: '1時間あたりの利用上限に達しました。しばらくしてから再度お試しください。' },
+      { status: 429 }
+    )
+  }
+
   const body: JudgeRequest = await req.json()
 
   // 入力長制限 + 改行サニタイズ（プロンプトインジェクション・DoS 対策）

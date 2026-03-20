@@ -123,6 +123,21 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ success: false, error: 'ログインが必要です' }, { status: 401 })
 
   const db = getSupabaseAdmin()
+
+  // 並行実行制御: 同一ユーザーの processing ジョブが存在する場合は拒否
+  const { data: running } = await db
+    .from('import_jobs')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('status', 'processing')
+    .limit(1)
+  if (running?.length) {
+    return NextResponse.json(
+      { success: false, error: '処理中のジョブがあります。完了後に再度お試しください' },
+      { status: 429 }
+    )
+  }
+
   const contentType = req.headers.get('content-type') ?? ''
 
   // ── ファイルモード ──

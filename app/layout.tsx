@@ -4,6 +4,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings";
 import { UserProvider } from "@/lib/auth-context";
+import { BottomNav } from "@/components/BottomNav";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -42,7 +43,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LanguageProvider><SettingsProvider><UserProvider>{children}</UserProvider></SettingsProvider></LanguageProvider>
+        <LanguageProvider><SettingsProvider><UserProvider>{children}<BottomNav /></UserProvider></SettingsProvider></LanguageProvider>
       </body>
     </html>
   );

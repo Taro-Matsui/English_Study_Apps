@@ -9,6 +9,7 @@ interface Settings {
   voiceURI: string | null   // voicePreset === 'custom' のときのみ使用
   skipMastered: boolean
   masteredIds: string[]
+  contextHint: boolean      // クイズ中にコンテキスト文（フレーズマスク済み）を表示
 }
 
 interface SettingsContextType {
@@ -16,6 +17,7 @@ interface SettingsContextType {
   setVoicePreset: (preset: VoicePreset) => void
   setVoice: (uri: string | null) => void
   setSkipMastered: (v: boolean) => void
+  setContextHint: (v: boolean) => void
   markMastered: (phraseId: string) => void
   clearMastered: () => void
 }
@@ -25,6 +27,7 @@ const DEFAULT: Settings = {
   voiceURI: null,
   skipMastered: false,
   masteredIds: [],
+  contextHint: false,
 }
 const KEY = 'app_settings'
 
@@ -33,6 +36,7 @@ const SettingsContext = createContext<SettingsContextType>({
   setVoicePreset: () => {},
   setVoice: () => {},
   setSkipMastered: () => {},
+  setContextHint: () => {},
   markMastered: () => {},
   clearMastered: () => {},
 })
@@ -98,10 +102,28 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(DEFAULT)
 
   useEffect(() => {
+    // 1. localStorage から復元
+    let local: Settings = DEFAULT
     try {
       const saved = localStorage.getItem(KEY)
-      if (saved) setSettings({ ...DEFAULT, ...JSON.parse(saved) })
+      if (saved) local = { ...DEFAULT, ...JSON.parse(saved) }
     } catch {}
+    setSettings(local)
+
+    // 2. DB から習得済み ID を取得してマージ（DB を正とする）
+    fetch('/api/user/progress')
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { ids: string[] } | null) => {
+        if (!data) return
+        setSettings((prev) => {
+          // DB の ids を正として、localStorage にしかない ids も union する
+          const merged = Array.from(new Set([...data.ids, ...prev.masteredIds]))
+          const next = { ...prev, masteredIds: merged }
+          persist(next)
+          return next
+        })
+      })
+      .catch(() => {/* ネットワークエラーは無視（localStorage のみで動作） */})
   }, [])
 
   function update(fn: (prev: Settings) => Settings) {
@@ -118,11 +140,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setVoicePreset: (preset) => update((p) => ({ ...p, voicePreset: preset })),
       setVoice: (uri) => update((p) => ({ ...p, voiceURI: uri, voicePreset: uri ? 'custom' : 'default' })),
       setSkipMastered: (v) => update((p) => ({ ...p, skipMastered: v })),
-      markMastered: (id) => update((p) => ({
-        ...p,
-        masteredIds: p.masteredIds.includes(id) ? p.masteredIds : [...p.masteredIds, id],
-      })),
-      clearMastered: () => update((p) => ({ ...p, masteredIds: [] })),
+      setContextHint: (v) => update((p) => ({ ...p, contextHint: v })),
+      markMastered: (id) => {
+        update((p) => ({
+          ...p,
+          masteredIds: p.masteredIds.includes(id) ? p.masteredIds : [...p.masteredIds, id],
+        }))
+        // DB に fire-and-forget 同期
+        fetch('/api/user/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phrase_id: id }),
+        }).catch(() => {})
+      },
+      clearMastered: () => {
+        update((p) => ({ ...p, masteredIds: [] }))
+        // DB から全削除
+        fetch('/api/user/progress', { method: 'DELETE' }).catch(() => {})
+      },
     }}>
       {children}
     </SettingsContext.Provider>

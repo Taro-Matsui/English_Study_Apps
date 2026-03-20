@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getUser } from '@/lib/auth'
+import { isRateLimited } from '@/lib/rate-limit'
 
 export interface ExplainRequest {
   phrase: string
@@ -12,6 +14,20 @@ export interface ExplainResponse {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json<ExplainResponse>(
+    { explanation: '', error: 'Unauthorized' },
+    { status: 401 }
+  )
+
+  // レート制限: 1時間あたり20回
+  if (await isRateLimited(user.id, 'quiz/explain', 20)) {
+    return NextResponse.json<ExplainResponse>(
+      { explanation: '', error: '1時間あたりの利用上限に達しました。しばらくしてから再度お試しください。' },
+      { status: 429 }
+    )
+  }
+
   const body: ExplainRequest = await req.json()
 
   const sanitize = (s: string) => s.replace(/[\n\r]/g, ' ')

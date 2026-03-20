@@ -7,22 +7,15 @@ import { TutorialGuide } from './TutorialGuide'
 interface Props {
   phraseCount: number | null
   sourceCount: number | null
+  streak: number
+  todayDone: boolean
+  weakCount: number
 }
 
-export function HomeContent({ phraseCount, sourceCount }: Props) {
+export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakCount }: Props) {
   const { lang, t } = useLanguage()
 
-  const cards = [
-    {
-      href: '/quiz',
-      icon: '🎯',
-      title: t('nav_quiz'),
-      desc: t('nav_quiz_desc'),
-      bg: 'bg-emerald-50 hover:bg-emerald-100',
-      border: 'border-emerald-200',
-      iconBg: 'from-emerald-500 to-emerald-600',
-      badge: null as string | null,
-    },
+  const subCards = [
     {
       href: '/history',
       icon: '📊',
@@ -46,7 +39,7 @@ export function HomeContent({ phraseCount, sourceCount }: Props) {
         : null,
     },
     {
-      href: '/admin/import',
+      href: '/library/import',
       icon: '⚙️',
       title: t('nav_import'),
       desc: t('nav_import_desc'),
@@ -60,22 +53,77 @@ export function HomeContent({ phraseCount, sourceCount }: Props) {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm space-y-8">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center gap-1 px-5 h-16 rounded-2xl bg-white/10 backdrop-blur-sm mb-2">
-            <span className="text-2xl">👩‍💻</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-6 pb-24">
+      <div className="w-full max-w-sm space-y-5">
+
+        {/* ヘッダー */}
+        <div className="text-center space-y-1">
+          <div className="inline-flex items-center justify-center gap-1 px-5 h-14 rounded-2xl bg-white/10 backdrop-blur-sm mb-1">
+            <span className="text-xl">👩‍💻</span>
             <span className="text-lg">💬</span>
-            <span className="text-2xl">👨‍💻</span>
+            <span className="text-xl">👨‍💻</span>
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Engineer English</h1>
           <p className="text-slate-400 text-sm">{t('tagline')}</p>
         </div>
-        <div className="space-y-3">
-          {cards.map((c) => (
+
+        {/* ストリーク表示 */}
+        {streak > 0 && (
+          <div className="flex items-center justify-center gap-2.5">
+            <span className="text-lg">🔥</span>
+            <span className="text-white font-bold text-base">
+              {streak}{lang === 'ja' ? '日連続' : '-day streak'}
+            </span>
+            {todayDone && (
+              <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                ✓ {lang === 'ja' ? '今日完了' : 'Done today'}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* メインクイズ CTA */}
+        <Link href="/quiz"
+          className="block p-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-emerald-500/20">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">
+              🎯
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-white text-lg">{t('nav_quiz')}</p>
+              <p className="text-emerald-100 text-sm mt-0.5">
+                {!todayDone
+                  ? (lang === 'ja' ? '今日はまだ学習していません' : "You haven't studied today")
+                  : (lang === 'ja' ? '今日のクイズを続ける' : "Continue today's quiz")}
+              </p>
+            </div>
+            <span className="text-emerald-200 text-xl flex-shrink-0">›</span>
+          </div>
+        </Link>
+
+        {/* 弱点フォーカス */}
+        {weakCount > 0 && (
+          <Link href="/quiz?mode=focus"
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/15 transition-colors">
+            <span className="text-xl flex-shrink-0">⚠️</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-red-300">
+                {lang === 'ja' ? `弱点フレーズ ${weakCount}件` : `${weakCount} weak phrases`}
+              </p>
+              <p className="text-xs text-red-400/70 mt-0.5">
+                {lang === 'ja' ? '苦手なフレーズを重点的に復習' : 'Focus on phrases you often miss'}
+              </p>
+            </div>
+            <span className="text-red-400 flex-shrink-0">›</span>
+          </Link>
+        )}
+
+        {/* サブカード */}
+        <div className="space-y-2.5">
+          {subCards.map((c) => (
             <Link key={c.href} href={c.href}
               className={`flex items-center gap-4 p-4 rounded-2xl border ${c.border} ${c.bg} transition-all duration-150 group`}>
-              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${c.iconBg} flex items-center justify-center text-xl shadow-sm flex-shrink-0`}>
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${c.iconBg} flex items-center justify-center text-lg shadow-sm flex-shrink-0`}>
                 {c.icon}
               </div>
               <div className="flex-1">
@@ -91,6 +139,7 @@ export function HomeContent({ phraseCount, sourceCount }: Props) {
             </Link>
           ))}
         </div>
+
         <TutorialGuide />
         <div className="flex justify-center items-center gap-3">
           <Link href="/settings" className="text-xs px-2.5 py-0.5 rounded-full border border-slate-600 text-slate-400 hover:bg-white/10 transition-colors font-medium">

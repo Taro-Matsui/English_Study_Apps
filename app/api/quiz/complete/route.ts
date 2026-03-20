@@ -14,6 +14,14 @@ export async function POST(req: NextRequest) {
   // 1セッションあたりの回答数上限（DoS対策）
   if (answers.length > 100) return NextResponse.json({ success: false, error: '回答数が上限を超えています' }, { status: 400 })
 
+  // phrase_id の UUID v4 形式バリデーション
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  for (const a of answers) {
+    if (!UUID_RE.test(a.phrase_id)) {
+      return NextResponse.json({ success: false, error: 'Invalid phrase_id format' }, { status: 400 })
+    }
+  }
+
   try {
     const db = getSupabaseAdmin()
     const correct = answers.filter((a) => a.is_correct).length

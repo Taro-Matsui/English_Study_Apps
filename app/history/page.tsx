@@ -16,6 +16,7 @@ interface AnswerRow {
     original_context: string | null
     usage_scene: string | null
     engineer_level: string | null
+    difficulty?: number
   } | null
 }
 
@@ -27,24 +28,44 @@ interface Session {
   quiz_answers: AnswerRow[]
 }
 
+interface DailyPoint { date: string; correct: number; total: number }
+interface DiffPoint  { difficulty: number; correct: number; total: number }
+interface ScenePoint { scene: string; correct: number; total: number }
+
+interface HistoryData {
+  sessions: Session[]
+  daily_accuracy: DailyPoint[]
+  by_difficulty: DiffPoint[]
+  by_scene: ScenePoint[]
+}
+
 function formatDate(iso: string) {
   const d = new Date(iso)
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+const DIFF_CLS: Record<number, string> = {
+  1: 'text-emerald-600', 2: 'text-sky-600', 3: 'text-amber-600', 4: 'text-orange-600', 5: 'text-red-600',
+}
+const SCENE_LABELS: Record<string, string> = {
+  daily: '日常', technical: '技術', business: 'ビジネス', other: 'その他',
+}
+
 export default function HistoryPage() {
   const { lang, t } = useLanguage()
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [data, setData] = useState<HistoryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/history').then((r) => r.json()).then((d) => {
-      setSessions(Array.isArray(d) ? d : [])
+      if (d.sessions) setData(d)
+      else setData({ sessions: Array.isArray(d) ? d : [], daily_accuracy: [], by_difficulty: [], by_scene: [] })
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
 
+  const sessions = data?.sessions ?? []
   const totalAnswered = sessions.reduce((s, ses) => s + ses.total_questions, 0)
   const totalCorrect = sessions.reduce((s, ses) => s + ses.correct_count, 0)
   const avgPct = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0
@@ -55,8 +76,12 @@ export default function HistoryPage() {
     { label: t('history_avg_score'), value: avgPct, unit: '%' },
   ]
 
+  // 14日グラフ用: 有データの日を計算
+  const daily = data?.daily_accuracy ?? []
+  const maxTotal = Math.max(...daily.map((d) => d.total), 1)
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 pb-24">
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-slate-100 px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -74,14 +99,109 @@ export default function HistoryPage() {
 
       <div className="max-w-2xl mx-auto p-4 space-y-4">
         {!loading && sessions.length > 0 && (
-          <div className="grid grid-cols-3 gap-3">
-            {stats.map((s) => (
-              <div key={s.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-slate-800">{s.value}<span className="text-sm text-slate-400 ml-0.5">{s.unit}</span></p>
-                <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+          <>
+            {/* サマリー統計 */}
+            <div className="grid grid-cols-3 gap-3">
+              {stats.map((s) => (
+                <div key={s.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
+                  <p className="text-2xl font-bold text-slate-800">{s.value}<span className="text-sm text-slate-400 ml-0.5">{s.unit}</span></p>
+                  <p className="text-xs text-slate-400 mt-1">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* 14日トレンドグラフ */}
+            {daily.some((d) => d.total > 0) && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  直近14日の学習記録
+                </p>
+                <div className="flex items-end gap-1 h-20">
+                  {daily.map((d) => {
+                    const heightPct = d.total > 0 ? (d.total / maxTotal) * 100 : 0
+                    const accuracy = d.total > 0 ? Math.round((d.correct / d.total) * 100) : null
+                    const barColor = accuracy === null ? 'bg-slate-100' :
+                      accuracy >= 80 ? 'bg-emerald-400' :
+                      accuracy >= 60 ? 'bg-amber-400' : 'bg-red-400'
+                    return (
+                      <div key={d.date} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-full flex items-end justify-center" style={{ height: 64 }}>
+                          <div
+                            className={`w-full rounded-t-sm transition-all ${barColor}`}
+                            style={{ height: `${Math.max(heightPct, d.total > 0 ? 8 : 0)}%` }}
+                            title={accuracy !== null ? `${d.date.slice(5)}: ${accuracy}% (${d.correct}/${d.total})` : d.date.slice(5)}
+                          />
+                        </div>
+                        <p className="text-[8px] text-slate-400 leading-none">
+                          {d.date.slice(8)}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="flex gap-3 mt-2">
+                  {[
+                    { color: 'bg-emerald-400', label: '≥80%' },
+                    { color: 'bg-amber-400', label: '60-79%' },
+                    { color: 'bg-red-400', label: '<60%' },
+                  ].map((l) => (
+                    <div key={l.label} className="flex items-center gap-1">
+                      <div className={`w-2 h-2 rounded-sm ${l.color}`} />
+                      <span className="text-[10px] text-slate-400">{l.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* 難易度別正解率 */}
+            {(data?.by_difficulty.length ?? 0) > 0 && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">難易度別 正解率</p>
+                {data!.by_difficulty.map((d) => {
+                  const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0
+                  return (
+                    <div key={d.difficulty} className="flex items-center gap-2">
+                      <span className={`text-xs font-bold w-10 flex-shrink-0 ${DIFF_CLS[d.difficulty] ?? 'text-slate-600'}`}>
+                        Lv.{d.difficulty}
+                      </span>
+                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-blue-400 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-500 w-10 text-right flex-shrink-0">{pct}%</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* シーン別 */}
+            {(data?.by_scene.length ?? 0) > 0 && (
+              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">シーン別 正解率</p>
+                {data!.by_scene.map((d) => {
+                  const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0
+                  return (
+                    <div key={d.scene} className="flex items-center gap-2">
+                      <span className="text-xs text-slate-600 w-14 flex-shrink-0">
+                        {SCENE_LABELS[d.scene] ?? d.scene}
+                      </span>
+                      <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-violet-400 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-500 w-10 text-right flex-shrink-0">{pct}%</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
 
         {loading ? (

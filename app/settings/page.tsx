@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
@@ -38,9 +39,39 @@ function guessGender(voice: SpeechSynthesisVoice): '♀' | '♂' | '' {
 }
 
 export default function SettingsPage() {
+  const router = useRouter()
   const { lang } = useLanguage()
-  const { settings, setVoicePreset, setVoice, setSkipMastered, clearMastered } = useSettings()
+  const { settings, setVoicePreset, setVoice, setSkipMastered, setContextHint, clearMastered } = useSettings()
   const { user } = useAuth()
+
+  const [deleteInput, setDeleteInput] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleSignOut() {
+    await fetch('/api/auth/signout', { method: 'POST' })
+    router.push('/login')
+  }
+
+  function handleExport() {
+    window.location.href = '/api/user/export'
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteInput !== '削除する') return
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/user/delete-account', { method: 'POST' })
+      if (res.ok) {
+        router.push('/login')
+      } else {
+        const d = await res.json()
+        alert(d.error ?? 'アカウントの削除に失敗しました')
+      }
+    } catch {
+      alert('通信エラーが発生しました')
+    }
+    setDeleting(false)
+  }
   const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
   const studyLevel = user?.user_metadata?.study_level as string | undefined
   const studyDomain = user?.user_metadata?.study_domain as string | undefined
@@ -266,6 +297,23 @@ export default function SettingsPage() {
             </div>
           </label>
 
+          <label className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+            <input
+              type="checkbox"
+              checked={settings.contextHint}
+              onChange={(e) => setContextHint(e.target.checked)}
+              className="w-4 h-4 accent-blue-500 flex-shrink-0"
+            />
+            <div>
+              <p className="text-sm font-medium">
+                {ja ? 'コンテキストヒントを表示' : 'Show context hint'}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {ja ? 'クイズ中に例文（フレーズ部分をマスク）を表示します' : 'Show example sentence with phrase masked during quiz'}
+              </p>
+            </div>
+          </label>
+
           <div className="flex items-center justify-between p-4 rounded-xl border border-white/10 bg-white/5">
             <div>
               <p className="text-sm font-medium">{ja ? '習得済みフレーズ' : 'Mastered phrases'}</p>
@@ -280,6 +328,55 @@ export default function SettingsPage() {
             >
               {ja ? 'リセット' : 'Reset'}
             </button>
+          </div>
+        </section>
+
+        {/* アカウント */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            {ja ? 'アカウント' : 'Account'}
+          </h2>
+          <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
+            {user?.email && (
+              <p className="text-xs text-slate-500 break-all">{user.email}</p>
+            )}
+            <button
+              onClick={handleExport}
+              className="w-full py-2.5 rounded-lg border border-white/10 bg-white/5 text-slate-300 text-sm font-medium hover:bg-white/10 transition-colors"
+            >
+              {ja ? 'データをエクスポート (JSON)' : 'Export my data (JSON)'}
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="w-full py-2.5 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors"
+            >
+              {ja ? 'ログアウト' : 'Sign out'}
+            </button>
+            <div className="border-t border-white/5 pt-3 space-y-2">
+              <p className="text-xs text-slate-600">
+                {ja ? 'アカウントを削除するとすべてのデータが完全に消去されます。' : 'Deleting your account permanently removes all your data.'}
+              </p>
+              <p className="text-xs text-slate-500">
+                {ja ? '確認のため「削除する」と入力してください' : 'Type "削除する" to confirm deletion'}
+              </p>
+              <input
+                type="text"
+                value={deleteInput}
+                onChange={(e) => setDeleteInput(e.target.value)}
+                placeholder="削除する"
+                style={{ fontSize: '16px' }}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-red-500/50 transition-colors"
+              />
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting || deleteInput !== '削除する'}
+                className="w-full py-2.5 rounded-lg border border-red-600/40 bg-red-600/10 text-red-400 text-sm font-medium hover:bg-red-600/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                {deleting
+                  ? (ja ? '削除中...' : 'Deleting...')
+                  : (ja ? 'アカウントを完全に削除する' : 'Permanently delete account')}
+              </button>
+            </div>
           </div>
         </section>
 

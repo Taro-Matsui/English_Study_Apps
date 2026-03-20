@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Progress } from '@/components/ui/progress'
 import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
 import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
@@ -73,8 +73,24 @@ function highlightPhrase(text: string, phrase: string): React.ReactNode {
   )
 }
 
+/** フレーズをマスクしたコンテキスト文を返す */
+function maskPhrase(context: string, phrase: string): string {
+  return context.replace(new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '___')
+}
+
 export default function QuizPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center"><p className="text-slate-500 text-sm animate-pulse">読み込み中...</p></div>}>
+      <QuizContent />
+    </Suspense>
+  )
+}
+
+function QuizContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isFocusMode = searchParams.get('mode') === 'focus'
+
   const { t } = useLanguage()
   const { settings, markMastered, setVoicePreset } = useSettings()
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
@@ -91,26 +107,28 @@ export default function QuizPage() {
   const [explaining, setExplaining] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (focusMode = isFocusMode) => {
     setStep('loading'); setAnswers([])
     setSaveState(null)
     try {
-      // 正解済みスキップ設定はlocalStorageから直接読む（stale closure回避）
-      let url = '/api/quiz?limit=10'
+      let excludeIds: string[] = []
       try {
         const saved = JSON.parse(localStorage.getItem('app_settings') ?? '{}')
         if (saved.skipMastered && (saved.masteredIds as string[] | undefined)?.length) {
-          const ids = (saved.masteredIds as string[]).slice(0, 200).join(',')
-          url += `&exclude=${ids}`
+          excludeIds = (saved.masteredIds as string[]).slice(0, 500)
         }
       } catch {}
-      const res = await fetch(url)
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 10, exclude: excludeIds, mode: focusMode ? 'focus' : 'normal' }),
+      })
       const data: QuizPhrase[] = await res.json()
       if (!data.length) { setStep('empty'); return }
       setPhrases(shuffle(data).slice(0, 10))
       setIndex(0); setScore({ correct: 0, partial: 0, incorrect: 0 }); setStep('question')
     } catch { setStep('empty') }
-  }, [])
+  }, [isFocusMode])
 
   useEffect(() => { load() }, [load])
 
@@ -189,9 +207,8 @@ export default function QuizPage() {
       setAnswers((prev) => [...prev, {
         phrase_id: current.id, phrase: current.phrase, meaning_ja: current.meaning_ja ?? '',
         user_answer: answer, is_correct: data.correct, ai_feedback: data.feedback,
-        status, // 表示用: done画面で正確なステータスを表示するために保持
+        status,
       }])
-      // 正解したフレーズを習得済みとしてマーク（スキップ設定が有効な場合に次回クイズで除外）
       if (status === 'correct') markMastered(current.id)
       speak(current.phrase, 'phrase'); setStep('result')
     } catch { setStep('question') }
@@ -236,6 +253,16 @@ export default function QuizPage() {
     setIndex(next); setAnswer(''); setJudgment(null); setStep('question')
   }
 
+  function handleShare(pct: number) {
+    const text = `Engineer English で ${pct}% 達成！${score.correct}/${total} 正解 #エンジニア英語`
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {})
+    } else {
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   const SpeedSelector = () => (
     <div className="flex items-center gap-0.5 bg-white/5 rounded-full px-1.5 py-1">
       {(['slow', 'normal', 'fast'] as Speed[]).map((s) => (
@@ -249,21 +276,29 @@ export default function QuizPage() {
 
   if (step === 'loading') return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-      <p className="text-slate-500 text-sm animate-pulse">{t('quiz_loading')}</p>
+      <p className="text-slate-500 text-sm animate-pulse">
+        {isFocusMode ? '⚠️ 弱点フレーズを読み込み中...' : t('quiz_loading')}
+      </p>
     </div>
   )
 
   if (step === 'empty') return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
-      <p className="text-slate-400 text-sm">{t('quiz_empty')}</p>
-      <Link href="/admin/import" className="text-sm text-blue-400 hover:underline">{t('quiz_empty_link')}</Link>
+      <p className="text-slate-400 text-sm">
+        {isFocusMode ? '弱点フレーズが見つかりません。通常クイズに切り替えます。' : t('quiz_empty')}
+      </p>
+      {isFocusMode
+        ? <Link href="/quiz" className="text-sm text-blue-400 hover:underline">通常クイズを開始</Link>
+        : <Link href="/library/import" className="text-sm text-blue-400 hover:underline">{t('quiz_empty_link')}</Link>
+      }
     </div>
   )
 
   if (step === 'done') {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
+    const isHighScore = pct >= 80
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col p-4">
         <div className="max-w-lg mx-auto w-full pt-8 space-y-5">
@@ -276,9 +311,33 @@ export default function QuizPage() {
               <div><p className="text-3xl font-bold text-red-400">{score.incorrect}</p><p className="text-xs text-slate-500 mt-1">{t('done_incorrect')}</p></div>
             </div>
           </div>
+
+          {/* ネクストアクション */}
+          {isHighScore && (
+            <Link href="/library/import"
+              className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors">
+              <span className="text-xl">🚀</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-emerald-300">フレーズを追加してレベルアップ！</p>
+                <p className="text-xs text-emerald-400/70 mt-0.5">新しいテキストをインポートする</p>
+              </div>
+              <span className="text-emerald-400">›</span>
+            </Link>
+          )}
+          {score.incorrect + score.partial > 0 && (
+            <button onClick={() => load(true)}
+              className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/15 transition-colors text-left">
+              <span className="text-xl">⚠️</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-300">弱点を復習する</p>
+                <p className="text-xs text-red-400/70 mt-0.5">間違えたフレーズを重点的に練習</p>
+              </div>
+              <span className="text-red-400">›</span>
+            </button>
+          )}
+
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
             {answers.map((a, i) => {
-              // バグ修正: status フィールドを使って partial を正確に表示
               const st: JudgeStatus = a.status ?? (a.is_correct ? 'correct' : 'incorrect')
               return (
                 <div key={i} className={`rounded-xl p-3 border text-sm ${st === 'correct' ? 'bg-emerald-500/10 border-emerald-500/20' : st === 'partial' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
@@ -294,15 +353,16 @@ export default function QuizPage() {
               )
             })}
           </div>
-          {/* 保存状態インジケーター */}
+
           {saveState === 'saving' && (
             <p className="text-center text-xs text-slate-500 animate-pulse">記録を保存中...</p>
           )}
           {saveState === 'failed' && (
             <p className="text-center text-xs text-red-400">記録の保存に失敗しました。ネットワーク状態を確認してください。</p>
           )}
+
           <div className="flex gap-2">
-            <button onClick={load} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">{t('done_again')}</button>
+            <button onClick={() => load(false)} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">{t('done_again')}</button>
             <button
               onClick={() => router.push('/history')}
               disabled={saveState === 'saving'}
@@ -315,12 +375,19 @@ export default function QuizPage() {
               {saveState === 'saving' ? '保存中...' : t('done_history')}
             </button>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => handleShare(pct)}
               className="flex-1 py-3 rounded-xl bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors"
+              title="結果をシェア"
             >
-              {t('done_home')}
+              𝕏 シェア
             </button>
           </div>
+          <button
+            onClick={() => router.push('/')}
+            className="w-full py-2.5 rounded-xl bg-white/5 text-slate-400 text-sm hover:bg-white/10 transition-colors"
+          >
+            {t('done_home')}
+          </button>
         </div>
       </div>
     )
@@ -332,6 +399,9 @@ export default function QuizPage() {
         <div className="px-4 pt-3 pb-1 flex items-center justify-between max-w-lg mx-auto">
           <Link href="/" className="text-slate-500 hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
           <div className="flex items-center gap-3">
+            {isFocusMode && (
+              <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-medium">⚠ 弱点</span>
+            )}
             <span className="text-xs text-emerald-400 font-semibold">✓ {score.correct}</span>
             <span className="text-xs text-amber-400 font-semibold">△ {score.partial}</span>
             <span className="text-xs text-red-400 font-semibold">✗ {score.incorrect}</span>
@@ -364,6 +434,14 @@ export default function QuizPage() {
               {isKanaPronunciation(current.pronunciation) && (
                 <p className="text-sm text-slate-400 tracking-widest">{current.pronunciation}</p>
               )}
+
+              {/* コンテキストヒント（設定 ON かつ original_context がある場合） */}
+              {settings.contextHint && current.original_context && step === 'question' && (
+                <p className="text-xs text-slate-400 italic bg-white/5 rounded-xl px-3 py-2 leading-relaxed text-left">
+                  &ldquo;{maskPhrase(current.original_context, current.phrase)}&rdquo;
+                </p>
+              )}
+
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <button onClick={() => speak(current.phrase, 'phrase')}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}>

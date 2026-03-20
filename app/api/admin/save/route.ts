@@ -107,6 +107,7 @@ export async function POST(req: NextRequest) {
         .from('phrases')
         .update(buildRow(p))
         .eq('id', id)
+        .eq('user_id', user.id)
       if (error) throw new Error(`フレーズの更新に失敗しました: ${p.phrase}`)
       updated_count++
     }

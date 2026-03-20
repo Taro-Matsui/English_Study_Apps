@@ -60,6 +60,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/onboarding', request.url))
   }
 
+  // /library/* と /api/admin/* は ADMIN_EMAILS に含まれるユーザーのみ許可（未設定時は全員許可）
+  if (path.startsWith('/library') || path.startsWith('/admin') || path.startsWith('/api/admin')) {
+    const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+    if (adminEmails.length > 0 && !adminEmails.includes((user.email ?? '').toLowerCase())) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
   return response
 }
 
