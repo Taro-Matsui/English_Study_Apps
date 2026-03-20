@@ -39,11 +39,28 @@ function htmlToText(html: string): string {
     .trim()
 }
 
+/** ジョブのuser_idからユーザーの学習設定を取得する */
+async function getUserContext(db: ReturnType<typeof getSupabaseAdmin>, jobId: string) {
+  try {
+    const { data: job } = await db.from('import_jobs').select('user_id').eq('id', jobId).single()
+    if (!job?.user_id) return undefined
+    const { data: { user } } = await db.auth.admin.getUserById(job.user_id)
+    if (!user) return undefined
+    return {
+      study_purpose: user.user_metadata?.study_purpose as string | undefined,
+      study_level: user.user_metadata?.study_level as string | undefined,
+    }
+  } catch {
+    return undefined
+  }
+}
+
 /** バックグラウンドでClaudeを呼び、ジョブを更新する */
 async function processJob(jobId: string, text: string) {
   const db = getSupabaseAdmin()
   try {
-    const phrases: ExtractedPhrase[] = await extractPhrasesWithClaude(text)
+    const userContext = await getUserContext(db, jobId)
+    const phrases: ExtractedPhrase[] = await extractPhrasesWithClaude(text, userContext)
     await db.from('import_jobs').update({
       status: 'done',
       phrase_count: phrases.length,

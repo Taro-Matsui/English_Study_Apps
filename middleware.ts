@@ -5,6 +5,9 @@ import type { NextRequest } from 'next/server'
 // 認証不要なパス
 const PUBLIC_PATHS = ['/login', '/auth/callback']
 
+// オンボーディング完了前でも許可するパス（認証は必要）
+const ONBOARDING_EXEMPT = ['/onboarding', '/api/', '/auth/']
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
     request: { headers: request.headers },
@@ -47,6 +50,14 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     const loginUrl = new URL('/login', request.url)
     return NextResponse.redirect(loginUrl)
+  }
+
+  // オンボーディング未完了 → /onboarding へ
+  if (
+    !user.user_metadata?.onboarding_complete &&
+    !ONBOARDING_EXEMPT.some((p) => path.startsWith(p))
+  ) {
+    return NextResponse.redirect(new URL('/onboarding', request.url))
   }
 
   return response

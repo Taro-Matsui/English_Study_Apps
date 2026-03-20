@@ -12,8 +12,30 @@ const SYSTEM_PROMPT = `あなたはエンジニアの英語学習を支援する
 
 必ずJSON配列のみを返してください。説明文やコメントは不要です。`
 
-const USER_PROMPT_TEMPLATE = (text: string) => `
-以下のテキストから英語フレーズを抽出してください。
+const PURPOSE_LABELS: Record<string, string> = {
+  meeting:   'ミーティング・日常会話（チームでのやり取り、口語的な表現を優先）',
+  review:    'コードレビュー・Slack（技術的な指摘やカジュアルなビジネス表現を優先）',
+  reading:   '技術ドキュメント・論文読解（専門用語、学術的・書き言葉的表現を優先）',
+  interview: '採用面接・プレゼン（フォーマルな表現、自己アピール・説明表現を優先）',
+  general:   '総合的に学びたい（バランスよく幅広く抽出）',
+}
+const LEVEL_LABELS: Record<string, string> = {
+  beginner:     '初級 → difficulty 1〜3 のフレーズを中心に抽出。難しすぎる表現は避ける',
+  intermediate: '中級 → difficulty 2〜4 のフレーズを中心にバランスよく抽出',
+  advanced:     '上級 → difficulty 3〜5 の高度な表現も積極的に抽出',
+}
+
+export interface UserContext {
+  study_purpose?: string
+  study_level?: string
+}
+
+const USER_PROMPT_TEMPLATE = (text: string, userContext?: UserContext) => `${userContext?.study_purpose || userContext?.study_level ? `## 学習者プロフィール
+${userContext.study_purpose ? `- 学習目的: ${PURPOSE_LABELS[userContext.study_purpose] ?? userContext.study_purpose}` : ''}
+${userContext.study_level ? `- 英語レベル: ${LEVEL_LABELS[userContext.study_level] ?? userContext.study_level}` : ''}
+→ 上記プロフィールに特に有用なフレーズを優先して抽出・難易度を調整してください。
+
+` : ''}以下のテキストから英語フレーズを抽出してください。
 目安は40個以上ですが、良質なフレーズが多い場合は60〜80個以上抽出しても構いません。リストアップは多めに行ってください。
 
 テキスト:
@@ -58,7 +80,7 @@ engineer_level の選び方：
 - これらには必ず \`"suggested": true\` フィールドを追加（抽出フレーズには付けない）
 - original_context にはその表現の典型的な使用例文を英語で作成`
 
-export async function extractPhrasesWithClaude(text: string): Promise<ExtractedPhrase[]> {
+export async function extractPhrasesWithClaude(text: string, userContext?: UserContext): Promise<ExtractedPhrase[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY が設定されていません')
 
@@ -76,7 +98,7 @@ export async function extractPhrasesWithClaude(text: string): Promise<ExtractedP
       model: 'claude-sonnet-4-6',
       max_tokens: 8192,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: USER_PROMPT_TEMPLATE(text) }],
+      messages: [{ role: 'user', content: USER_PROMPT_TEMPLATE(text, userContext) }],
     }),
   })
   } catch (err) {

@@ -47,7 +47,22 @@ export default function LoginPage() {
         options: { emailRedirectTo: `${location.origin}/auth/callback` },
       })
       if (error) {
-        setError(translateError(error.message))
+        if (error.message.includes('User already registered')) {
+          // 未確認の状態で再登録しようとした場合は確認メールを再送する
+          const { error: resendError } = await supabase.auth.resend({
+            type: 'signup',
+            email,
+            options: { emailRedirectTo: `${location.origin}/auth/callback` },
+          })
+          if (!resendError) {
+            setSignupEmail(email)
+            setMessage('このメールアドレスは登録済みですが未確認です。確認メールを再送しました。')
+          } else {
+            setError('このメールアドレスは既に登録済みです。ログインタブからログインしてください。')
+          }
+        } else {
+          setError(translateError(error.message))
+        }
       } else {
         setSignupEmail(email)
         setMessage('確認メールを送信しました。メールのリンクをクリックしてログインしてください。')
