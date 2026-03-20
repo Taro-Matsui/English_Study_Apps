@@ -5,6 +5,9 @@ import type { NextRequest } from 'next/server'
 // 認証不要なパス
 const PUBLIC_PATHS = ['/login', '/auth/callback']
 
+// 認証状態に関わらず通過するパス（デモモード）
+const GUEST_PATHS = ['/demo', '/api/demo']
+
 // オンボーディング完了前でも許可するパス（認証は必要）
 const ONBOARDING_EXEMPT = ['/onboarding', '/api/', '/auth/']
 
@@ -36,6 +39,11 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
+
+  // ゲストパス（デモモード）は認証状態に関わらず通過
+  if (GUEST_PATHS.some((p) => path.startsWith(p))) {
+    return response
+  }
 
   // パブリックパスは認証不要
   if (PUBLIC_PATHS.some((p) => path.startsWith(p))) {

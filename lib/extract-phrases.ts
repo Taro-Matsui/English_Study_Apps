@@ -31,7 +31,7 @@ export interface UserContext {
   study_domain?: string
 }
 
-const USER_PROMPT_TEMPLATE = (text: string, userContext?: UserContext) => {
+const USER_PROMPT_TEMPLATE = (text: string, userContext?: UserContext, maxPhrases = 30, maxSuggested = 10) => {
   const hasContext = userContext?.study_purpose || userContext?.study_level || userContext?.study_domain
   const contextSection = hasContext ? `## 学習者プロフィール
 ${userContext!.study_purpose ? `- 学習目的: ${PURPOSE_LABELS[userContext!.study_purpose] ?? userContext!.study_purpose}` : ''}
@@ -41,7 +41,7 @@ ${userContext!.study_domain ? `- 専門・興味領域: ${userContext!.study_dom
 
 ` : ''
   return `${contextSection}以下のテキストから英語フレーズを抽出してください。
-目安は40個以上ですが、良質なフレーズが多い場合は60〜80個以上抽出しても構いません。リストアップは多めに行ってください。
+目安は${maxPhrases}個程度（良質なフレーズが多い場合は最大${Math.round(maxPhrases * 1.3)}個まで）。リストアップは多めに行ってください。
 
 テキスト:
 ---
@@ -79,7 +79,7 @@ engineer_level の選び方：
 - mid: 実務経験2〜4年の中級エンジニアが使いこなす表現
 - senior: シニア・リーダー層が多用する高度な表現
 
-さらに、このテキストのドメイン・技術分野に関連し、**テキストには登場しないが実務で広く使われる重要な慣用句・コロケーション** を10〜15個追加してください。
+さらに、このテキストのドメイン・技術分野に関連し、**テキストには登場しないが実務で広く使われる重要な慣用句・コロケーション** を${maxSuggested}個程度追加してください。
 - エンジニアが日々の業務・MTG・コードレビュー等で頻繁に使う表現を優先
 - テキストから抽出したフレーズと重複しないこと
 - これらには必ず \`"suggested": true\` フィールドを追加（抽出フレーズには付けない）
@@ -89,6 +89,15 @@ engineer_level の選び方：
 export async function extractPhrasesWithClaude(text: string, userContext?: UserContext): Promise<ExtractedPhrase[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY が設定されていません')
+
+  // テキスト長に応じてモデル・出力件数・トークン上限を切り替え
+  // 短文（< 10k chars）: Haiku で十分、低コスト・高速
+  // 長文（>= 10k chars）: Sonnet で精度優先
+  const isShort = text.length < 10_000
+  const model = isShort ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-6'
+  const maxTokens = isShort ? 3000 : 8192
+  const maxPhrases = isShort ? 15 : 30
+  const maxSuggested = isShort ? 5 : 10
 
   // SDK の代わりに fetch を直接使用（Next.js 環境での接続問題を回避）
   let res: Response
@@ -101,10 +110,10 @@ export async function extractPhrasesWithClaude(text: string, userContext?: UserC
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 8192,
+      model,
+      max_tokens: maxTokens,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: USER_PROMPT_TEMPLATE(text, userContext) }],
+      messages: [{ role: 'user', content: USER_PROMPT_TEMPLATE(text, userContext, maxPhrases, maxSuggested) }],
     }),
   })
   } catch (err) {

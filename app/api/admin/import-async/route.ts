@@ -176,11 +176,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, job_id: job.id })
   }
 
-  // ── URLモード ──
+  // ── テキスト貼り付け / URLモード ──
   if (contentType.includes('application/json')) {
-    let body: { url?: string }
+    let body: { url?: string; text?: string; sourceType?: string; sourceTitle?: string; sourceDate?: string }
     try { body = await req.json() }
     catch { return NextResponse.json({ success: false, error: 'リクエストの解析に失敗しました' }, { status: 400 }) }
+
+    // テキスト貼り付けモード
+    if (body.text !== undefined) {
+      const text = String(body.text).slice(0, TEXT_MAX_LEN)
+      if (text.trim().length < 100)
+        return NextResponse.json({ success: false, error: 'テキストが短すぎます（100文字以上入力してください）' }, { status: 400 })
+
+      const sourceName = String(body.sourceTitle || 'テキスト貼り付け').slice(0, 200)
+      const { data: job, error: jobErr } = await db
+        .from('import_jobs')
+        .insert({ type: 'file', source_name: sourceName, status: 'processing', user_id: user.id })
+        .select('id').single()
+      if (jobErr || !job)
+        return NextResponse.json({ success: false, error: 'ジョブの作成に失敗しました' }, { status: 500 })
+
+      processJob(job.id as string, text).catch(console.error)
+      return NextResponse.json({ success: true, job_id: job.id })
+    }
 
     const rawUrl = (body.url ?? '').trim()
     if (!rawUrl)

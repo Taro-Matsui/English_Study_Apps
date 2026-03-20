@@ -199,6 +199,16 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* デモモードリンク */}
+        <div className="mt-4 text-center">
+          <p className="text-xs text-slate-600">
+            登録なしで試してみたい方は
+          </p>
+          <a href="/demo" className="text-sm text-slate-400 hover:text-white underline">
+            → デモモードで体験する
+          </a>
+        </div>
+
       </div>
     </div>
   )

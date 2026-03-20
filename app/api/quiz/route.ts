@@ -18,7 +18,7 @@ async function fetchPhrases(user: { id: string }, limit: number, excludeIds: str
     query = query.not('id', 'in', `(${excludeIds.join(',')})`)
   }
 
-  return query.limit(limit * 5)
+  return query.limit(limit * 2)
 }
 
 // GET: limit クエリのみ（exclude なし）

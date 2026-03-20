@@ -7,7 +7,9 @@ import { Progress } from '@/components/ui/progress'
 import { SourceType } from '@/types'
 
 type Step = 'upload' | 'submitting' | 'submitted' | 'error'
-type ImportMode = 'file' | 'url'
+type ImportMode = 'file' | 'url' | 'text'
+
+const TEXT_MAX = 200_000
 
 const SAMPLE_TEXT = `Good morning, everyone. Let's kick off today's sprint planning.
 First, I'd like to touch base on the deployment pipeline issues we had last week.
@@ -26,6 +28,7 @@ export default function LibraryImportPage() {
   const [mode, setMode] = useState<ImportMode>('file')
   const [url, setUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [pasteText, setPasteText] = useState('')
   const [sourceType, setSourceType] = useState<SourceType>('DSH_Event')
   const [sourceTitle, setSourceTitle] = useState('')
   const [sourceDate, setSourceDate] = useState('')
@@ -34,7 +37,10 @@ export default function LibraryImportPage() {
   const [jobId, setJobId] = useState<string | null>(null)
 
   const isSubmitting = step === 'submitting'
-  const canSubmit = mode === 'file' ? !!file : !!url.trim()
+  const canSubmit =
+    mode === 'file' ? !!file :
+    mode === 'url' ? !!url.trim() :
+    pasteText.trim().length >= 100
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFile(e.target.files?.[0] ?? null)
@@ -62,12 +68,25 @@ export default function LibraryImportPage() {
         const form = new FormData()
         form.append('file', file)
         res = await fetch('/api/admin/import-async', { method: 'POST', body: form })
-      } else {
+      } else if (mode === 'url') {
         if (!url.trim()) { setStep('upload'); return }
         res = await fetch('/api/admin/import-async', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: url.trim() }),
+        })
+      } else {
+        const trimmed = pasteText.trim()
+        if (!trimmed) { setStep('upload'); return }
+        res = await fetch('/api/admin/import-async', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: trimmed,
+            sourceType,
+            sourceTitle: sourceTitle || 'テキスト貼り付け',
+            sourceDate: sourceDate || undefined,
+          }),
         })
       }
 
@@ -82,7 +101,7 @@ export default function LibraryImportPage() {
   }
 
   function handleReset() {
-    setFile(null); setUrl('')
+    setFile(null); setUrl(''); setPasteText('')
     setSourceTitle(''); setSourceDate('')
     setSourceType('DSH_Event')
     setError(null); setJobId(null)
@@ -123,8 +142,8 @@ export default function LibraryImportPage() {
             <CardContent className="space-y-4">
 
               {/* モード切り替えタブ */}
-              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
-                {(['file', 'url'] as ImportMode[]).map((m) => (
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit flex-wrap">
+                {([['file', '📄 ファイル'], ['url', '🌐 URL'], ['text', '📋 テキスト貼り付け']] as [ImportMode, string][]).map(([m, label]) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
@@ -133,7 +152,7 @@ export default function LibraryImportPage() {
                       mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    {m === 'file' ? '📄 ファイル' : '🌐 URL'}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -166,6 +185,41 @@ export default function LibraryImportPage() {
                   >
                     💡 サンプルテキストを試す
                   </button>
+                </div>
+              )}
+
+              {/* テキスト貼り付け */}
+              {mode === 'text' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    テキストを貼り付け <span className="text-red-500">*</span>
+                    <span className="text-gray-400 font-normal ml-1">（100文字以上）</span>
+                  </label>
+                  <textarea
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value.slice(0, TEXT_MAX))}
+                    placeholder="会議録、Slack メッセージ、技術ドキュメントなどを貼り付けてください..."
+                    disabled={isSubmitting}
+                    rows={8}
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                    style={{ fontSize: '16px' }}
+                  />
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-gray-400">
+                      {pasteText.length.toLocaleString()} / {TEXT_MAX.toLocaleString()} 文字
+                      {pasteText.trim().length < 100 && pasteText.length > 0 && (
+                        <span className="text-red-400 ml-2">あと {100 - pasteText.trim().length} 文字以上入力してください</span>
+                      )}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setPasteText(SAMPLE_TEXT); setSourceTitle('サンプル会議録'); setSourceType('DSH_Event') }}
+                      disabled={isSubmitting}
+                      className="text-xs px-3 py-1 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition-colors"
+                    >
+                      💡 サンプルを試す
+                    </button>
+                  </div>
                 </div>
               )}
 

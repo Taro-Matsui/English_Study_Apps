@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { getUser } from '@/lib/auth'
 import { log } from '@/lib/logger'
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
     const { error: answerErr } = await db.from('quiz_answers').insert(rows)
     if (answerErr) throw new Error('answer_insert_failed')
 
+    revalidateTag(`stats:${user.id}`)
     log({ level: 'info', endpoint: '/api/quiz/complete',
       message: 'session_saved', detail: { session_id: session.id, answer_count: answers.length, correct_count: correct } })
     return NextResponse.json({ success: true, session_id: session.id })
