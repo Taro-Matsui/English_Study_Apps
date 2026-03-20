@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -20,6 +21,12 @@ export default function LoginPage() {
     setError(null)
     setMessage(null)
     setLoading(true)
+
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError('パスワードが一致しません')
+      setLoading(false)
+      return
+    }
 
     const supabase = createBrowserSupabaseClient()
 
@@ -63,7 +70,7 @@ export default function LoginPage() {
           {(['signin', 'signup'] as Mode[]).map((m) => (
             <button
               key={m}
-              onClick={() => { setMode(m); setError(null); setMessage(null) }}
+              onClick={() => { setMode(m); setError(null); setMessage(null); setConfirmPassword('') }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                 mode === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
               }`}
@@ -103,6 +110,29 @@ export default function LoginPage() {
             />
           </div>
 
+          {mode === 'signup' && (
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">パスワード（確認）</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={loading}
+                placeholder="••••••••"
+                style={{ fontSize: '16px' }}
+                className={`w-full bg-white/10 border rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none transition-colors disabled:opacity-50 ${
+                  confirmPassword && confirmPassword !== password
+                    ? 'border-red-500/60 focus:border-red-500'
+                    : 'border-white/20 focus:border-blue-500'
+                }`}
+              />
+              {confirmPassword && confirmPassword !== password && (
+                <p className="text-red-400 text-xs mt-1">パスワードが一致しません</p>
+              )}
+            </div>
+          )}
+
           {error && (
             <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3">
               <p className="text-red-400 text-sm">{error}</p>
@@ -116,7 +146,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading || !email || !password}
+            disabled={loading || !email || !password || (mode === 'signup' && password !== confirmPassword)}
             className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? '処理中...' : mode === 'signin' ? 'ログイン' : 'アカウント作成'}

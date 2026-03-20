@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 import { getUser } from '@/lib/auth'
 
 const ALLOWED_SOURCE_TYPES = ['DSH_Event', 'YouTube', 'Podcast']
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   const rawSource = searchParams.get('source') ?? ''
   const source = ALLOWED_SOURCE_TYPES.includes(rawSource) ? rawSource : ''
 
-  const db = getSupabase()
+  const db = getSupabaseAdmin()
   let query = db
     .from('phrases')
     .select('*')

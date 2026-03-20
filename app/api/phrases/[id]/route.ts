@@ -42,6 +42,7 @@ export async function PATCH(
     .from('phrases')
     .update({ deleted_at: new Date().toISOString(), delete_reason: delete_reason as AllowedReason })
     .eq('id', id)
+    .eq('user_id', user.id)
 
   if (error) {
     log({ level: 'error', endpoint: '/api/phrases/[id]', message: 'delete_failed',

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 import { getUser } from '@/lib/auth'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -12,11 +12,12 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!UUID_RE.test(id))
     return NextResponse.json({ error: 'IDが不正です' }, { status: 400 })
 
-  const db = getSupabase()
+  const db = getSupabaseAdmin()
   const { data, error } = await db
     .from('import_jobs')
     .select('id, type, source_name, status, phrase_count, phrases, error_text, created_at, completed_at')
     .eq('id', id)
+    .eq('user_id', user.id)
     .single()
 
   if (error || !data)
