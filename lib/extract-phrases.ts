@@ -25,7 +25,7 @@ ${text}
 [
   {
     "phrase": "フレーズ（英語）",
-    "pronunciation": "発音記号（IPA）",
+    "pronunciation": "日本語カタカナ読み（例: データ、むるちくらすたー）",
     "meaning_ja": "日本語での意味・説明",
     "original_context": "元テキストでの使用例文（英語原文から最大120文字で引用）",
     "difficulty": 3,
@@ -33,6 +33,13 @@ ${text}
     "engineer_level": "junior|mid|senior のいずれか"
   }
 ]
+
+pronunciation の書き方：
+- 日本人エンジニアが英語を聞いたときの「実際の音の雰囲気」をカタカナで表現してください
+- 辞書的な外来語表記（データ）ではなく、ネイティブの発音に近いカタカナ（でらー）を使うこと
+- 例: "data" → "でらー", "cluster" → "くらすたー", "multicluster" → "むるちくらすたー"
+- 例: "leverage" → "れヴぁりじ", "deploy" → "でぷろい", "architecture" → "あーきてくちゃー"
+- 長音は「ー」で表現、促音は「っ」を使う
 
 usage_scene の選び方：
 - daily: 日常的な会話や雑談でも使われる汎用表現

@@ -50,6 +50,12 @@ const RESULT_CLS: Record<JudgeStatus, string> = {
 
 function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5) }
 
+/** 日本語カタカナ/ひらがなを含む場合のみ表示（IPA記号は非表示）*/
+function isKanaPronunciation(s: string | null): s is string {
+  if (!s) return false
+  return /[\u3040-\u30ff]/.test(s)
+}
+
 function highlightPhrase(text: string, phrase: string): React.ReactNode {
   if (!phrase || !text) return <>{text}</>
   const idx = text.toLowerCase().indexOf(phrase.toLowerCase())
@@ -323,6 +329,9 @@ export default function QuizPage() {
                 )}
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-white tracking-wide break-words">{current.phrase}</p>
+              {isKanaPronunciation(current.pronunciation) && (
+                <p className="text-sm text-slate-400 tracking-widest">{current.pronunciation}</p>
+              )}
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <button onClick={() => speak(current.phrase, 'phrase')}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-400' : 'bg-white/10 text-slate-400 hover:bg-white/20'}`}>
