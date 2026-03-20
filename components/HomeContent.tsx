@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
@@ -19,6 +20,33 @@ interface Props {
 export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakCount }: Props) {
   const { lang, t } = useLanguage()
   const { user } = useAuth()
+
+  // クイズページ表示を高速化するためフレーズをバックグラウンドでプリフェッチ
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('app_settings') ?? '{}')
+      if (saved.skipMastered) return // 除外リストが変わるためプリフェッチ不可
+
+      const cache = sessionStorage.getItem('quiz_prefetch')
+      if (cache) {
+        const { ts } = JSON.parse(cache) as { ts: number }
+        if (Date.now() - ts < 90_000) return // 90秒以内なら再フェッチ不要
+      }
+
+      fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 10 }),
+      })
+        .then((r) => r.json())
+        .then((data: unknown) => {
+          if (Array.isArray(data) && data.length) {
+            sessionStorage.setItem('quiz_prefetch', JSON.stringify({ phrases: data, ts: Date.now() }))
+          }
+        })
+        .catch(() => {})
+    } catch {}
+  }, [user?.id])
 
   const subCards = [
     {

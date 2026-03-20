@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { getUser } from '@/lib/auth'
 import { HomeContent } from '@/components/HomeContent'
@@ -62,15 +63,27 @@ async function getStats() {
   }
 }
 
-export default async function Home() {
-  const { phraseCount, sourceCount, streak, todayDone, weakCount } = await getStats()
+// stats が揃ったら差し替えるコンポーネント
+async function HomeData() {
+  const stats = await getStats()
+  return <HomeContent {...stats} />
+}
+
+// ホームの CTA をすぐ表示し、バッジ類 (streak/件数) は Suspense で後流し
+export default function Home() {
   return (
-    <HomeContent
-      phraseCount={phraseCount}
-      sourceCount={sourceCount}
-      streak={streak}
-      todayDone={todayDone}
-      weakCount={weakCount}
-    />
+    <Suspense
+      fallback={
+        <HomeContent
+          phraseCount={null}
+          sourceCount={null}
+          streak={0}
+          todayDone={false}
+          weakCount={0}
+        />
+      }
+    >
+      <HomeData />
+    </Suspense>
   )
 }

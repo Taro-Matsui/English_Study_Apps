@@ -107,12 +107,31 @@ function QuizContent() {
     setSaveState(null)
     try {
       let excludeIds: string[] = []
+      let skipMastered = false
       try {
         const saved = JSON.parse(localStorage.getItem('app_settings') ?? '{}')
-        if (saved.skipMastered && (saved.masteredIds as string[] | undefined)?.length) {
+        skipMastered = Boolean(saved.skipMastered)
+        if (skipMastered && (saved.masteredIds as string[] | undefined)?.length) {
           excludeIds = (saved.masteredIds as string[]).slice(0, 500)
         }
       } catch {}
+
+      // 通常モード + skipMastered 無効 → プリフェッチキャッシュを利用して即起動
+      if (!focusMode && !skipMastered) {
+        try {
+          const cached = sessionStorage.getItem('quiz_prefetch')
+          if (cached) {
+            const { phrases: cachedPhrases, ts } = JSON.parse(cached) as { phrases: QuizPhrase[]; ts: number }
+            sessionStorage.removeItem('quiz_prefetch') // 使い切り
+            if (Date.now() - ts < 90_000 && cachedPhrases.length) {
+              setPhrases(shuffle(cachedPhrases).slice(0, 10))
+              setIndex(0); setScore({ correct: 0, partial: 0, incorrect: 0 }); setStep('question')
+              return
+            }
+          }
+        } catch {}
+      }
+
       const res = await fetch('/api/quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

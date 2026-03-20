@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { DEMO_PHRASES, type DemoPhrase } from '../phrases'
 
-type Step = 'question' | 'result' | 'done'
+type Step = 'question' | 'judging' | 'result' | 'done'
 
 interface JudgeResult {
   correct: boolean
@@ -25,41 +25,6 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
-}
-
-/** 正規化: 全角→半角、句読点・スペース除去、小文字化 */
-function normalize(s: string): string {
-  return s.trim()
-    .toLowerCase()
-    .replace(/[、。　！？!?,.\s・]/g, '')
-    .replace(/[\uff01-\uff60]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
-}
-
-/** LLM不使用のローカル判定 */
-function judgeLocal(userAnswer: string, meaning: string): JudgeResult {
-  const a = normalize(userAnswer)
-  const m = normalize(meaning)
-
-  if (!a) return { correct: false, status: 'incorrect', feedback: `正解: ${meaning}` }
-  if (a === m) return { correct: true, status: 'correct', feedback: '完全一致！' }
-
-  // 部分一致（参照が回答を含む、または逆）
-  if (m.includes(a) && a.length >= m.length * 0.55) {
-    return { correct: true, status: 'correct', feedback: '正解！' }
-  }
-  if (a.includes(m) && m.length >= a.length * 0.55) {
-    return { correct: true, status: 'correct', feedback: '正解！' }
-  }
-
-  // 文字ベースの類似度
-  const aSet = new Set(a.split(''))
-  const overlap = m.split('').filter((c) => aSet.has(c)).length
-  const similarity = overlap / Math.max(a.length, m.length)
-
-  if (similarity >= 0.65) {
-    return { correct: false, status: 'partial', feedback: `惜しい！正解: ${meaning}` }
-  }
-  return { correct: false, status: 'incorrect', feedback: `正解: ${meaning}` }
 }
 
 function speak(text: string) {
@@ -90,28 +55,42 @@ export default function DemoQuizPage() {
 
   const current = phrases[index]
 
-  // 問題が変わったら読み上げ停止
   useEffect(() => {
     return () => { window.speechSynthesis?.cancel() }
   }, [index])
 
   function handleSpeak() {
     setSpeaking(true)
-    speak(current.phrase)
-    // Web Speech API は onend が不安定なことがあるためタイムアウトで戻す
-    const t = setTimeout(() => setSpeaking(false), 3000)
+    window.speechSynthesis?.cancel()
     const utt = new SpeechSynthesisUtterance(current.phrase)
     utt.lang = 'en-US'
     utt.rate = 0.85
+    const t = setTimeout(() => setSpeaking(false), 3500)
     utt.onend = () => { setSpeaking(false); clearTimeout(t) }
-    window.speechSynthesis.cancel()
     window.speechSynthesis.speak(utt)
   }
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!answer.trim() || step !== 'question') return
-    const result = judgeLocal(answer, current.meaning_ja)
-    setJudgment(result)
+    setStep('judging')
+
+    try {
+      const res = await fetch('/api/demo/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phrase: current.phrase,
+          user_answer: answer,
+          meaning_ja: current.meaning_ja,
+        }),
+      })
+      const data: JudgeResult = await res.json()
+      setJudgment(data)
+      // 正解時は自動で読み上げ
+      if (data.status === 'correct') speak(current.phrase)
+    } catch {
+      setJudgment({ correct: false, status: 'incorrect', feedback: `正解: ${current.meaning_ja}` })
+    }
     setStep('result')
   }, [answer, current, step])
 
@@ -128,11 +107,10 @@ export default function DemoQuizPage() {
     }
   }
 
-  // done screen
   if (step === 'done') {
     const allAnswers = [...answers]
     const correct = allAnswers.filter((a) => a.result.status === 'correct').length
-    const partial = allAnswers.filter((a) => a.result.status === 'partial').length
+    const partial  = allAnswers.filter((a) => a.result.status === 'partial').length
     const pct = Math.round(((correct + partial * 0.5) / allAnswers.length) * 100)
 
     return (
@@ -146,9 +124,6 @@ export default function DemoQuizPage() {
               <span className="text-amber-400">惜しい {partial}</span>
               <span className="text-slate-400">不正解 {allAnswers.length - correct - partial}</span>
             </div>
-            <p className="text-[11px] text-slate-600 pt-1">
-              ※デモ版は文字列マッチングで判定。登録するとAIによる柔軟な採点になります。
-            </p>
           </div>
 
           <div className="bg-gradient-to-r from-emerald-600 to-blue-600 rounded-2xl p-5 space-y-2">
@@ -197,9 +172,7 @@ export default function DemoQuizPage() {
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs text-slate-500">
             <span>{index + 1} / {phrases.length}</span>
-            <span>
-              {answers.filter((a) => a.result.status === 'correct').length}正解
-            </span>
+            <span>{answers.filter((a) => a.result.status === 'correct').length}正解</span>
           </div>
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div
@@ -220,9 +193,7 @@ export default function DemoQuizPage() {
             <button
               onClick={handleSpeak}
               className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-colors flex-shrink-0 ${
-                speaking
-                  ? 'bg-blue-500/30 text-blue-300'
-                  : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
+                speaking ? 'bg-blue-500/30 text-blue-300' : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
               }`}
               title="読み上げ"
             >
@@ -233,7 +204,7 @@ export default function DemoQuizPage() {
         </div>
 
         {/* 回答入力 */}
-        {step === 'question' && (
+        {(step === 'question' || step === 'judging') && (
           <div className="space-y-3">
             <input
               type="text"
@@ -241,17 +212,23 @@ export default function DemoQuizPage() {
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="意味を日本語で入力…"
-              className="w-full bg-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              disabled={step === 'judging'}
+              className="w-full bg-white/10 text-white placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
               style={{ fontSize: '16px' }}
               autoFocus
             />
             <button
               onClick={handleSubmit}
-              disabled={!answer.trim()}
+              disabled={!answer.trim() || step === 'judging'}
               className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors"
             >
-              回答する
+              {step === 'judging' ? 'AI判定中…' : '回答する'}
             </button>
+            {step === 'judging' && (
+              <div className="h-1 bg-emerald-900 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 animate-pulse rounded-full w-full" />
+              </div>
+            )}
           </div>
         )}
 
@@ -260,7 +237,7 @@ export default function DemoQuizPage() {
           <div className="space-y-3">
             <div className={`rounded-xl p-4 space-y-2 ${
               judgment.status === 'correct' ? 'bg-emerald-500/20 border border-emerald-500/40' :
-              judgment.status === 'partial' ? 'bg-amber-500/20 border border-amber-500/40' :
+              judgment.status === 'partial'  ? 'bg-amber-500/20 border border-amber-500/40' :
               'bg-red-500/20 border border-red-500/40'
             }`}>
               <div className="flex items-center gap-2">
@@ -271,7 +248,7 @@ export default function DemoQuizPage() {
                   {judgment.status === 'correct' ? '正解！' : judgment.status === 'partial' ? '惜しい！' : '不正解'}
                 </span>
                 {judgment.feedback && (
-                  <span className="text-xs text-slate-300 ml-auto">{judgment.feedback}</span>
+                  <span className="text-xs text-slate-300 ml-auto text-right max-w-[160px]">{judgment.feedback}</span>
                 )}
               </div>
               <p className="text-sm text-slate-200">
