@@ -1,14 +1,17 @@
-import { getSupabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
+import { getUser } from '@/lib/auth'
 import { HomeContent } from '@/components/HomeContent'
 
 export const dynamic = 'force-dynamic'
 
 async function getStats() {
   try {
-    const db = getSupabase()
+    const user = await getUser()
+    if (!user) return { phraseCount: null, sourceCount: null }
+    const db = getSupabaseAdmin()
     const [phraseRes, sourceRes] = await Promise.all([
-      db.from('phrases').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-      db.from('phrases').select('source_title').is('deleted_at', null).not('source_title', 'is', null),
+      db.from('phrases').select('id', { count: 'exact', head: true }).eq('user_id', user.id).is('deleted_at', null),
+      db.from('phrases').select('source_title').eq('user_id', user.id).is('deleted_at', null).not('source_title', 'is', null),
     ])
     const phraseCount = phraseRes.count ?? 0
     const sourceCount = new Set(

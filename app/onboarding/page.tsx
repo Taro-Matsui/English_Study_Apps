@@ -7,6 +7,16 @@ import { useAuth } from '@/lib/auth-context'
 type StudyPurpose = 'meeting' | 'review' | 'reading' | 'interview' | 'general'
 type StudyLevel = 'beginner' | 'intermediate' | 'advanced'
 
+const DOMAIN_PRESETS = [
+  'データエンジニア',
+  'データサイエンティスト',
+  'フロントエンド開発',
+  'バックエンド開発',
+  'セキュリティ',
+  'ビジネス・マーケティング',
+  'ワイン・料理',
+]
+
 const PURPOSES: { value: StudyPurpose; icon: string; label: string; desc: string }[] = [
   { value: 'meeting',   icon: '💬', label: 'ミーティング・日常会話',  desc: 'チームとのやり取りやスタンドアップで使う表現' },
   { value: 'review',    icon: '👨‍💻', label: 'コードレビュー・Slack',  desc: 'レビューコメントやSlackで使う技術的表現' },
@@ -26,6 +36,7 @@ export default function OnboardingPage() {
   const { user } = useAuth()
   const [purpose, setPurpose] = useState<StudyPurpose | null>(null)
   const [level, setLevel] = useState<StudyLevel | null>(null)
+  const [domain, setDomain] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,8 +47,10 @@ export default function OnboardingPage() {
     if (!user) return
     const p = user.user_metadata?.study_purpose as StudyPurpose | undefined
     const l = user.user_metadata?.study_level as StudyLevel | undefined
+    const d = user.user_metadata?.study_domain as string | undefined
     if (p && PURPOSES.some((x) => x.value === p)) setPurpose(p)
     if (l && LEVELS.some((x) => x.value === l)) setLevel(l)
+    if (d) setDomain(d)
   }, [user])
 
   async function handleSubmit() {
@@ -48,7 +61,7 @@ export default function OnboardingPage() {
       const res = await fetch('/api/user/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ study_purpose: purpose, study_level: level }),
+        body: JSON.stringify({ study_purpose: purpose, study_level: level, study_domain: domain.trim() || undefined }),
       })
       if (!res.ok) {
         const data = await res.json()
@@ -134,6 +147,40 @@ export default function OnboardingPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* 専門領域（任意） */}
+        <div className="space-y-3">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-sm font-semibold text-slate-300">専門領域・興味（任意）</h2>
+            <span className="text-xs text-slate-600">フレーズ抽出の優先度に反映されます</span>
+          </div>
+          {/* プリセットチップ */}
+          <div className="flex flex-wrap gap-2">
+            {DOMAIN_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setDomain((prev) => prev === preset ? '' : preset)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  domain === preset
+                    ? 'border-blue-500 bg-blue-500/20 text-blue-300'
+                    : 'border-white/15 bg-white/5 text-slate-400 hover:bg-white/10'
+                }`}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
+          {/* フリーテキスト */}
+          <input
+            type="text"
+            value={domain}
+            onChange={(e) => setDomain(e.target.value.slice(0, 100))}
+            placeholder="または自由に入力（例: 機械学習、クラウドインフラ、DX推進）"
+            style={{ fontSize: '16px' }}
+            className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-blue-500/60 transition-colors text-sm"
+          />
         </div>
 
         {error && (

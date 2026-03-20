@@ -28,14 +28,19 @@ const LEVEL_LABELS: Record<string, string> = {
 export interface UserContext {
   study_purpose?: string
   study_level?: string
+  study_domain?: string
 }
 
-const USER_PROMPT_TEMPLATE = (text: string, userContext?: UserContext) => `${userContext?.study_purpose || userContext?.study_level ? `## 学習者プロフィール
-${userContext.study_purpose ? `- 学習目的: ${PURPOSE_LABELS[userContext.study_purpose] ?? userContext.study_purpose}` : ''}
-${userContext.study_level ? `- 英語レベル: ${LEVEL_LABELS[userContext.study_level] ?? userContext.study_level}` : ''}
+const USER_PROMPT_TEMPLATE = (text: string, userContext?: UserContext) => {
+  const hasContext = userContext?.study_purpose || userContext?.study_level || userContext?.study_domain
+  const contextSection = hasContext ? `## 学習者プロフィール
+${userContext!.study_purpose ? `- 学習目的: ${PURPOSE_LABELS[userContext!.study_purpose] ?? userContext!.study_purpose}` : ''}
+${userContext!.study_level ? `- 英語レベル: ${LEVEL_LABELS[userContext!.study_level] ?? userContext!.study_level}` : ''}
+${userContext!.study_domain ? `- 専門・興味領域: ${userContext!.study_domain}（この領域に関連する専門用語・表現を優先して抽出）` : ''}
 → 上記プロフィールに特に有用なフレーズを優先して抽出・難易度を調整してください。
 
-` : ''}以下のテキストから英語フレーズを抽出してください。
+` : ''
+  return `${contextSection}以下のテキストから英語フレーズを抽出してください。
 目安は40個以上ですが、良質なフレーズが多い場合は60〜80個以上抽出しても構いません。リストアップは多めに行ってください。
 
 テキスト:
@@ -79,6 +84,7 @@ engineer_level の選び方：
 - テキストから抽出したフレーズと重複しないこと
 - これらには必ず \`"suggested": true\` フィールドを追加（抽出フレーズには付けない）
 - original_context にはその表現の典型的な使用例文を英語で作成`
+}
 
 export async function extractPhrasesWithClaude(text: string, userContext?: UserContext): Promise<ExtractedPhrase[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY

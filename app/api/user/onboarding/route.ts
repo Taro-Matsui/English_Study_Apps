@@ -7,6 +7,7 @@ type StudyLevel = 'beginner' | 'intermediate' | 'advanced'
 
 const VALID_PURPOSES: StudyPurpose[] = ['meeting', 'review', 'reading', 'interview', 'general']
 const VALID_LEVELS: StudyLevel[] = ['beginner', 'intermediate', 'advanced']
+const DOMAIN_MAX_LEN = 100
 
 // 初期シードフレーズ（初級〜中級レベルのエンジニア英語 10選）
 const SEED_PHRASES = [
@@ -126,7 +127,7 @@ export async function POST(req: NextRequest) {
   const user = await getUser()
   if (!user) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 })
 
-  let body: { study_purpose: StudyPurpose; study_level: StudyLevel }
+  let body: { study_purpose: StudyPurpose; study_level: StudyLevel; study_domain?: string }
   try { body = await req.json() }
   catch { return NextResponse.json({ error: 'リクエストの解析に失敗しました' }, { status: 400 }) }
 
@@ -134,6 +135,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '学習目的が不正です' }, { status: 400 })
   if (!VALID_LEVELS.includes(body.study_level))
     return NextResponse.json({ error: 'レベルが不正です' }, { status: 400 })
+
+  // study_domain: 任意フィールド、英数字・日本語・一般記号のみ、最大100文字
+  const rawDomain = (body.study_domain ?? '').trim()
+  const study_domain = rawDomain.slice(0, DOMAIN_MAX_LEN) || undefined
 
   const db = getSupabaseAdmin()
 
@@ -143,6 +148,7 @@ export async function POST(req: NextRequest) {
       ...user.user_metadata,
       study_purpose: body.study_purpose,
       study_level: body.study_level,
+      study_domain,
       onboarding_complete: true,
     },
   })

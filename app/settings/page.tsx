@@ -43,6 +43,7 @@ export default function SettingsPage() {
   const { user } = useAuth()
   const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
   const studyLevel = user?.user_metadata?.study_level as string | undefined
+  const studyDomain = user?.user_metadata?.study_domain as string | undefined
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
   const [testingKey, setTestingKey] = useState<string | null>(null)
   const [showCustom, setShowCustom] = useState(settings.voicePreset === 'custom')
@@ -112,6 +113,12 @@ export default function SettingsPage() {
                     {studyLevel ? LEVEL_LABELS[studyLevel] ?? studyLevel : '—'}
                   </span>
                 </div>
+                {studyDomain && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">{ja ? '領域' : 'Domain'}</span>
+                    <span className="text-sm text-white">{studyDomain}</span>
+                  </div>
+                )}
               </div>
               <Link
                 href="/onboarding"
