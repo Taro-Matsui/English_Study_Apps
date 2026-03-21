@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import { WelcomeGuide } from './WelcomeGuide'
 import { AnnouncementBell } from './AnnouncementBell'
 import { HintBubble } from './HintBubble'
+import { PwaInstallHint } from './PwaInstallHint'
 import { X_URL } from '@/lib/social'
 
 interface Props {
@@ -87,6 +88,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 pb-24">
+      <PwaInstallHint />
       <div className="w-full max-w-sm space-y-5">
 
         {/* ヘッダー */}

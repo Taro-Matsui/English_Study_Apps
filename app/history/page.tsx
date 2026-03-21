@@ -7,6 +7,15 @@ import { useAuth } from '@/lib/auth-context'
 import { openXShare } from '@/lib/share-image'
 import { formatTime } from '@/lib/utils'
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
+
+function getShareImageUrl(sessionId: string, completedAt: string): string | null {
+  const age = Date.now() - new Date(completedAt).getTime()
+  if (age > ONE_DAY_MS) return null
+  return `${SUPABASE_URL}/storage/v1/object/public/share-images/${sessionId}.png`
+}
+
 interface AnswerRow {
   is_correct: boolean
   user_answer: string
@@ -240,18 +249,38 @@ export default function HistoryPage() {
             const summaryStr = lang === 'ja'
               ? `${ses.total_questions}問 / 正解 ${ses.correct_count}問`
               : `${ses.total_questions}Q / ${ses.correct_count} correct`
+            const thumbUrl = getShareImageUrl(ses.id, ses.completed_at)
             return (
-              <div key={ses.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div key={ses.id} className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
                 <button
                   onClick={() => setOpen(isOpen ? null : ses.id)}
-                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-amber-50/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 text-left">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
-                      pct >= 80 ? 'bg-emerald-100 text-emerald-700' : pct >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                    }`}>
-                      {pct}%
-                    </div>
+                    {/* サムネイル or スコアバッジ */}
+                    {thumbUrl ? (
+                      <div className="w-10 h-14 rounded-lg overflow-hidden flex-shrink-0 border border-amber-100 shadow-sm">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={thumbUrl}
+                          alt={`${pct}%`}
+                          className="w-full h-full object-cover object-top"
+                          onError={(e) => {
+                            // 画像がなければバッジ表示にフォールバック
+                            const el = e.currentTarget.parentElement!
+                            el.innerHTML = `<div class="w-full h-full flex items-center justify-center text-xs font-bold ${
+                              pct >= 80 ? 'bg-emerald-100 text-emerald-700' : pct >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                            }">${pct}%</div>`
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold ${
+                        pct >= 80 ? 'bg-emerald-100 text-emerald-700' : pct >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {pct}%
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm font-semibold text-gray-800">{dateStr}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{summaryStr}</p>
