@@ -48,7 +48,7 @@ const nextConfig = {
               "img-src 'self' data: blob: *.google-analytics.com *.googletagmanager.com *.doubleclick.net *.googlesyndication.com",
               "font-src 'self' data:",
               "connect-src 'self' https://tgqfnsmrwvpycmhmfpyv.supabase.co *.google-analytics.com *.analytics.google.com *.googletagmanager.com *.doubleclick.net *.adtrafficquality.google",
-              "frame-src *.googletagmanager.com *.google.com *.doubleclick.net *.googlesyndication.com",
+              "frame-src *.googletagmanager.com *.google.com *.doubleclick.net *.googlesyndication.com *.adtrafficquality.google",
               "frame-ancestors 'none'",
             ].join('; '),
           },
