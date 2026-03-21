@@ -9,6 +9,7 @@ import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
 import type { ExplainResponse } from '../api/quiz/explain/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
+import { useAuth } from '@/lib/auth-context'
 import { generateQuizResultImage, getShareText } from '@/lib/share-image'
 
 interface QuizPhrase {
@@ -89,6 +90,7 @@ function QuizContent() {
 
   const { t } = useLanguage()
   const { settings, markMastered, setVoicePreset } = useSettings()
+  const { user } = useAuth()
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
   const [index, setIndex] = useState(0)
   const [step, setStep] = useState<Step>('loading')
@@ -277,37 +279,38 @@ function QuizContent() {
   async function handleShare(pct: number) {
     if (sharing) return
     setSharing(true)
-    const params = { pct, correct: score.correct, total, partial: score.partial, incorrect: score.incorrect }
+    const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
+    const isDark = settings.colorTheme === 'dark' ||
+      (settings.colorTheme === 'system' &&
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches)
+    const params = {
+      pct,
+      correct: score.correct,
+      total,
+      partial: score.partial,
+      incorrect: score.incorrect,
+      theme: isDark ? 'dark' as const : 'light' as const,
+      studyPurpose,
+    }
     try {
       const shareText = getShareText(params)
-      let blob: Blob | null = null
-      try { blob = await generateQuizResultImage(params) } catch {}
-
-      // モバイル: Web Share API で画像ごと共有
-      if (blob) {
-        const file = new File([blob], 'engineer-english-result.png', { type: 'image/png' })
-        if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ files: [file], text: shareText })
-          return
-        }
-      }
-
-      // デスクトップ fallback: 画像ダウンロード + X インテント
-      if (blob) {
+      // 画像生成 → 自動ダウンロード
+      try {
+        const blob = await generateQuizResultImage(params)
         const objUrl = URL.createObjectURL(blob)
         const a = document.createElement('a')
-        a.href = objUrl; a.download = 'engineer-english-result.png'; a.click()
-        URL.revokeObjectURL(objUrl)
-      }
+        a.href = objUrl
+        a.download = 'phrase-up-result.png'
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
+      } catch {}
+      // X 投稿ページを直接開く
       window.open(
         `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-        '_blank', 'noopener,noreferrer',
+        '_blank',
+        'noopener,noreferrer',
       )
-    } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') return
-      // 最終 fallback: テキストのみ
-      const text = `Engineer English で ${pct}% 達成！${score.correct}/${total} 正解 #エンジニア英語`
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
     } finally {
       setSharing(false)
     }
@@ -348,12 +351,18 @@ function QuizContent() {
   if (step === 'done') {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
+    const motivationMsg = pct >= 80
+      ? 'この調子で明日も続けよう！'
+      : pct >= 60
+      ? '毎日続ければ必ず上達する！'
+      : '挑戦を続けることが上達の近道！'
     const isHighScore = pct >= 80
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col p-4">
         <div className="max-w-lg mx-auto w-full pt-8 space-y-5">
           <div className="text-center space-y-2">
             <p className="text-5xl">{grade}</p>
+            <p className="text-base font-semibold text-gray-600 dark:text-slate-300">{motivationMsg}</p>
             <p className="text-5xl font-bold text-gray-900 dark:text-white">{pct}<span className="text-2xl text-gray-400 dark:text-slate-400">%</span></p>
             <div className="flex justify-center gap-6 pt-2">
               <div><p className="text-3xl font-bold text-emerald-500 dark:text-emerald-400">{score.correct}</p><p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t('done_correct')}</p></div>
@@ -452,7 +461,7 @@ function QuizContent() {
     <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
       <div className="sticky top-0 z-10 bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-sm">
         <div className="px-4 pt-3 pb-1 flex items-center justify-between max-w-lg mx-auto">
-          <Link href="/" className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
+          <Link href="/" className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-2xl p-2 -ml-2">‹</Link>
           <div className="flex items-center gap-3">
             {isFocusMode && (
               <span className="text-xs bg-red-500/20 text-red-500 dark:text-red-400 px-2 py-0.5 rounded-full font-medium">⚠ 弱点</span>

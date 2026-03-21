@@ -96,7 +96,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <span className="text-lg">💬</span>
             <span className="text-xl">👨‍💻</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Engineer English</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Phrase Up</h1>
           <p className="text-gray-500 dark:text-slate-400 text-sm">{t('tagline')}</p>
         </div>
 

@@ -100,7 +100,7 @@ export default function PhrasesPage() {
         <div className="max-w-2xl mx-auto space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Link href="/" className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 text-lg leading-none">‹</Link>
+              <Link href="/" className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 text-2xl p-2 -ml-2">‹</Link>
               <h1 className="text-base font-bold text-gray-800 dark:text-white">{t('phrases_title')}</h1>
             </div>
             <div className="flex items-center gap-2">

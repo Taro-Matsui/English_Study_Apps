@@ -4,19 +4,31 @@ export interface ShareParams {
   total: number
   partial: number
   incorrect: number
+  theme?: 'light' | 'dark'
+  studyPurpose?: string
+}
+
+const PURPOSE_SHARE_LABELS: Record<string, string> = {
+  meeting:   'ミーティング英語',
+  review:    'コードレビュー英語',
+  reading:   '技術文書英語',
+  interview: '面接英語',
+  general:   'ビジネス英語',
 }
 
 /** X 投稿用テキストを生成 */
-export function getShareText({ pct, correct, total }: ShareParams): string {
+export function getShareText({ pct, correct, total, studyPurpose }: ShareParams): string {
   const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  const categoryTag = studyPurpose && PURPOSE_SHARE_LABELS[studyPurpose]
+    ? ` #${PURPOSE_SHARE_LABELS[studyPurpose].replace(/\s/g, '')}` : ''
   return [
-    `【Engineer English】クイズ完了 📊`,
+    `【Phrase Up】クイズ完了 📊`,
     `${pct}% 正解（${correct}/${total}問）`,
     ``,
-    `エンジニア向け英語フレーズ学習アプリ`,
+    `英語フレーズ学習アプリ`,
     appUrl,
     ``,
-    `#エンジニア英語 #英語学習`,
+    `#英語学習 #フレーズ学習${categoryTag}`,
   ].join('\n')
 }
 
@@ -44,7 +56,8 @@ function fillRoundRect(
  * 1200×630px（Twitter カード推奨サイズ）。
  */
 export async function generateQuizResultImage(params: ShareParams): Promise<Blob> {
-  const { pct, correct, total, partial, incorrect } = params
+  const { pct, correct, total, partial, incorrect, theme = 'dark' } = params
+  const isLight = theme === 'light'
   const W = 1200, H = 630
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
@@ -55,18 +68,28 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
     pct >= 60 ? '#f59e0b' :   // amber-500
                '#ef4444'      // red-500
 
+  const motivationText =
+    pct >= 80 ? '素晴らしい！この調子で明日も 🔥' :
+    pct >= 60 ? 'いい調子！また明日も挑戦 💡' :
+               '挑戦を続けることが上達の近道 ✨'
+
   // ── 背景グラデーション ─────────────────────────────────
   const bg = ctx.createLinearGradient(0, 0, W, H)
-  bg.addColorStop(0, '#0f172a')   // slate-900
-  bg.addColorStop(1, '#1e1b4b')   // indigo-950
+  if (isLight) {
+    bg.addColorStop(0, '#f8fafc')   // slate-50
+    bg.addColorStop(1, '#eef2ff')   // indigo-50
+  } else {
+    bg.addColorStop(0, '#0f172a')   // slate-900
+    bg.addColorStop(1, '#1e1b4b')   // indigo-950
+  }
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
   // デコレーション円（右上・スコアカラー）
-  ctx.fillStyle = `${scoreColor}1a`
+  ctx.fillStyle = `${scoreColor}${isLight ? '22' : '1a'}`
   ctx.beginPath(); ctx.arc(W + 80, -80, 400, 0, Math.PI * 2); ctx.fill()
   // デコレーション円（左下・indigo）
-  ctx.fillStyle = 'rgba(99,102,241,0.10)'
+  ctx.fillStyle = isLight ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.10)'
   ctx.beginPath(); ctx.arc(-80, H + 80, 340, 0, Math.PI * 2); ctx.fill()
 
   // ── ヘッダー ───────────────────────────────────────────
@@ -75,36 +98,36 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   fillRoundRect(ctx, 60, 52, 5, 42, 3)
 
   // アプリ名
-  ctx.fillStyle = '#f1f5f9'
+  ctx.fillStyle = isLight ? '#1e293b' : '#f1f5f9'
   ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
   ctx.textAlign = 'left'
-  ctx.fillText('Engineer English', 78, 81)
+  ctx.fillText('Phrase Up', 78, 81)
 
   // サブタイトル
   ctx.fillStyle = '#64748b'
   ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.fillText('エンジニア向け英語フレーズ学習', 78, 107)
+  ctx.fillText('英語フレーズ学習アプリ', 78, 107)
 
   // 日付（右寄せ）
   const dateStr = new Date().toLocaleDateString('ja-JP', {
     year: 'numeric', month: 'long', day: 'numeric',
   })
-  ctx.fillStyle = '#475569'
+  ctx.fillStyle = isLight ? '#94a3b8' : '#475569'
   ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
   ctx.textAlign = 'right'
   ctx.fillText(dateStr, W - 60, 81)
 
   // 区切り線
-  ctx.strokeStyle = '#1e293b'
+  ctx.strokeStyle = isLight ? '#e2e8f0' : '#1e293b'
   ctx.lineWidth = 1.5
   ctx.beginPath(); ctx.moveTo(60, 138); ctx.lineTo(W - 60, 138); ctx.stroke()
 
   // ── メインスコア ──────────────────────────────────────
-  // 「今日のクイズ完了！」
-  ctx.fillStyle = '#94a3b8'
+  // モチベーションメッセージ
+  ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'
   ctx.font = '24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
   ctx.textAlign = 'center'
-  ctx.fillText('今日のクイズ完了！', W / 2, 192)
+  ctx.fillText(motivationText, W / 2, 192)
 
   // スコア % （大）
   ctx.fillStyle = scoreColor
@@ -113,7 +136,7 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   ctx.fillText(`${pct}%`, W / 2, 400)
 
   // 問題数サマリ
-  ctx.fillStyle = '#94a3b8'
+  ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'
   ctx.font = '30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
   ctx.fillText(`${correct} / ${total} 問正解`, W / 2, 453)
 
@@ -124,9 +147,9 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   const bY = 490
 
   const badges = [
-    { label: `✓  正解 ${correct}`, bg: 'rgba(16,185,129,0.18)', fg: '#10b981' },
-    { label: `△  部分 ${partial}`,  bg: 'rgba(245,158,11,0.18)', fg: '#f59e0b' },
-    { label: `✗  誤答 ${incorrect}`, bg: 'rgba(239,68,68,0.18)',  fg: '#ef4444' },
+    { label: `✓  正解 ${correct}`, bg: isLight ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.18)', fg: '#10b981' },
+    { label: `△  部分 ${partial}`,  bg: isLight ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.18)', fg: '#f59e0b' },
+    { label: `✗  誤答 ${incorrect}`, bg: isLight ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.18)',  fg: '#ef4444' },
   ]
   badges.forEach(({ label, bg, fg }, i) => {
     const bx = bX0 + i * (bW + bGap)
@@ -142,10 +165,10 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   const footerY = H - 34
 
   // ハッシュタグ（左）
-  ctx.fillStyle = '#334155'
+  ctx.fillStyle = isLight ? '#94a3b8' : '#334155'
   ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
   ctx.textAlign = 'left'
-  ctx.fillText('#エンジニア英語  #英語学習', 60, footerY)
+  ctx.fillText('#英語学習  #フレーズ学習', 60, footerY)
 
   // URL（右）
   const appUrl = typeof window !== 'undefined' ? window.location.origin : ''

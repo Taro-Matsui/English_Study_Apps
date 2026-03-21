@@ -19,7 +19,7 @@ export const TRANSLATIONS = {
     speed_slow: 'ゆっくり',
 
     // home
-    tagline: 'エンジニア文脈の英語を実務感覚で習得する',
+    tagline: '仕事で使う英語フレーズを実務感覚で習得する',
     nav_quiz: 'クイズ',
     nav_quiz_desc: 'フレーズの意味を答えて学習',
     nav_history: 'チャレンジ記録',
@@ -99,7 +99,7 @@ export const TRANSLATIONS = {
     speed_slow: 'Slow',
 
     // home
-    tagline: 'Master engineer English in real-world context',
+    tagline: 'Master workplace English phrases in real-world context',
     nav_quiz: 'Quiz',
     nav_quiz_desc: 'Answer phrase meanings to learn',
     nav_history: 'Challenge Records',

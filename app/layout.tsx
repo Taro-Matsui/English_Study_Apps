@@ -19,12 +19,12 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Engineer English",
-  description: "エンジニアのための英語フレーズ学習アプリ",
+  title: "Phrase Up",
+  description: "英語フレーズを実務で使えるレベルまで習得するアプリ",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "EngEng",
+    title: "Phrase Up",
   },
 };
 

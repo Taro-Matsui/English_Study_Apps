@@ -95,7 +95,7 @@ export default function StreakPage() {
       {/* ヘッダー */}
       <div className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-white/5 px-4 py-3">
         <div className="max-w-sm mx-auto flex items-center gap-2">
-          <Link href="/" className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 text-lg leading-none">‹</Link>
+          <Link href="/" className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 text-2xl p-2 -ml-2">‹</Link>
           <h1 className="text-base font-bold text-gray-800 dark:text-white">
             {lang === 'ja' ? '学習カレンダー' : 'Study Calendar'}
           </h1>

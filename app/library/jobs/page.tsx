@@ -59,7 +59,7 @@ export default function LibraryJobsPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-white pb-24">
       <div className="sticky top-0 z-10 bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-white/5">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
-          <Link href="/library/import" className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-lg px-1 -ml-1">‹</Link>
+          <Link href="/library/import" className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-2xl p-2 -ml-2">‹</Link>
           <h1 className="flex-1 text-sm font-semibold">インポート ジョブ一覧</h1>
           <button
             onClick={fetchJobs}

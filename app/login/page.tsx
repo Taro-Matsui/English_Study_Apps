@@ -98,8 +98,8 @@ export default function LoginPage() {
         {/* ロゴ / タイトル */}
         <div className="text-center space-y-1">
           <p className="text-3xl">🧑‍💻</p>
-          <h1 className="text-gray-900 dark:text-white font-bold text-lg">Engineer English</h1>
-          <p className="text-gray-400 dark:text-slate-500 text-xs">エンジニア向け英語フレーズ学習</p>
+          <h1 className="text-gray-900 dark:text-white font-bold text-lg">Phrase Up</h1>
+          <p className="text-gray-400 dark:text-slate-500 text-xs">英語フレーズ学習アプリ</p>
         </div>
 
         {/* タブ切り替え */}

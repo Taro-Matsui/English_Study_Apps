@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Engineer English',
-    short_name: 'EngEng',
-    description: 'エンジニアのための英語フレーズ学習アプリ',
+    name: 'Phrase Up',
+    short_name: 'PhraseUp',
+    description: '英語フレーズを実務で使えるレベルまで習得するアプリ',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
