@@ -5,6 +5,7 @@ export interface ShareParams {
   partial: number
   incorrect: number
   studyPurpose?: string
+  sessionId?: string
 }
 
 const PURPOSE_SHARE_LABELS: Record<string, string> = {
@@ -15,17 +16,13 @@ const PURPOSE_SHARE_LABELS: Record<string, string> = {
   general:   'ビジネス英語',
 }
 
-/** X 投稿用テキストを生成 */
+/** X 投稿用テキストを生成（URL は別途 &url= で渡すため本文に含めない） */
 export function getShareText({ pct, correct, total, studyPurpose }: ShareParams): string {
-  const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const categoryTag = studyPurpose && PURPOSE_SHARE_LABELS[studyPurpose]
     ? ` #${PURPOSE_SHARE_LABELS[studyPurpose].replace(/\s/g, '')}` : ''
   return [
     `【Reel】クイズ完了 📊`,
     `${pct}% 正解（${correct}/${total}問）`,
-    ``,
-    `Reel — 実際の会話から学ぶ英語フレーズ`,
-    appUrl,
     ``,
     `#英語学習 #フレーズ学習${categoryTag}`,
   ].join('\n')
@@ -197,16 +194,33 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
 }
 
 /**
- * 結果画像をシェア。
- * モバイル（Web Share API対応）: 画像ファイルを直接シェアシートに渡す（X に直接投稿可）
- * デスクトップ: クリップボードにコピーして X 投稿画面を開く
+ * 結果をシェア。
+ * sessionId あり → Twitter Cards（シェアURLをツイートに含める。画像は自動表示）
+ * sessionId なし（モバイル）→ Web Share API でファイルシェート
+ * sessionId なし（デスクトップ）→ クリップボードコピー + X 投稿画面を開く
+ *
  * 戻り値: 'shared' | 'copied' | 'opened'
  */
 export async function openXShare(params: ShareParams): Promise<'shared' | 'copied' | 'opened'> {
+  const { sessionId } = params
   const shareText = getShareText(params)
+
+  // ── Twitter Cards: sessionId がある場合 ──────────────────────
+  // シェアURLをツイートに含めると Twitter が og:image を自動取得して表示する
+  if (sessionId && typeof window !== 'undefined') {
+    const shareUrl = `${window.location.origin}/share/${sessionId}`
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+      '_blank',
+      'noopener,noreferrer',
+    )
+    return 'opened'
+  }
+
+  // ── フォールバック: Canvas 画像生成 ──────────────────────────
   const blob = await generateQuizResultImage(params).catch(() => null)
 
-  // ── モバイル: Web Share API でファイルシェア ─────────────────
+  // モバイル: Web Share API でファイルシェア
   if (blob && typeof navigator.share === 'function' && navigator.canShare) {
     const file = new File([blob], 'reel-result.png', { type: 'image/png' })
     if (navigator.canShare({ files: [file] })) {
@@ -222,7 +236,7 @@ export async function openXShare(params: ShareParams): Promise<'shared' | 'copie
     }
   }
 
-  // ── デスクトップ: クリップボード + X ウィンドウ ──────────────
+  // デスクトップ: クリップボード + X ウィンドウ
   let copied = false
   if (blob && navigator.clipboard && 'ClipboardItem' in window) {
     try {
@@ -231,10 +245,14 @@ export async function openXShare(params: ShareParams): Promise<'shared' | 'copie
     } catch {}
   }
 
+  const fallbackText = typeof window !== 'undefined'
+    ? `${shareText}\n\n${window.location.origin}`
+    : shareText
+
   const delay = copied ? 600 : 0
   setTimeout(() => {
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(fallbackText)}`,
       '_blank',
       'noopener,noreferrer',
     )

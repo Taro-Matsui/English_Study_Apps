@@ -77,7 +77,7 @@ function maskPhrase(context: string, phrase: string): string {
 
 export default function QuizPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center"><p className="text-gray-400 dark:text-slate-500 text-sm animate-pulse">読み込み中...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-amber-50 flex items-center justify-center"><p className="text-gray-400 text-sm animate-pulse">読み込み中...</p></div>}>
       <QuizContent />
     </Suspense>
   )
@@ -103,6 +103,7 @@ function QuizContent() {
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'failed' | null>(null)
   const [sharing, setSharing] = useState(false)
   const [clipboardMsg, setClipboardMsg] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const [explanation, setExplanation] = useState<string | null>(null)
   const [explaining, setExplaining] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -192,11 +193,11 @@ function QuizContent() {
   ]
 
   const VoiceSelector = () => (
-    <div className="flex items-center gap-0.5 bg-gray-100 dark:bg-white/5 rounded-full px-1.5 py-1">
+    <div className="flex items-center gap-0.5 bg-gray-100 rounded-full px-1.5 py-1">
       {VOICE_PRESETS.map(({ key, label }) => (
         <button key={key} onClick={() => setVoicePreset(key)}
           className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
-            settings.voicePreset === key ? 'bg-blue-500 text-white' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+            settings.voicePreset === key ? 'bg-blue-500 text-white' : 'text-gray-500 hover:text-gray-700'
           }`}>
           {label}
         </button>
@@ -270,7 +271,10 @@ function QuizContent() {
         body: JSON.stringify({ answers }),
       })
         .then((r) => r.json())
-        .then((d) => setSaveState(d.success ? 'saved' : 'failed'))
+        .then((d) => {
+          setSaveState(d.success ? 'saved' : 'failed')
+          if (d.session_id) setSessionId(d.session_id)
+        })
         .catch(() => setSaveState('failed'))
       return
     }
@@ -285,19 +289,20 @@ function QuizContent() {
         pct, correct: score.correct, total,
         partial: score.partial, incorrect: score.incorrect,
         studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
+        sessionId: sessionId ?? undefined,
       })
       if (result === 'copied') {
         setClipboardMsg(true)
-        setTimeout(() => setClipboardMsg(false), 4000)
+        setTimeout(() => setClipboardMsg(false), 3000)
       }
     } finally { setSharing(false) }
   }
 
   const SpeedSelector = () => (
-    <div className="flex items-center gap-0.5 bg-gray-100 dark:bg-white/5 rounded-full px-1.5 py-1">
+    <div className="flex items-center gap-0.5 bg-gray-100 rounded-full px-1.5 py-1">
       {(['slow', 'normal', 'fast'] as Speed[]).map((s) => (
         <button key={s} onClick={() => setSpeed(s)}
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${speed === s ? 'bg-blue-500 text-white' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'}`}>
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${speed === s ? 'bg-blue-500 text-white' : 'text-gray-500 hover:text-gray-700'}`}>
           {t(`speed_${s}` as 'speed_fast' | 'speed_normal' | 'speed_slow')}
         </button>
       ))}
@@ -305,22 +310,22 @@ function QuizContent() {
   )
 
   if (step === 'loading') return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
-      <p className="text-gray-400 dark:text-slate-500 text-sm animate-pulse">
+    <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+      <p className="text-gray-400 text-sm animate-pulse">
         {isFocusMode ? '⚠️ 弱点フレーズを読み込み中...' : t('quiz_loading')}
       </p>
     </div>
   )
 
   if (step === 'empty') return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col items-center justify-center gap-4 p-8 text-center">
+    <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
-      <p className="text-gray-500 dark:text-slate-400 text-sm">
+      <p className="text-gray-500 text-sm">
         {isFocusMode ? '弱点フレーズが見つかりません。通常クイズに切り替えます。' : t('quiz_empty')}
       </p>
       {isFocusMode
-        ? <Link href="/quiz" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">通常クイズを開始</Link>
-        : <Link href="/library/import" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">{t('quiz_empty_link')}</Link>
+        ? <Link href="/quiz" className="text-sm text-blue-600 hover:underline">通常クイズを開始</Link>
+        : <Link href="/library/import" className="text-sm text-blue-600 hover:underline">{t('quiz_empty_link')}</Link>
       }
     </div>
   )
@@ -335,16 +340,16 @@ function QuizContent() {
       : '挑戦を続けることが上達の近道！'
     const isHighScore = pct >= 80
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col p-4">
+      <div className="min-h-screen bg-amber-50 flex flex-col p-4">
         <div className="max-w-lg mx-auto w-full pt-8 space-y-5">
           <div className="text-center space-y-2">
             <p className="text-5xl">{grade}</p>
-            <p className="text-base font-semibold text-gray-600 dark:text-slate-300">{motivationMsg}</p>
-            <p className="text-5xl font-bold text-gray-900 dark:text-white">{pct}<span className="text-2xl text-gray-400 dark:text-slate-400">%</span></p>
+            <p className="text-base font-semibold text-gray-600">{motivationMsg}</p>
+            <p className="text-5xl font-bold text-gray-900">{pct}<span className="text-2xl text-gray-400">%</span></p>
             <div className="flex justify-center gap-6 pt-2">
-              <div><p className="text-3xl font-bold text-emerald-500 dark:text-emerald-400">{score.correct}</p><p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t('done_correct')}</p></div>
-              <div><p className="text-3xl font-bold text-amber-500 dark:text-amber-400">{score.partial}</p><p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t('done_partial')}</p></div>
-              <div><p className="text-3xl font-bold text-red-500 dark:text-red-400">{score.incorrect}</p><p className="text-xs text-gray-400 dark:text-slate-500 mt-1">{t('done_incorrect')}</p></div>
+              <div><p className="text-3xl font-bold text-emerald-500">{score.correct}</p><p className="text-xs text-gray-400 mt-1">{t('done_correct')}</p></div>
+              <div><p className="text-3xl font-bold text-amber-500">{score.partial}</p><p className="text-xs text-gray-400 mt-1">{t('done_partial')}</p></div>
+              <div><p className="text-3xl font-bold text-red-500">{score.incorrect}</p><p className="text-xs text-gray-400 mt-1">{t('done_incorrect')}</p></div>
             </div>
           </div>
 
@@ -376,29 +381,29 @@ function QuizContent() {
             {answers.map((a, i) => {
               const st: JudgeStatus = a.status ?? (a.is_correct ? 'correct' : 'incorrect')
               return (
-                <div key={i} className={`rounded-xl p-3 border text-sm ${st === 'correct' ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20' : st === 'partial' ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20'}`}>
+                <div key={i} className={`rounded-xl p-3 border text-sm ${st === 'correct' ? 'bg-emerald-50 border-emerald-200' : st === 'partial' ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-gray-900 dark:text-white">{a.phrase}</span>
+                    <span className="font-bold text-gray-900">{a.phrase}</span>
                     <span className={`text-xs ${RESULT_CLS[st]}`}>
                       {t(`result_${st}` as 'result_correct' | 'result_partial' | 'result_incorrect')}
                     </span>
                   </div>
-                  <p className="text-gray-500 dark:text-slate-400 text-xs mt-1">{t('quiz_your_answer')}{a.user_answer}</p>
-                  {st !== 'correct' && <p className="text-gray-600 dark:text-slate-300 text-xs mt-0.5">{t('quiz_correct_answer')}{a.meaning_ja}</p>}
+                  <p className="text-gray-500 text-xs mt-1">{t('quiz_your_answer')}{a.user_answer}</p>
+                  {st !== 'correct' && <p className="text-gray-600 text-xs mt-0.5">{t('quiz_correct_answer')}{a.meaning_ja}</p>}
                 </div>
               )
             })}
           </div>
 
           {saveState === 'saving' && (
-            <p className="text-center text-xs text-gray-400 dark:text-slate-500 animate-pulse">記録を保存中...</p>
+            <p className="text-center text-xs text-gray-400 animate-pulse">記録を保存中...</p>
           )}
           {saveState === 'failed' && (
-            <p className="text-center text-xs text-red-500 dark:text-red-400">記録の保存に失敗しました。ネットワーク状態を確認してください。</p>
+            <p className="text-center text-xs text-red-500">記録の保存に失敗しました。ネットワーク状態を確認してください。</p>
           )}
           {clipboardMsg && (
-            <p className="text-center text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl py-2.5 px-3">
-              📋 画像をコピーしました！Xの投稿画面で Ctrl+V / ⌘V で貼り付けてください。
+            <p className="text-center text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-xl py-2 px-3">
+              📋 画像をクリップボードにコピーしました。Xの投稿画面で Ctrl+V / ⌘V で貼り付けてください。
             </p>
           )}
 
@@ -409,8 +414,8 @@ function QuizContent() {
               disabled={saveState === 'saving'}
               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors ${
                 saveState === 'saving'
-                  ? 'bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-slate-600 cursor-not-allowed'
-                  : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/20'
+                  ? 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {saveState === 'saving' ? '保存中...' : t('done_history')}
@@ -420,8 +425,8 @@ function QuizContent() {
               disabled={sharing}
               className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors ${
                 sharing
-                  ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-slate-500 animate-pulse cursor-not-allowed'
-                  : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/20'
+                  ? 'bg-gray-100 text-gray-400 animate-pulse cursor-not-allowed'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
               title="結果をシェア"
             >
@@ -430,7 +435,7 @@ function QuizContent() {
           </div>
           <button
             onClick={() => router.push('/')}
-            className="w-full py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-slate-400 text-sm hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+            className="w-full py-2.5 rounded-xl bg-gray-100 text-gray-500 text-sm hover:bg-gray-200 transition-colors"
           >
             {t('done_home')}
           </button>
@@ -440,18 +445,18 @@ function QuizContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
-      <div className="sticky top-0 z-10 bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-sm">
+    <div className="min-h-screen bg-amber-50">
+      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm">
         <div className="px-4 pt-3 pb-1 flex items-center justify-between max-w-lg mx-auto">
-          <Link href="/" className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-2xl p-2 -ml-2">‹</Link>
+          <Link href="/" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
           <div className="flex items-center gap-3">
             {isFocusMode && (
-              <span className="text-xs bg-red-500/20 text-red-500 dark:text-red-400 px-2 py-0.5 rounded-full font-medium">⚠ 弱点</span>
+              <span className="text-xs bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full font-medium">⚠ 弱点</span>
             )}
-            <span className="text-xs text-emerald-500 dark:text-emerald-400 font-semibold">✓ {score.correct}</span>
-            <span className="text-xs text-amber-500 dark:text-amber-400 font-semibold">△ {score.partial}</span>
-            <span className="text-xs text-red-500 dark:text-red-400 font-semibold">✗ {score.incorrect}</span>
-            <span className="text-xs text-gray-400 dark:text-slate-500">{answered + 1}/{total}</span>
+            <span className="text-xs text-emerald-500 font-semibold">✓ {score.correct}</span>
+            <span className="text-xs text-amber-500 font-semibold">△ {score.partial}</span>
+            <span className="text-xs text-red-500 font-semibold">✗ {score.incorrect}</span>
+            <span className="text-xs text-gray-400">{answered + 1}/{total}</span>
             <LangToggle />
           </div>
         </div>
@@ -463,7 +468,7 @@ function QuizContent() {
       <div className="px-4 pt-2 pb-10 max-w-lg mx-auto space-y-2">
         {current && (
           <>
-            <div className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 text-center space-y-2">
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 text-center space-y-2">
               <div className="flex justify-center gap-2 flex-wrap">
                 {current.usage_scene && (
                   <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${SCENE_CLS[current.usage_scene]}`}>
@@ -476,17 +481,17 @@ function QuizContent() {
                   </span>
                 )}
               </div>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-wide break-words">{current.phrase}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-wide break-words">{current.phrase}</p>
               {/* コンテキストヒント（設定 ON かつ original_context がある場合） */}
               {settings.contextHint && current.original_context && step === 'question' && (
-                <p className="text-xs text-gray-500 dark:text-slate-400 italic bg-gray-50 dark:bg-white/5 rounded-xl px-3 py-2 leading-relaxed text-left">
+                <p className="text-xs text-gray-500 italic bg-gray-50 rounded-xl px-3 py-2 leading-relaxed text-left">
                   &ldquo;{maskPhrase(current.original_context, current.phrase)}&rdquo;
                 </p>
               )}
 
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <button onClick={() => speak(current.phrase, 'phrase')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-500 dark:text-blue-400' : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20'}`}>
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-500' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                   {t('quiz_speak_phrase')}
                 </button>
                 <SpeedSelector />
@@ -507,7 +512,7 @@ function QuizContent() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   placeholder={t('quiz_placeholder')}
                   style={{ fontSize: '16px' }}
-                  className="w-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/20 rounded-2xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500 transition-colors"
                 />
                 <button onClick={handleSubmit} disabled={!answer.trim()}
                   className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700">
@@ -517,7 +522,7 @@ function QuizContent() {
             )}
 
             {step === 'judging' && (
-              <p className="text-center text-gray-500 dark:text-slate-400 text-sm animate-pulse py-3">{t('quiz_judging')}</p>
+              <p className="text-center text-gray-500 text-sm animate-pulse py-3">{t('quiz_judging')}</p>
             )}
 
             {step === 'result' && judgment && (() => {
@@ -532,33 +537,33 @@ function QuizContent() {
                     {judgment.feedback && <p className="text-xs text-slate-300 mt-0.5">{judgment.feedback}</p>}
                   </div>
 
-                  <div className="bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-3 space-y-2">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-3 space-y-2">
                     <div>
-                      <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{t('quiz_correct_meaning')}</p>
-                      <p className="text-gray-900 dark:text-white font-semibold text-sm">{current.meaning_ja}</p>
+                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">{t('quiz_correct_meaning')}</p>
+                      <p className="text-gray-900 font-semibold text-sm">{current.meaning_ja}</p>
                     </div>
                     {current.original_context && (
-                      <div className="border-t border-gray-100 dark:border-white/10 pt-2 space-y-1.5">
-                        <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider">{t('quiz_usage_example')}</p>
+                      <div className="border-t border-gray-100 pt-2 space-y-1.5">
+                        <p className="text-xs text-gray-400 uppercase tracking-wider">{t('quiz_usage_example')}</p>
                         <div className="flex items-start gap-2">
-                          <p className="flex-1 text-sm text-gray-600 dark:text-slate-200 italic leading-relaxed">
+                          <p className="flex-1 text-sm text-gray-600 italic leading-relaxed">
                             &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
                           </p>
                           <button onClick={() => speak(current.original_context!, 'context')}
-                            className={`flex-shrink-0 mt-0.5 px-2 py-1 rounded-full text-[10px] transition-colors ${speaking === 'context' ? 'bg-blue-500/20 text-blue-500 dark:text-blue-400' : 'bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20'}`}>
+                            className={`flex-shrink-0 mt-0.5 px-2 py-1 rounded-full text-[10px] transition-colors ${speaking === 'context' ? 'bg-blue-500/20 text-blue-500' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
                             🔊
                           </button>
                         </div>
                         {judgment.context_ja && (
-                          <p className="text-xs text-gray-500 dark:text-slate-400 leading-relaxed bg-gray-50 dark:bg-white/5 rounded-xl px-3 py-2">
+                          <p className="text-xs text-gray-500 leading-relaxed bg-gray-50 rounded-xl px-3 py-2">
                             {judgment.context_ja}
                           </p>
                         )}
-                        <p className="text-xs text-gray-400 dark:text-slate-500 leading-relaxed">
+                        <p className="text-xs text-gray-400 leading-relaxed">
                           ※{' '}
-                          <mark className="bg-amber-400/20 text-amber-600 dark:text-amber-300 not-italic rounded px-0.5 font-semibold">{current.phrase}</mark>
+                          <mark className="bg-amber-400/20 text-amber-600 not-italic rounded px-0.5 font-semibold">{current.phrase}</mark>
                           {' '}={' '}
-                          <mark className="bg-amber-400/20 text-amber-600 dark:text-amber-300 not-italic rounded px-0.5">{current.meaning_ja}</mark>
+                          <mark className="bg-amber-400/20 text-amber-600 not-italic rounded px-0.5">{current.meaning_ja}</mark>
                         </p>
                       </div>
                     )}
@@ -571,22 +576,22 @@ function QuizContent() {
                       disabled={explaining}
                       className={`w-full py-2.5 rounded-2xl text-sm font-medium transition-colors border ${
                         explaining
-                          ? 'border-amber-500/20 bg-amber-500/10 text-amber-500 dark:text-amber-400 animate-pulse'
-                          : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-white/10 hover:text-gray-700 dark:hover:text-slate-200'
+                          ? 'border-amber-500/20 bg-amber-500/10 text-amber-500 animate-pulse'
+                          : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                       }`}
                     >
                       {explaining ? t('quiz_explaining') : t('quiz_explain')}
                     </button>
                   )}
                   {explanation && (
-                    <div className="rounded-2xl border border-blue-500/20 bg-blue-50 dark:bg-blue-500/5 p-3 space-y-1.5">
-                      <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider">💡 AI解説</p>
-                      <p className="text-xs text-gray-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{explanation}</p>
+                    <div className="rounded-2xl border border-blue-500/20 bg-blue-50 p-3 space-y-1.5">
+                      <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">💡 AI解説</p>
+                      <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{explanation}</p>
                     </div>
                   )}
 
                   <button onClick={handleNext}
-                    className="w-full py-3 rounded-2xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white font-bold text-sm hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:bg-gray-300 dark:active:bg-white/30">
+                    className="w-full py-3 rounded-2xl bg-gray-100 text-gray-700 font-bold text-sm hover:bg-gray-200 transition-colors active:bg-gray-300">
                     {index + 1 >= total ? t('quiz_see_results') : t('quiz_next')}
                   </button>
                 </>
