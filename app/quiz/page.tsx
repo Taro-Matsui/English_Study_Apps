@@ -10,7 +10,8 @@ import type { ExplainResponse } from '../api/quiz/explain/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
-import { generateQuizResultImage, getShareText } from '@/lib/share-image'
+import { openXShare } from '@/lib/share-image'
+import { resolveIsDark } from '@/lib/utils'
 
 interface QuizPhrase {
   id: string
@@ -279,41 +280,14 @@ function QuizContent() {
   async function handleShare(pct: number) {
     if (sharing) return
     setSharing(true)
-    const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
-    const isDark = settings.colorTheme === 'dark' ||
-      (settings.colorTheme === 'system' &&
-        typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)
-    const params = {
-      pct,
-      correct: score.correct,
-      total,
-      partial: score.partial,
-      incorrect: score.incorrect,
-      theme: isDark ? 'dark' as const : 'light' as const,
-      studyPurpose,
-    }
     try {
-      const shareText = getShareText(params)
-      // 画像生成 → 自動ダウンロード
-      try {
-        const blob = await generateQuizResultImage(params)
-        const objUrl = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = objUrl
-        a.download = 'reel-result.png'
-        a.click()
-        setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
-      } catch {}
-      // X 投稿ページを直接開く
-      window.open(
-        `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-        '_blank',
-        'noopener,noreferrer',
-      )
-    } finally {
-      setSharing(false)
-    }
+      await openXShare({
+        pct, correct: score.correct, total,
+        partial: score.partial, incorrect: score.incorrect,
+        theme: resolveIsDark(settings.colorTheme) ? 'dark' : 'light',
+        studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
+      })
+    } finally { setSharing(false) }
   }
 
   const SpeedSelector = () => (

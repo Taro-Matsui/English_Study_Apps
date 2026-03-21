@@ -184,3 +184,22 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
     )
   })
 }
+
+/** 結果画像を自動ダウンロードし X 投稿画面を直接開く */
+export async function openXShare(params: ShareParams): Promise<void> {
+  const shareText = getShareText(params)
+  try {
+    const blob = await generateQuizResultImage(params)
+    const objUrl = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = objUrl
+    a.download = 'reel-result.png'
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
+  } catch {}
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+    '_blank',
+    'noopener,noreferrer',
+  )
+}

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
-import { generateQuizResultImage, getShareText } from '@/lib/share-image'
+import { openXShare } from '@/lib/share-image'
+import { formatTime, resolveIsDark } from '@/lib/utils'
 
 interface AnswerRow {
   is_correct: boolean
@@ -42,10 +43,6 @@ interface HistoryData {
   by_scene: ScenePoint[]
 }
 
-function formatDate(iso: string) {
-  const d = new Date(iso)
-  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
 
 const DIFF_CLS: Record<number, string> = {
   1: 'text-emerald-600', 2: 'text-sky-600', 3: 'text-amber-600', 4: 'text-orange-600', 5: 'text-red-600',
@@ -66,40 +63,15 @@ export default function HistoryPage() {
   async function handleShareSession(ses: Session) {
     if (sharing) return
     setSharing(ses.id)
-    const pct = ses.total_questions ? Math.round((ses.correct_count / ses.total_questions) * 100) : 0
-    const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
-    const isDark = settings.colorTheme === 'dark' ||
-      (settings.colorTheme === 'system' &&
-        typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)
-    const params = {
-      pct,
-      correct: ses.correct_count,
-      total: ses.total_questions,
-      partial: 0,
-      incorrect: ses.total_questions - ses.correct_count,
-      theme: isDark ? 'dark' as const : 'light' as const,
-      studyPurpose,
-    }
     try {
-      const shareText = getShareText(params)
-      try {
-        const blob = await generateQuizResultImage(params)
-        const objUrl = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = objUrl
-        a.download = 'reel-result.png'
-        a.click()
-        setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
-      } catch {}
-      window.open(
-        `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-        '_blank',
-        'noopener,noreferrer',
-      )
-    } finally {
-      setSharing(null)
-    }
+      const pct = ses.total_questions ? Math.round((ses.correct_count / ses.total_questions) * 100) : 0
+      await openXShare({
+        pct, correct: ses.correct_count, total: ses.total_questions,
+        partial: 0, incorrect: ses.total_questions - ses.correct_count,
+        theme: resolveIsDark(settings.colorTheme) ? 'dark' : 'light',
+        studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
+      })
+    } finally { setSharing(null) }
   }
 
   useEffect(() => {
@@ -261,7 +233,7 @@ export default function HistoryPage() {
           sessions.map((ses) => {
             const pct = ses.total_questions ? Math.round((ses.correct_count / ses.total_questions) * 100) : 0
             const isOpen = open === ses.id
-            const dateStr = ses.completed_at ? formatDate(ses.completed_at) : '—'
+            const dateStr = ses.completed_at ? formatTime(ses.completed_at) : '—'
             const summaryStr = lang === 'ja'
               ? `${ses.total_questions}問 / 正解 ${ses.correct_count}問`
               : `${ses.total_questions}Q / ${ses.correct_count} correct`
