@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Phrase, SourceType, DeleteReason } from '@/types'
@@ -96,7 +97,7 @@ export default function PhrasesPage() {
 
   return (
     <div className="min-h-screen bg-amber-50 pb-24">
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
+      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-amber-100 px-4 py-3">
         <div className="max-w-2xl mx-auto space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -104,7 +105,7 @@ export default function PhrasesPage() {
               <h1 className="text-base font-bold text-gray-800">{t('phrases_title')}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
                 {loading ? '...' : countLabel}
               </span>
               {masteredCount > 0 && (
@@ -120,7 +121,7 @@ export default function PhrasesPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('phrases_search')}
-            className="h-9 text-sm bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
+            className="h-9 text-sm bg-white border-amber-200 text-amber-900 placeholder-amber-400"
           />
 
           {/* 難易度フィルター */}
@@ -128,7 +129,7 @@ export default function PhrasesPage() {
             <button
               onClick={() => setDiffFilter(null)}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                diffFilter === null ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                diffFilter === null ? 'bg-amber-800 text-white' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
               }`}
             >
               {t('phrases_all')}
@@ -138,7 +139,7 @@ export default function PhrasesPage() {
                 key={lv}
                 onClick={() => setDiffFilter(diffFilter === lv ? null : lv)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  diffFilter === lv ? `${DIFF_CONFIG[lv].cls} ring-1 ring-current` : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  diffFilter === lv ? `${DIFF_CONFIG[lv].cls} ring-1 ring-current` : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
                 }`}
               >
                 Lv.{lv}
@@ -153,7 +154,7 @@ export default function PhrasesPage() {
                 key={sc}
                 onClick={() => setSceneFilter(sceneFilter === sc ? '' : sc)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  sceneFilter === sc ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  sceneFilter === sc ? 'bg-amber-800 text-white' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
                 }`}
               >
                 {SCENE_LABELS[sc]}
@@ -165,8 +166,8 @@ export default function PhrasesPage() {
                 onClick={() => setSource(source === type ? '' : type)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   source === type && type !== ''
-                    ? 'bg-gray-800 text-white'
-                    : type === '' ? 'hidden' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-amber-800 text-white'
+                    : type === '' ? 'hidden' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
                 }`}
               >
                 {type}
@@ -175,7 +176,7 @@ export default function PhrasesPage() {
             <button
               onClick={() => setOnlyUnmastered(!onlyUnmastered)}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
-                onlyUnmastered ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                onlyUnmastered ? 'bg-amber-800 text-white' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
               }`}
             >
               未習得のみ
@@ -195,15 +196,36 @@ export default function PhrasesPage() {
       <div className="max-w-2xl mx-auto p-4 space-y-2">
         {loading ? (
           [...Array(6)].map((_, i) => (
-            <div key={i} className="h-[88px] rounded-2xl bg-gray-200 animate-pulse" />
+            <div key={i} className="h-[88px] rounded-2xl bg-amber-100 animate-pulse" />
           ))
         ) : displayedPhrases.length === 0 ? (
-          <div className="text-center py-20 space-y-3">
-            <p className="text-4xl">📭</p>
-            <p className="text-sm text-gray-400">{t('phrases_empty')}</p>
+          <div className="flex flex-col items-center py-12 space-y-4 text-center">
+            <div className="w-48 h-48 relative opacity-90">
+              <Image
+                src="/hero.png"
+                alt="フレーズがありません"
+                width={192}
+                height={192}
+                className="object-contain drop-shadow-md"
+                priority
+              />
+            </div>
+            <div className="space-y-1">
+              <p className="text-base font-semibold text-amber-900">
+                {hasFilters ? 'フレーズが見つかりません' : 'まだフレーズがありません'}
+              </p>
+              <p className="text-sm text-amber-700/60">
+                {hasFilters
+                  ? 'フィルターを変えて試してみましょう'
+                  : '会話録や記事をインポートして\n英語フレーズを釣り上げよう！'}
+              </p>
+            </div>
             {!hasFilters && (
-              <Link href="/library/import" className="text-xs text-blue-500 hover:underline">
-                {t('phrases_import_link')}
+              <Link
+                href="/library/import"
+                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-800 text-white text-sm font-semibold hover:bg-amber-700 transition-colors shadow-sm"
+              >
+                テキストをインポート →
               </Link>
             )}
           </div>
@@ -214,7 +236,7 @@ export default function PhrasesPage() {
               <div
                 key={p.id}
                 className={`bg-white rounded-2xl border shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow ${
-                  isMastered ? 'border-emerald-200' : 'border-gray-100'
+                  isMastered ? 'border-emerald-200' : 'border-amber-100'
                 }`}
               >
                 <div className="flex-1 min-w-0">
@@ -232,7 +254,7 @@ export default function PhrasesPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm font-medium text-blue-600 mt-1">{p.meaning_ja}</p>
+                  <p className="text-sm font-medium text-amber-800 mt-1">{p.meaning_ja}</p>
                   {p.original_context && (
                     <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">
                       &quot;{p.original_context}&quot;
@@ -249,7 +271,7 @@ export default function PhrasesPage() {
                   <button
                     onClick={() => speak(p.phrase, p.id)}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
-                      speaking === p.id ? 'bg-blue-100 text-blue-600 animate-pulse' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                      speaking === p.id ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
                     }`}
                   >
                     🔊
@@ -270,7 +292,7 @@ export default function PhrasesPage() {
 
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4">
+          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4">
             <h2 className="font-bold text-gray-800">{t('phrases_delete_title')}</h2>
             <p className="text-sm text-gray-600 font-medium">&ldquo;{deleteTarget.phrase}&rdquo;</p>
             <div className="space-y-2">
@@ -294,7 +316,7 @@ export default function PhrasesPage() {
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 rounded-xl border border-gray-200 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                className="flex-1 rounded-xl border border-amber-200 py-2 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
               >
                 {t('phrases_cancel')}
               </button>
