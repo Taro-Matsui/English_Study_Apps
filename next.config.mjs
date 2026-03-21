@@ -28,22 +28,27 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
           },
-          // M2: CSP — XSS防止。Next.js App Router は inline script を使うため unsafe-inline が必要
-          // unsafe-eval: GTM が動的コード評価を使用するため必要
-          // connect-src: Supabase（Auth/DB）・GTM/GA4・AdSense の通信を許可
-          // frame-src: GTM の noscript iframe・Google OAuth ポップアップを許可
-          // frame-ancestors: X-Frame-Options: DENY と同等（CSP版）
+          // M2: CSP — ワイルドカードで Google 系サービスを包括許可
+          // *.googletagmanager.com  : GTM スクリプト・noscript iframe
+          // *.google-analytics.com  : GA4 計測
+          // *.googlesyndication.com : AdSense 広告配信
+          // *.googleadservices.com  : Google 広告サービス
+          // *.adtrafficquality.google: AdSense トラフィック品質チェック (ep1/ep2 等)
+          // *.doubleclick.net       : 広告配信・iframe
+          // *.google.com            : Google OAuth (accounts.google.com) 等
+          // unsafe-eval             : GTM が動的コード評価を使用するため必要
+          // frame-ancestors 'none'  : X-Frame-Options: DENY と同等（CSP版）
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://pagead2.googlesyndication.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google",
-              "script-src-elem 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://pagead2.googlesyndication.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://ep1.adtrafficquality.google https://ep2.adtrafficquality.google",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.google-analytics.com *.googlesyndication.com *.googleadservices.com *.adtrafficquality.google",
+              "script-src-elem 'self' 'unsafe-inline' *.googletagmanager.com *.google-analytics.com *.googlesyndication.com *.googleadservices.com *.adtrafficquality.google",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
+              "img-src 'self' data: blob: *.google-analytics.com *.googletagmanager.com *.doubleclick.net *.googlesyndication.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://tgqfnsmrwvpycmhmfpyv.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://ep1.adtrafficquality.google",
-              "frame-src https://www.googletagmanager.com https://accounts.google.com https://tpc.googlesyndication.com https://googleads.g.doubleclick.net",
+              "connect-src 'self' https://tgqfnsmrwvpycmhmfpyv.supabase.co *.google-analytics.com *.analytics.google.com *.googletagmanager.com *.doubleclick.net *.adtrafficquality.google",
+              "frame-src *.googletagmanager.com *.google.com *.doubleclick.net *.googlesyndication.com",
               "frame-ancestors 'none'",
             ].join('; '),
           },
