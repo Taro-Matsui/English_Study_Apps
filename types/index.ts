@@ -67,6 +67,8 @@ export interface QuizAnswerRecord {
   ai_feedback: string
   /** 表示用のみ。DBには保存されない */
   status?: JudgeStatus
+  /** 問題表示から回答送信までのミリ秒 */
+  response_time_ms?: number
 }
 
 export interface CompleteRequest {

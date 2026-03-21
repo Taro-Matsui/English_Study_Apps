@@ -47,6 +47,8 @@ export async function POST(req: NextRequest) {
       user_answer: String(a.user_answer ?? '').slice(0, 500),
       is_correct: Boolean(a.is_correct),
       ai_feedback: String(a.ai_feedback ?? '').slice(0, 300),
+      response_time_ms: typeof a.response_time_ms === 'number' && a.response_time_ms > 0
+        ? a.response_time_ms : null,
     }))
 
     const { error: answerErr } = await db.from('quiz_answers').insert(rows)

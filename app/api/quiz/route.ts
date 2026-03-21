@@ -106,5 +106,40 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const shuffled = [...(data ?? [])].sort(() => Math.random() - 0.5)
-  return NextResponse.json(shuffled.slice(0, limit))
+
+  // 即答済みフレーズの再出確率を下げる:
+  // 直近10セッションで3秒以内に正解したフレーズをリストの後ろへ移動
+  let quickMasteredIds = new Set<string>()
+  try {
+    const db = getSupabaseAdmin()
+    const { data: recentSessions } = await db
+      .from('quiz_sessions')
+      .select('id')
+      .eq('user_id', user.id)
+      .order('completed_at', { ascending: false })
+      .limit(10)
+    if (recentSessions?.length) {
+      const sessionIds = recentSessions.map((s: { id: string }) => s.id)
+      const { data: fastAnswers } = await db
+        .from('quiz_answers')
+        .select('phrase_id')
+        .in('session_id', sessionIds)
+        .eq('is_correct', true)
+        .not('response_time_ms', 'is', null)
+        .lt('response_time_ms', 3500)
+      if (fastAnswers?.length) {
+        const counts = new Map<string, number>()
+        fastAnswers.forEach((a: { phrase_id: string }) => {
+          counts.set(a.phrase_id, (counts.get(a.phrase_id) ?? 0) + 1)
+        })
+        quickMasteredIds = new Set(
+          Array.from(counts.entries()).filter(([, c]) => c >= 3).map(([id]) => id)
+        )
+      }
+    }
+  } catch {}
+
+  const normal = shuffled.filter((p) => !quickMasteredIds.has(p.id))
+  const quick  = shuffled.filter((p) => quickMasteredIds.has(p.id))
+  return NextResponse.json([...normal, ...quick].slice(0, limit))
 }

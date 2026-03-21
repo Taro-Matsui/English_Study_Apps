@@ -101,6 +101,7 @@ function QuizContent() {
   const [explanation, setExplanation] = useState<string | null>(null)
   const [explaining, setExplaining] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const questionStartTime = useRef<number>(0)
 
   const load = useCallback(async (focusMode = isFocusMode) => {
     setStep('loading'); setAnswers([])
@@ -148,6 +149,7 @@ function QuizContent() {
 
   useEffect(() => {
     if (step === 'question') {
+      questionStartTime.current = Date.now()
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
       setTimeout(() => inputRef.current?.focus(), 80)
     }
@@ -199,6 +201,7 @@ function QuizContent() {
 
   async function handleSubmit() {
     if (!answer.trim() || !current) return
+    const responseTimeMs = Date.now() - questionStartTime.current
     setStep('judging')
     try {
       const res = await fetch('/api/quiz/judge', {
@@ -222,6 +225,7 @@ function QuizContent() {
         phrase_id: current.id, phrase: current.phrase, meaning_ja: current.meaning_ja ?? '',
         user_answer: answer, is_correct: data.correct, ai_feedback: data.feedback,
         status,
+        response_time_ms: responseTimeMs,
       }])
       if (status === 'correct') markMastered(current.id)
       speak(current.phrase, 'phrase'); setStep('result')

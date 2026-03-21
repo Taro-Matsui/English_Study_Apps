@@ -103,10 +103,12 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
         {/* ストリーク表示 */}
         {streak > 0 && (
           <div className="flex items-center justify-center gap-2.5">
-            <span className="text-lg">🔥</span>
-            <span className="text-gray-800 dark:text-white font-bold text-base">
-              {streak}{lang === 'ja' ? '日連続' : '-day streak'}
-            </span>
+            <Link href="/streak" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
+              <span className="text-lg">🔥</span>
+              <span className="text-gray-800 dark:text-white font-bold text-base">
+                {streak}{lang === 'ja' ? '日連続' : '-day streak'}
+              </span>
+            </Link>
             {todayDone && (
               <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-2 py-0.5 rounded-full">
                 ✓ {lang === 'ja' ? '今日完了' : 'Done today'}
