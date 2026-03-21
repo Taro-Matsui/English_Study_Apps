@@ -19,12 +19,12 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Phrase Up",
-  description: "英語フレーズを実務で使えるレベルまで習得するアプリ",
+  title: "Reel",
+  description: "実際の会話・文書から英語フレーズを手繰り寄せて学ぶアプリ",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Phrase Up",
+    title: "Reel",
   },
 };
 

@@ -88,7 +88,7 @@ export default function HistoryPage() {
         const objUrl = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = objUrl
-        a.download = 'phrase-up-result.png'
+        a.download = 'reel-result.png'
         a.click()
         setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
       } catch {}

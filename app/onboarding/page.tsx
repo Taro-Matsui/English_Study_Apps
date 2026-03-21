@@ -93,7 +93,7 @@ export default function OnboardingPage() {
           ) : (
             <>
               <p className="text-4xl">🧑‍💻</p>
-              <h1 className="text-xl font-bold">Phrase Up へようこそ</h1>
+              <h1 className="text-xl font-bold">Reel へようこそ</h1>
               <p className="text-gray-500 dark:text-slate-400 text-sm">あなたの学習スタイルを教えてください。<br />フレーズ抽出や出題をカスタマイズします。</p>
             </>
           )}

@@ -22,10 +22,10 @@ export function getShareText({ pct, correct, total, studyPurpose }: ShareParams)
   const categoryTag = studyPurpose && PURPOSE_SHARE_LABELS[studyPurpose]
     ? ` #${PURPOSE_SHARE_LABELS[studyPurpose].replace(/\s/g, '')}` : ''
   return [
-    `【Phrase Up】クイズ完了 📊`,
+    `【Reel】クイズ完了 📊`,
     `${pct}% 正解（${correct}/${total}問）`,
     ``,
-    `英語フレーズ学習アプリ`,
+    `Reel — 実際の会話から学ぶ英語フレーズ`,
     appUrl,
     ``,
     `#英語学習 #フレーズ学習${categoryTag}`,
@@ -101,12 +101,12 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   ctx.fillStyle = isLight ? '#1e293b' : '#f1f5f9'
   ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
   ctx.textAlign = 'left'
-  ctx.fillText('Phrase Up', 78, 81)
+  ctx.fillText('Reel', 78, 81)
 
   // サブタイトル
   ctx.fillStyle = '#64748b'
   ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.fillText('英語フレーズ学習アプリ', 78, 107)
+  ctx.fillText('Reel in the words.', 78, 107)
 
   // 日付（右寄せ）
   const dateStr = new Date().toLocaleDateString('ja-JP', {
