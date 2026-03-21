@@ -59,18 +59,23 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState<string | null>(null)
   const [sharing, setSharing] = useState<string | null>(null)
+  const [clipboardId, setClipboardId] = useState<string | null>(null)
 
   async function handleShareSession(ses: Session) {
     if (sharing) return
     setSharing(ses.id)
     try {
       const pct = ses.total_questions ? Math.round((ses.correct_count / ses.total_questions) * 100) : 0
-      await openXShare({
+      const copied = await openXShare({
         pct, correct: ses.correct_count, total: ses.total_questions,
         partial: 0, incorrect: ses.total_questions - ses.correct_count,
         theme: resolveIsDark(settings.colorTheme) ? 'dark' : 'light',
         studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
       })
+      if (copied) {
+        setClipboardId(ses.id)
+        setTimeout(() => setClipboardId(null), 3000)
+      }
     } finally { setSharing(null) }
   }
 
@@ -271,6 +276,11 @@ export default function HistoryPage() {
                   </div>
                 </button>
 
+                {clipboardId === ses.id && (
+                  <p className="px-5 py-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-t border-emerald-100 dark:border-emerald-500/20">
+                    📋 クリップボードにコピーしました。Xで Ctrl+V / ⌘V で貼り付けてください。
+                  </p>
+                )}
                 {isOpen && (
                   <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-50 dark:divide-gray-700/50">
                     {ses.quiz_answers.map((a, i) => (

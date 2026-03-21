@@ -185,21 +185,29 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   })
 }
 
-/** 結果画像を自動ダウンロードし X 投稿画面を直接開く */
-export async function openXShare(params: ShareParams): Promise<void> {
+/**
+ * 結果画像をクリップボードにコピーし X 投稿画面を開く。
+ * クリップボードへのコピー成功時は true を返す。
+ * コピー後に X ウィンドウを開くので、ユーザーは Ctrl+V で画像を貼り付けられる。
+ */
+export async function openXShare(params: ShareParams): Promise<boolean> {
   const shareText = getShareText(params)
+  let copied = false
   try {
     const blob = await generateQuizResultImage(params)
-    const objUrl = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = objUrl
-    a.download = 'reel-result.png'
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
+    if (navigator.clipboard && 'ClipboardItem' in window) {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      copied = true
+    }
   } catch {}
-  window.open(
-    `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-    '_blank',
-    'noopener,noreferrer',
-  )
+  // コピー成功時は少し間を置いてから X を開く（ユーザーがトーストを読む時間）
+  const delay = copied ? 600 : 0
+  setTimeout(() => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      '_blank',
+      'noopener,noreferrer',
+    )
+  }, delay)
+  return copied
 }

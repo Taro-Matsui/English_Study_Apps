@@ -103,6 +103,7 @@ function QuizContent() {
   const [speed, setSpeed] = useState<Speed>('normal')
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'failed' | null>(null)
   const [sharing, setSharing] = useState(false)
+  const [clipboardMsg, setClipboardMsg] = useState(false)
   const [explanation, setExplanation] = useState<string | null>(null)
   const [explaining, setExplaining] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -281,12 +282,16 @@ function QuizContent() {
     if (sharing) return
     setSharing(true)
     try {
-      await openXShare({
+      const copied = await openXShare({
         pct, correct: score.correct, total,
         partial: score.partial, incorrect: score.incorrect,
         theme: resolveIsDark(settings.colorTheme) ? 'dark' : 'light',
         studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
       })
+      if (copied) {
+        setClipboardMsg(true)
+        setTimeout(() => setClipboardMsg(false), 3000)
+      }
     } finally { setSharing(false) }
   }
 
@@ -392,6 +397,11 @@ function QuizContent() {
           )}
           {saveState === 'failed' && (
             <p className="text-center text-xs text-red-500 dark:text-red-400">記録の保存に失敗しました。ネットワーク状態を確認してください。</p>
+          )}
+          {clipboardMsg && (
+            <p className="text-center text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl py-2 px-3">
+              📋 画像をクリップボードにコピーしました。Xの投稿画面で Ctrl+V / ⌘V で貼り付けてください。
+            </p>
           )}
 
           <div className="flex gap-2">

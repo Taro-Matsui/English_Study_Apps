@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
-import { TutorialGuide } from './TutorialGuide'
+import { WelcomeGuide } from './WelcomeGuide'
 import { AnnouncementBell } from './AnnouncementBell'
 import { HintBubble } from './HintBubble'
 import { X_URL } from '@/lib/social'
@@ -201,7 +201,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
           })}
         </div>
 
-        <TutorialGuide />
+        <WelcomeGuide />
 
         {/* フッター: 設定・ベル・言語・X */}
         <div className="flex justify-center items-center gap-2 flex-wrap">

@@ -9,48 +9,28 @@ export default function AppleIcon() {
     (
       <div
         style={{
-          background: '#0f172a',
+          background: 'linear-gradient(145deg, #f5f0e8 0%, #e8ddd0 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '2px',
+          borderRadius: '40px',
         }}
       >
+        <div style={{ fontSize: '96px', lineHeight: 1 }}>🎣</div>
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '112px',
-            height: '112px',
-            background: '#1e293b',
-            borderRadius: '22px',
+            fontSize: '26px',
+            fontWeight: 800,
+            color: '#5c3d1e',
+            letterSpacing: '-1px',
+            marginTop: '-4px',
+            fontFamily: 'Georgia, serif',
           }}
         >
-          <div
-            style={{
-              fontSize: '70px',
-              fontWeight: 800,
-              color: '#3b82f6',
-              lineHeight: 1,
-              letterSpacing: '-3px',
-            }}
-          >
-            EE
-          </div>
-        </div>
-        <div
-          style={{
-            fontSize: '20px',
-            fontWeight: 700,
-            color: '#64748b',
-            letterSpacing: '3px',
-          }}
-        >
-          ENG
+          Reel
         </div>
       </div>
     ),

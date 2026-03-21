@@ -9,48 +9,28 @@ export default function Icon() {
     (
       <div
         style={{
-          background: '#0f172a',
+          background: 'linear-gradient(145deg, #f5f0e8 0%, #e8ddd0 100%)',
           width: '100%',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '8px',
+          borderRadius: '112px',
         }}
       >
+        <div style={{ fontSize: '280px', lineHeight: 1 }}>🎣</div>
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '320px',
-            height: '320px',
-            background: '#1e293b',
-            borderRadius: '64px',
+            fontSize: '72px',
+            fontWeight: 800,
+            color: '#5c3d1e',
+            letterSpacing: '-2px',
+            marginTop: '-8px',
+            fontFamily: 'Georgia, serif',
           }}
         >
-          <div
-            style={{
-              fontSize: '200px',
-              fontWeight: 800,
-              color: '#3b82f6',
-              lineHeight: 1,
-              letterSpacing: '-8px',
-            }}
-          >
-            EE
-          </div>
-        </div>
-        <div
-          style={{
-            fontSize: '56px',
-            fontWeight: 700,
-            color: '#64748b',
-            letterSpacing: '8px',
-          }}
-        >
-          ENG
+          Reel
         </div>
       </div>
     ),
