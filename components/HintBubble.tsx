@@ -81,7 +81,7 @@ export function HintBubble({
 
 /** 設定画面などからチュートリアルとヒントをすべてリセット */
 export function resetTutorialAndHints(userId: string) {
-  localStorage.removeItem(`tutorial_seen_${userId}`)
+  localStorage.removeItem(`welcome_seen_${userId}`)
   const toRemove: string[] = []
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i)
