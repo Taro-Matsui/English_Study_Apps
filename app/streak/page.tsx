@@ -91,12 +91,12 @@ export default function StreakPage() {
   const todayStr = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 pb-10">
+    <div className="min-h-screen bg-amber-50 pb-10">
       {/* ヘッダー */}
-      <div className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-white/5 px-4 py-3">
+      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
         <div className="max-w-sm mx-auto flex items-center gap-2">
-          <Link href="/" className="text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200 text-2xl p-2 -ml-2">‹</Link>
-          <h1 className="text-base font-bold text-gray-800 dark:text-white">
+          <Link href="/" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
+          <h1 className="text-base font-bold text-gray-800">
             {lang === 'ja' ? '学習カレンダー' : 'Study Calendar'}
           </h1>
         </div>
@@ -105,24 +105,24 @@ export default function StreakPage() {
       <div className="max-w-sm mx-auto px-4 pt-5 space-y-4">
         {/* 統計カード */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 text-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center">
             <p className="text-xl mb-0.5">🔥</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '—' : streak}</p>
-            <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 leading-tight">
+            <p className="text-2xl font-bold text-gray-900">{loading ? '—' : streak}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
               {lang === 'ja' ? '現在の連続' : 'Current streak'}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 text-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center">
             <p className="text-xl mb-0.5">🏆</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '—' : longest}</p>
-            <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 leading-tight">
+            <p className="text-2xl font-bold text-gray-900">{loading ? '—' : longest}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
               {lang === 'ja' ? '最長記録' : 'Best streak'}
             </p>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-3 text-center">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center">
             <p className="text-xl mb-0.5">📅</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '—' : totalDays}</p>
-            <p className="text-[10px] text-gray-500 dark:text-slate-400 mt-0.5 leading-tight">
+            <p className="text-2xl font-bold text-gray-900">{loading ? '—' : totalDays}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
               {lang === 'ja' ? '総学習日数' : 'Total days'}
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function StreakPage() {
           ].map((l) => (
             <div key={l.label} className="flex items-center gap-1">
               <div className={`w-2.5 h-2.5 rounded-sm ${l.color}`} />
-              <span className="text-[10px] text-gray-400 dark:text-slate-500">{l.label}</span>
+              <span className="text-[10px] text-gray-400">{l.label}</span>
             </div>
           ))}
         </div>
@@ -145,14 +145,14 @@ export default function StreakPage() {
         {/* カレンダー月別 */}
         {loading ? (
           [...Array(3)].map((_, i) => (
-            <div key={i} className="h-52 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
+            <div key={i} className="h-52 bg-gray-100 rounded-2xl animate-pulse" />
           ))
         ) : (
           months.map(({ year, month }) => {
             const cells = getCalendarCells(year, month)
             return (
-              <div key={`${year}-${month}`} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
-                <p className="text-sm font-bold text-gray-700 dark:text-slate-200 mb-3">
+              <div key={`${year}-${month}`} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                <p className="text-sm font-bold text-gray-700 mb-3">
                   {year}年{MONTH_LABELS[month]}
                 </p>
 
@@ -162,7 +162,7 @@ export default function StreakPage() {
                     <div
                       key={w}
                       className={`text-center text-[10px] font-medium py-0.5 ${
-                        i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400 dark:text-slate-500'
+                        i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'
                       }`}
                     >
                       {w}
@@ -180,7 +180,7 @@ export default function StreakPage() {
                     const isToday = dateStr === todayStr
                     const isFuture = dateStr > todayStr
 
-                    let bgCls = 'bg-gray-100 dark:bg-gray-700/60 text-gray-500 dark:text-slate-400'
+                    let bgCls = 'bg-gray-100 text-gray-500'
                     if (act && act.total > 0) {
                       const pct = (act.correct / act.total) * 100
                       bgCls = pct >= 80
@@ -196,7 +196,7 @@ export default function StreakPage() {
                         title={act ? `${act.correct}/${act.total} 正解` : dateStr}
                         className={`aspect-square rounded-md flex items-center justify-center text-[11px] font-medium transition-all ${
                           isFuture ? 'opacity-25' : ''
-                        } ${isToday ? 'ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-800' : ''} ${bgCls}`}
+                        } ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''} ${bgCls}`}
                       >
                         {day}
                       </div>

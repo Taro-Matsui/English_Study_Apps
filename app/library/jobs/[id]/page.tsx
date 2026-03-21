@@ -108,15 +108,15 @@ export default function LibraryJobDetailPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
-      <p className="text-gray-400 dark:text-slate-500 text-sm animate-pulse">読み込み中...</p>
+    <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+      <p className="text-gray-400 text-sm animate-pulse">読み込み中...</p>
     </div>
   )
 
   if (error && !job) return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex flex-col items-center justify-center gap-4">
-      <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
-      <Link href="/library/jobs" className="text-blue-600 dark:text-blue-400 text-sm hover:underline">← 一覧に戻る</Link>
+    <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4">
+      <p className="text-red-500 text-sm">{error}</p>
+      <Link href="/library/jobs" className="text-blue-600 text-sm hover:underline">← 一覧に戻る</Link>
     </div>
   )
 
@@ -125,14 +125,14 @@ export default function LibraryJobDetailPage() {
   const suggestedPhrases = phrases.filter((p) => p.suggested)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 text-gray-900 dark:text-white pb-24">
-      <div className="sticky top-0 z-10 bg-slate-50/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-white/5">
+    <div className="min-h-screen bg-amber-50 text-gray-900 pb-24">
+      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-gray-200">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
-          <Link href="/library/jobs" className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 text-2xl p-2 -ml-2">‹</Link>
+          <Link href="/library/jobs" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate">{job?.source_name ?? 'ジョブ詳細'}</p>
             {job && (
-              <p className="text-xs text-gray-400 dark:text-slate-500">
+              <p className="text-xs text-gray-400">
                 {formatTime(job.created_at)}
                 {job.completed_at && ` → ${formatTime(job.completed_at)}`}
               </p>
@@ -149,14 +149,14 @@ export default function LibraryJobDetailPage() {
       <div className="px-4 pt-4 pb-12 max-w-2xl mx-auto space-y-5">
 
         {(job?.status === 'pending' || job?.status === 'processing') && (
-          <div className="rounded-xl border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 p-6 text-center space-y-3">
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center space-y-3">
             <p className="text-2xl animate-spin">⚙</p>
-            <p className="text-amber-600 dark:text-amber-400 font-semibold text-sm">Claude APIでフレーズを抽出中...</p>
-            <p className="text-gray-400 dark:text-slate-500 text-xs">自動的に更新されます。このページを開いたままにしてください。</p>
+            <p className="text-amber-600 font-semibold text-sm">Claude APIでフレーズを抽出中...</p>
+            <p className="text-gray-400 text-xs">自動的に更新されます。このページを開いたままにしてください。</p>
             <button
               onClick={handleCancel}
               disabled={cancelling}
-              className="text-xs px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-500/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg border border-red-300 text-red-500 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {cancelling ? 'キャンセル中...' : 'ジョブをキャンセル'}
             </button>
@@ -164,43 +164,43 @@ export default function LibraryJobDetailPage() {
         )}
 
         {job?.status === 'error' && (
-          <div className="rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 p-4 space-y-2">
-            <p className="text-red-500 dark:text-red-400 font-semibold text-sm">処理に失敗しました</p>
-            <p className="text-red-400 dark:text-red-300 text-xs">{job.error_text}</p>
-            <Link href="/library/import" className="text-blue-600 dark:text-blue-400 text-xs hover:underline block mt-2">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-2">
+            <p className="text-red-500 font-semibold text-sm">処理に失敗しました</p>
+            <p className="text-red-400 text-xs">{job.error_text}</p>
+            <Link href="/library/import" className="text-blue-600 text-xs hover:underline block mt-2">
               インポートをやり直す →
             </Link>
           </div>
         )}
 
         {saveResult && (
-          <div className="rounded-xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 p-4 space-y-2">
-            <p className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-2">
+            <p className="text-emerald-600 font-semibold text-sm">
               ✓ {saveResult.inserted}件を新規登録
               {saveResult.updated > 0 && `、${saveResult.updated}件を更新`}
             </p>
             {saveResult.skipped > 0 && (
-              <p className="text-gray-500 dark:text-slate-400 text-xs">{saveResult.skipped}件はスキップ</p>
+              <p className="text-gray-500 text-xs">{saveResult.skipped}件はスキップ</p>
             )}
             <div className="flex gap-2 mt-2 flex-wrap">
-              <Link href="/quiz" className="text-xs px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 transition-colors font-medium">今すぐクイズで確認する →</Link>
-              <Link href="/library/import" className="text-xs text-blue-600 dark:text-blue-400 hover:underline self-center">続けてインポート →</Link>
-              <Link href="/" className="text-xs text-gray-400 dark:text-slate-400 hover:underline self-center">ホームへ →</Link>
+              <Link href="/quiz" className="text-xs px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors font-medium">今すぐクイズで確認する →</Link>
+              <Link href="/library/import" className="text-xs text-blue-600 hover:underline self-center">続けてインポート →</Link>
+              <Link href="/" className="text-xs text-gray-400 hover:underline self-center">ホームへ →</Link>
             </div>
           </div>
         )}
 
-        {error && <p className="text-red-500 dark:text-red-400 text-xs">{error}</p>}
+        {error && <p className="text-red-500 text-xs">{error}</p>}
 
         {job?.status === 'done' && phrases.length > 0 && !saveResult && (
           <>
-            <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 space-y-3">
-              <h2 className="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">ソース情報</h2>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">ソース情報</h2>
               <div className="flex gap-2 flex-wrap">
                 {SOURCE_TYPES.map((t) => (
                   <button key={t} onClick={() => setSourceType(t)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      sourceType === t ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20'
+                      sourceType === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     }`}>{t}</button>
                 ))}
               </div>
@@ -209,23 +209,23 @@ export default function LibraryJobDetailPage() {
                 value={sourceTitle}
                 onChange={(e) => setSourceTitle(e.target.value)}
                 placeholder="ソースタイトル（省略可）"
-                className="w-full bg-gray-50 dark:bg-white/10 border border-gray-200 dark:border-white/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500"
                 style={{ fontSize: '16px' }}
               />
               <input
                 type="date"
                 value={sourceDate}
                 onChange={(e) => setSourceDate(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-white/10 border border-gray-200 dark:border-white/20 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold">
-                  フレーズ <span className="text-gray-400 dark:text-slate-400">({phrases.length}件)</span>
+                  フレーズ <span className="text-gray-400">({phrases.length}件)</span>
                   {suggestedPhrases.length > 0 && (
-                    <span className="ml-2 text-xs text-violet-500 dark:text-violet-400">うち提案 {suggestedPhrases.length}件</span>
+                    <span className="ml-2 text-xs text-violet-500">うち提案 {suggestedPhrases.length}件</span>
                   )}
                 </h2>
               </div>
@@ -233,7 +233,7 @@ export default function LibraryJobDetailPage() {
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
                 {extractedPhrases.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs text-gray-400 dark:text-slate-500 uppercase tracking-wider">テキストから抽出 ({extractedPhrases.length}件)</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider">テキストから抽出 ({extractedPhrases.length}件)</p>
                     {extractedPhrases.map((p) => (
                       <PhraseRow key={p.phrase} phrase={p} onRemove={() => setPhrases((prev) => prev.filter((x) => x !== p))} disabled={saving} />
                     ))}
@@ -241,7 +241,7 @@ export default function LibraryJobDetailPage() {
                 )}
                 {suggestedPhrases.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs text-violet-500 dark:text-violet-400 uppercase tracking-wider">✨ AI提案 ({suggestedPhrases.length}件)</p>
+                    <p className="text-xs text-violet-500 uppercase tracking-wider">✨ AI提案 ({suggestedPhrases.length}件)</p>
                     {suggestedPhrases.map((p) => (
                       <PhraseRow key={p.phrase} phrase={p} suggested onRemove={() => setPhrases((prev) => prev.filter((x) => x !== p))} disabled={saving} />
                     ))}
@@ -262,8 +262,8 @@ export default function LibraryJobDetailPage() {
 
         {job?.status === 'done' && phrases.length === 0 && !saveResult && (
           <div className="text-center py-8">
-            <p className="text-gray-400 dark:text-slate-500 text-sm">フレーズが0件です</p>
-            <Link href="/library/import" className="text-blue-600 dark:text-blue-400 text-sm hover:underline mt-2 inline-block">
+            <p className="text-gray-400 text-sm">フレーズが0件です</p>
+            <Link href="/library/import" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
               インポートに戻る →
             </Link>
           </div>
@@ -285,23 +285,23 @@ function PhraseRow({
   disabled: boolean
 }) {
   return (
-    <div className={`flex items-start gap-3 rounded-xl border p-3 ${suggested ? 'border-violet-200 dark:border-violet-500/20 bg-violet-50 dark:bg-violet-500/5' : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5'}`}>
+    <div className={`flex items-start gap-3 rounded-xl border p-3 ${suggested ? 'border-violet-200 bg-violet-50' : 'border-gray-200 bg-white'}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold text-sm text-gray-900 dark:text-white">{p.phrase}</span>
-          {p.pronunciation && <span className="text-xs text-gray-400 dark:text-slate-500">{p.pronunciation}</span>}
-          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-slate-400">Lv.{p.difficulty}</span>
-          {suggested && <span className="text-xs px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400">提案</span>}
+          <span className="font-semibold text-sm text-gray-900">{p.phrase}</span>
+          {p.pronunciation && <span className="text-xs text-gray-400">{p.pronunciation}</span>}
+          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">Lv.{p.difficulty}</span>
+          {suggested && <span className="text-xs px-1.5 py-0.5 rounded bg-violet-100 text-violet-600">提案</span>}
         </div>
-        <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">{p.meaning_ja}</p>
+        <p className="text-xs text-blue-600 mt-0.5">{p.meaning_ja}</p>
         {p.original_context && (
-          <p className="text-xs text-gray-400 dark:text-slate-500 mt-1 italic truncate">&quot;{p.original_context}&quot;</p>
+          <p className="text-xs text-gray-400 mt-1 italic truncate">&quot;{p.original_context}&quot;</p>
         )}
       </div>
       <button
         onClick={onRemove}
         disabled={disabled}
-        className="text-gray-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 disabled:opacity-30 transition-colors text-lg leading-none flex-shrink-0"
+        className="text-gray-300 hover:text-red-500 disabled:opacity-30 transition-colors text-lg leading-none flex-shrink-0"
       >
         ×
       </button>
