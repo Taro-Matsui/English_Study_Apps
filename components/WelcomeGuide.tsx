@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Image from 'next/image'
 
@@ -35,7 +34,6 @@ const SLIDES = [
 
 export function WelcomeGuide() {
   const { user } = useAuth()
-  const router = useRouter()
   const [show, setShow] = useState(false)
   const [slide, setSlide] = useState(0)
   const [imgError, setImgError] = useState(false)
@@ -59,7 +57,6 @@ export function WelcomeGuide() {
       setSlide((s) => s + 1)
     } else {
       dismiss()
-      router.push('/quiz')
     }
   }
 

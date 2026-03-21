@@ -3,10 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
-import { useSettings } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
 import { openXShare } from '@/lib/share-image'
-import { formatTime, resolveIsDark } from '@/lib/utils'
+import { formatTime } from '@/lib/utils'
 
 interface AnswerRow {
   is_correct: boolean
@@ -53,7 +52,6 @@ const SCENE_LABELS: Record<string, string> = {
 
 export default function HistoryPage() {
   const { lang, t } = useLanguage()
-  const { settings } = useSettings()
   const { user } = useAuth()
   const [data, setData] = useState<HistoryData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -66,15 +64,14 @@ export default function HistoryPage() {
     setSharing(ses.id)
     try {
       const pct = ses.total_questions ? Math.round((ses.correct_count / ses.total_questions) * 100) : 0
-      const copied = await openXShare({
+      const result = await openXShare({
         pct, correct: ses.correct_count, total: ses.total_questions,
         partial: 0, incorrect: ses.total_questions - ses.correct_count,
-        theme: resolveIsDark(settings.colorTheme) ? 'dark' : 'light',
         studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
       })
-      if (copied) {
+      if (result === 'copied') {
         setClipboardId(ses.id)
-        setTimeout(() => setClipboardId(null), 3000)
+        setTimeout(() => setClipboardId(null), 4000)
       }
     } finally { setSharing(null) }
   }

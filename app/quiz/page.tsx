@@ -11,7 +11,6 @@ import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
 import { openXShare } from '@/lib/share-image'
-import { resolveIsDark } from '@/lib/utils'
 
 interface QuizPhrase {
   id: string
@@ -282,15 +281,14 @@ function QuizContent() {
     if (sharing) return
     setSharing(true)
     try {
-      const copied = await openXShare({
+      const result = await openXShare({
         pct, correct: score.correct, total,
         partial: score.partial, incorrect: score.incorrect,
-        theme: resolveIsDark(settings.colorTheme) ? 'dark' : 'light',
         studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
       })
-      if (copied) {
+      if (result === 'copied') {
         setClipboardMsg(true)
-        setTimeout(() => setClipboardMsg(false), 3000)
+        setTimeout(() => setClipboardMsg(false), 4000)
       }
     } finally { setSharing(false) }
   }
@@ -399,8 +397,8 @@ function QuizContent() {
             <p className="text-center text-xs text-red-500 dark:text-red-400">記録の保存に失敗しました。ネットワーク状態を確認してください。</p>
           )}
           {clipboardMsg && (
-            <p className="text-center text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl py-2 px-3">
-              📋 画像をクリップボードにコピーしました。Xの投稿画面で Ctrl+V / ⌘V で貼り付けてください。
+            <p className="text-center text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl py-2.5 px-3">
+              📋 画像をコピーしました！Xの投稿画面で Ctrl+V / ⌘V で貼り付けてください。
             </p>
           )}
 

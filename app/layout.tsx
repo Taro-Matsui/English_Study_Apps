@@ -6,7 +6,6 @@ import { LanguageProvider } from "@/lib/i18n";
 import { SettingsProvider } from "@/lib/settings";
 import { UserProvider } from "@/lib/auth-context";
 import { BottomNav } from "@/components/BottomNav";
-import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,7 +23,7 @@ export const metadata: Metadata = {
   description: "実際の会話・文書から英語フレーズを手繰り寄せて学ぶアプリ",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Reel",
   },
 };
@@ -32,13 +31,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
-    { media: "(prefers-color-scheme: dark)", color: "#111827" },
-  ],
+  themeColor: "#f5f0e8",
 };
-
-const FOUC_SCRIPT = `try{var t=JSON.parse(localStorage.getItem('app_settings')||'{}').colorTheme;if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`
 
 export default function RootLayout({
   children,
@@ -48,7 +42,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
         {/* AdSense 所有権確認・広告配信（直接埋め込み） */}
         <script
           async
@@ -61,12 +54,10 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <SettingsProvider>
-            <ThemeProvider>
-              <UserProvider>
-                {children}
-                <BottomNav />
-              </UserProvider>
-            </ThemeProvider>
+            <UserProvider>
+              {children}
+              <BottomNav />
+            </UserProvider>
           </SettingsProvider>
         </LanguageProvider>
       </body>

@@ -108,24 +108,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
 
         {/* ロゴ / タイトル */}
         <div className="text-center space-y-1">
           <p className="text-3xl">🧑‍💻</p>
-          <h1 className="text-gray-900 dark:text-white font-bold text-lg">Reel</h1>
-          <p className="text-gray-400 dark:text-slate-500 text-xs">実際の会話から学ぶ英語フレーズ</p>
+          <h1 className="text-gray-900 font-bold text-lg">Reel</h1>
+          <p className="text-gray-400 text-xs">実際の会話から学ぶ英語フレーズ</p>
         </div>
 
         {/* タブ切り替え */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-xl">
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
           {(['signin', 'signup'] as Mode[]).map((m) => (
             <button
               key={m}
               onClick={() => { setMode(m); setError(null); setMessage(null); setConfirmPassword('') }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                mode === m ? 'bg-blue-600 text-white' : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
+                mode === m ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               {m === 'signin' ? 'ログイン' : '新規登録'}
@@ -136,7 +136,7 @@ export default function LoginPage() {
         {/* フォーム */}
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">メールアドレス</label>
+            <label className="block text-xs text-gray-500 mb-1">メールアドレス</label>
             <input
               type="email"
               value={email}
@@ -145,11 +145,11 @@ export default function LoginPage() {
               disabled={loading}
               placeholder="you@example.com"
               style={{ fontSize: '16px' }}
-              className="w-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
+              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">パスワード</label>
+            <label className="block text-xs text-gray-500 mb-1">パスワード</label>
             <input
               type="password"
               value={password}
@@ -159,13 +159,13 @@ export default function LoginPage() {
               placeholder={mode === 'signup' ? '8文字以上' : '••••••••'}
               minLength={mode === 'signup' ? 8 : undefined}
               style={{ fontSize: '16px' }}
-              className="w-full bg-white dark:bg-white/10 border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
+              className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
             />
           </div>
 
           {mode === 'signup' && (
             <div>
-              <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">パスワード（確認）</label>
+              <label className="block text-xs text-gray-500 mb-1">パスワード（確認）</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -174,32 +174,32 @@ export default function LoginPage() {
                 disabled={loading}
                 placeholder="••••••••"
                 style={{ fontSize: '16px' }}
-                className={`w-full bg-white dark:bg-white/10 border rounded-xl px-4 py-3 text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-slate-500 focus:outline-none transition-colors disabled:opacity-50 ${
+                className={`w-full bg-white border rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none transition-colors disabled:opacity-50 ${
                   confirmPassword && confirmPassword !== password
                     ? 'border-red-500/60 focus:border-red-500'
-                    : 'border-gray-200 dark:border-white/20 focus:border-blue-500'
+                    : 'border-gray-200 focus:border-blue-500'
                 }`}
               />
               {confirmPassword && confirmPassword !== password && (
-                <p className="text-red-500 dark:text-red-400 text-xs mt-1">パスワードが一致しません</p>
+                <p className="text-red-500 text-xs mt-1">パスワードが一致しません</p>
               )}
             </div>
           )}
 
           {error && (
-            <div className="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 px-4 py-3">
-              <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
+            <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+              <p className="text-red-500 text-sm">{error}</p>
             </div>
           )}
           {message && (
-            <div className="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-4 py-3 space-y-2">
-              <p className="text-emerald-600 dark:text-emerald-400 text-sm">{message}</p>
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 space-y-2">
+              <p className="text-emerald-600 text-sm">{message}</p>
               {signupEmail && (
                 <button
                   type="button"
                   onClick={handleResend}
                   disabled={resending}
-                  className="text-xs text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 underline disabled:opacity-50"
+                  className="text-xs text-gray-500 hover:text-gray-700 underline disabled:opacity-50"
                 >
                   {resending ? '送信中...' : '確認メールを再送する'}
                 </button>
@@ -219,15 +219,15 @@ export default function LoginPage() {
         {/* Google ログイン */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
-            <span className="text-xs text-gray-400 dark:text-slate-500">または</span>
-            <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400">または</span>
+            <div className="flex-1 h-px bg-gray-200" />
           </div>
           <button
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-white dark:bg-white/10 border border-gray-200 dark:border-white/20 text-gray-700 dark:text-white text-sm font-medium hover:bg-gray-50 dark:hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-3 py-3 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             {googleLoading ? (
               <span className="text-xs animate-pulse">接続中...</span>
@@ -247,10 +247,10 @@ export default function LoginPage() {
 
         {/* デモモードリンク */}
         <div className="mt-4 text-center space-y-2">
-          <p className="text-xs text-gray-400 dark:text-slate-600">
+          <p className="text-xs text-gray-400">
             登録なしで試してみたい方は
           </p>
-          <a href="/demo" className="text-sm text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white underline">
+          <a href="/demo" className="text-sm text-gray-500 hover:text-gray-900 underline">
             → デモモードで体験する
           </a>
           <div className="pt-2">
@@ -258,7 +258,7 @@ export default function LoginPage() {
               href={X_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-gray-400 dark:text-slate-600 hover:text-gray-600 dark:hover:text-slate-400 transition-colors"
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
               𝕏 アップデート情報はXで
             </a>

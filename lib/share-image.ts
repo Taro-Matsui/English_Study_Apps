@@ -4,7 +4,6 @@ export interface ShareParams {
   total: number
   partial: number
   incorrect: number
-  theme?: 'light' | 'dark'
   studyPurpose?: string
 }
 
@@ -52,130 +51,142 @@ function fillRoundRect(
 }
 
 /**
- * クイズ結果のシェア画像を Canvas で生成し Blob を返す。
- * 1200×630px（Twitter カード推奨サイズ）。
+ * クイズ結果シェア画像を Canvas で生成し Blob を返す。
+ * 縦長 630×900px、ウォームベージュテーマ。
  */
 export async function generateQuizResultImage(params: ShareParams): Promise<Blob> {
-  const { pct, correct, total, partial, incorrect, theme = 'dark' } = params
-  const isLight = theme === 'light'
-  const W = 1200, H = 630
+  const { pct, correct, total, partial, incorrect, studyPurpose } = params
+  const W = 630, H = 900
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')!
 
   const scoreColor =
-    pct >= 80 ? '#10b981' :   // emerald-500
-    pct >= 60 ? '#f59e0b' :   // amber-500
-               '#ef4444'      // red-500
+    pct >= 80 ? '#10b981' :  // emerald
+    pct >= 60 ? '#d97706' :  // amber
+               '#ef4444'     // red
 
   const motivationText =
-    pct >= 80 ? '素晴らしい！この調子で明日も 🔥' :
-    pct >= 60 ? 'いい調子！また明日も挑戦 💡' :
-               '挑戦を続けることが上達の近道 ✨'
+    pct >= 80 ? '素晴らしい！この調子で 🔥' :
+    pct >= 60 ? 'いい調子！また明日も 💡' :
+               '続けることが上達の近道 ✨'
 
-  // ── 背景グラデーション ─────────────────────────────────
+  // ── 背景（ウォームベージュグラデーション）────────────────────
   const bg = ctx.createLinearGradient(0, 0, W, H)
-  if (isLight) {
-    bg.addColorStop(0, '#f8fafc')   // slate-50
-    bg.addColorStop(1, '#eef2ff')   // indigo-50
-  } else {
-    bg.addColorStop(0, '#0f172a')   // slate-900
-    bg.addColorStop(1, '#1e1b4b')   // indigo-950
-  }
+  bg.addColorStop(0, '#f5f0e8')
+  bg.addColorStop(1, '#e8ddd0')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
-  // デコレーション円（右上・スコアカラー）
-  ctx.fillStyle = `${scoreColor}${isLight ? '22' : '1a'}`
-  ctx.beginPath(); ctx.arc(W + 80, -80, 400, 0, Math.PI * 2); ctx.fill()
-  // デコレーション円（左下・indigo）
-  ctx.fillStyle = isLight ? 'rgba(99,102,241,0.08)' : 'rgba(99,102,241,0.10)'
-  ctx.beginPath(); ctx.arc(-80, H + 80, 340, 0, Math.PI * 2); ctx.fill()
+  // デコレーション：右上のソフト円
+  ctx.fillStyle = `${scoreColor}18`
+  ctx.beginPath(); ctx.arc(W + 60, -60, 300, 0, Math.PI * 2); ctx.fill()
+  // 左下の円
+  ctx.fillStyle = 'rgba(139,99,64,0.08)'
+  ctx.beginPath(); ctx.arc(-60, H + 60, 280, 0, Math.PI * 2); ctx.fill()
 
-  // ── ヘッダー ───────────────────────────────────────────
-  // 左アクセントバー
-  ctx.fillStyle = '#6366f1'
-  fillRoundRect(ctx, 60, 52, 5, 42, 3)
+  const font = (size: number, weight: string = 'normal') =>
+    `${weight} ${size}px -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif`
 
-  // アプリ名
-  ctx.fillStyle = isLight ? '#1e293b' : '#f1f5f9'
-  ctx.font = 'bold 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.textAlign = 'left'
-  ctx.fillText('Reel', 78, 81)
+  // ── アプリ名ヘッダー ──────────────────────────────────────────
+  const HEADER_Y = 80
 
-  // サブタイトル
-  ctx.fillStyle = '#64748b'
-  ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.fillText('Reel in the words.', 78, 107)
+  // 🎣 アイコン
+  ctx.font = font(52)
+  ctx.textAlign = 'center'
+  ctx.fillText('🎣', W / 2, HEADER_Y)
 
-  // 日付（右寄せ）
+  // Reel
+  ctx.fillStyle = '#4a3020'
+  ctx.font = font(48, 'bold')
+  ctx.textAlign = 'center'
+  ctx.fillText('Reel', W / 2, HEADER_Y + 60)
+
+  // タグライン
+  ctx.fillStyle = '#8b6340'
+  ctx.font = font(20)
+  ctx.textAlign = 'center'
+  ctx.fillText('実際の会話から学ぶ英語フレーズ', W / 2, HEADER_Y + 96)
+
+  // ── 区切り線 ──────────────────────────────────────────────────
+  ctx.strokeStyle = 'rgba(139,115,85,0.25)'
+  ctx.lineWidth = 1.5
+  ctx.beginPath(); ctx.moveTo(60, HEADER_Y + 120); ctx.lineTo(W - 60, HEADER_Y + 120); ctx.stroke()
+
+  // ── スコアカード ──────────────────────────────────────────────
+  const CARD_Y = HEADER_Y + 150
+  const CARD_H = 280
+  ctx.fillStyle = 'rgba(255,255,255,0.7)'
+  fillRoundRect(ctx, 40, CARD_Y, W - 80, CARD_H, 24)
+
+  // モチベーションテキスト
+  ctx.fillStyle = '#7a6248'
+  ctx.font = font(20)
+  ctx.textAlign = 'center'
+  ctx.fillText(motivationText, W / 2, CARD_Y + 46)
+
+  // スコア % （メイン数字）
+  ctx.fillStyle = scoreColor
+  ctx.font = font(110, 'bold')
+  ctx.textAlign = 'center'
+  ctx.fillText(`${pct}%`, W / 2, CARD_Y + 175)
+
+  // 問題数
+  ctx.fillStyle = '#7a6248'
+  ctx.font = font(26)
+  ctx.textAlign = 'center'
+  ctx.fillText(`${correct} / ${total} 問正解`, W / 2, CARD_Y + 225)
+
+  // ── 内訳バッジ（3列）────────────────────────────────────────
+  const BADGE_Y = CARD_Y + CARD_H + 32
+  const bW = 162, bH = 72, bGap = 12
+  const bTotalW = bW * 3 + bGap * 2
+  const bX0 = (W - bTotalW) / 2
+
+  const badges = [
+    { label: '正解', value: correct, bg: 'rgba(16,185,129,0.12)', fg: '#10b981' },
+    { label: '部分', value: partial,  bg: 'rgba(217,119,6,0.12)',  fg: '#d97706' },
+    { label: '誤答', value: incorrect, bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
+  ]
+  badges.forEach(({ label, value, bg, fg }, i) => {
+    const bx = bX0 + i * (bW + bGap)
+    ctx.fillStyle = bg
+    fillRoundRect(ctx, bx, BADGE_Y, bW, bH, 16)
+    // count
+    ctx.fillStyle = fg
+    ctx.font = font(34, 'bold')
+    ctx.textAlign = 'center'
+    ctx.fillText(String(value), bx + bW / 2, BADGE_Y + 42)
+    // label
+    ctx.fillStyle = '#7a6248'
+    ctx.font = font(16)
+    ctx.fillText(label, bx + bW / 2, BADGE_Y + 62)
+  })
+
+  // ── 日付 ─────────────────────────────────────────────────────
   const dateStr = new Date().toLocaleDateString('ja-JP', {
     year: 'numeric', month: 'long', day: 'numeric',
   })
-  ctx.fillStyle = isLight ? '#94a3b8' : '#475569'
-  ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.textAlign = 'right'
-  ctx.fillText(dateStr, W - 60, 81)
-
-  // 区切り線
-  ctx.strokeStyle = isLight ? '#e2e8f0' : '#1e293b'
-  ctx.lineWidth = 1.5
-  ctx.beginPath(); ctx.moveTo(60, 138); ctx.lineTo(W - 60, 138); ctx.stroke()
-
-  // ── メインスコア ──────────────────────────────────────
-  // モチベーションメッセージ
-  ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'
-  ctx.font = '24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  ctx.fillStyle = '#a08060'
+  ctx.font = font(20)
   ctx.textAlign = 'center'
-  ctx.fillText(motivationText, W / 2, 192)
+  ctx.fillText(dateStr, W / 2, BADGE_Y + bH + 52)
 
-  // スコア % （大）
-  ctx.fillStyle = scoreColor
-  ctx.font = 'bold 196px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  // ── ハッシュタグ ──────────────────────────────────────────────
+  const categoryTag = studyPurpose && PURPOSE_SHARE_LABELS[studyPurpose]
+    ? ` #${PURPOSE_SHARE_LABELS[studyPurpose].replace(/\s/g, '')}` : ''
+  const tags = `#英語学習  #フレーズ学習${categoryTag}`
+  ctx.fillStyle = 'rgba(139,99,64,0.5)'
+  ctx.font = font(19)
   ctx.textAlign = 'center'
-  ctx.fillText(`${pct}%`, W / 2, 400)
+  ctx.fillText(tags, W / 2, BADGE_Y + bH + 86)
 
-  // 問題数サマリ
-  ctx.fillStyle = isLight ? '#64748b' : '#94a3b8'
-  ctx.font = '30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.fillText(`${correct} / ${total} 問正解`, W / 2, 453)
-
-  // ── 内訳バッジ ────────────────────────────────────────
-  const bW = 192, bH = 58, bGap = 14
-  const bTotalW = bW * 3 + bGap * 2
-  const bX0 = (W - bTotalW) / 2
-  const bY = 490
-
-  const badges = [
-    { label: `✓  正解 ${correct}`, bg: isLight ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.18)', fg: '#10b981' },
-    { label: `△  部分 ${partial}`,  bg: isLight ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.18)', fg: '#f59e0b' },
-    { label: `✗  誤答 ${incorrect}`, bg: isLight ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.18)',  fg: '#ef4444' },
-  ]
-  badges.forEach(({ label, bg, fg }, i) => {
-    const bx = bX0 + i * (bW + bGap)
-    ctx.fillStyle = bg
-    fillRoundRect(ctx, bx, bY, bW, bH, 12)
-    ctx.fillStyle = fg
-    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText(label, bx + bW / 2, bY + 38)
-  })
-
-  // ── フッター ──────────────────────────────────────────
-  const footerY = H - 34
-
-  // ハッシュタグ（左）
-  ctx.fillStyle = isLight ? '#94a3b8' : '#334155'
-  ctx.font = '18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.textAlign = 'left'
-  ctx.fillText('#英語学習  #フレーズ学習', 60, footerY)
-
-  // URL（右）
+  // ── URL フッター ──────────────────────────────────────────────
   const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
-  ctx.fillStyle = '#6366f1'
-  ctx.font = '20px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-  ctx.textAlign = 'right'
-  ctx.fillText(appUrl, W - 60, footerY)
+  ctx.fillStyle = '#8b6340'
+  ctx.font = font(18)
+  ctx.textAlign = 'center'
+  ctx.fillText(appUrl, W / 2, H - 36)
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -186,21 +197,40 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
 }
 
 /**
- * 結果画像をクリップボードにコピーし X 投稿画面を開く。
- * クリップボードへのコピー成功時は true を返す。
- * コピー後に X ウィンドウを開くので、ユーザーは Ctrl+V で画像を貼り付けられる。
+ * 結果画像をシェア。
+ * モバイル（Web Share API対応）: 画像ファイルを直接シェアシートに渡す（X に直接投稿可）
+ * デスクトップ: クリップボードにコピーして X 投稿画面を開く
+ * 戻り値: 'shared' | 'copied' | 'opened'
  */
-export async function openXShare(params: ShareParams): Promise<boolean> {
+export async function openXShare(params: ShareParams): Promise<'shared' | 'copied' | 'opened'> {
   const shareText = getShareText(params)
+  const blob = await generateQuizResultImage(params).catch(() => null)
+
+  // ── モバイル: Web Share API でファイルシェア ─────────────────
+  if (blob && typeof navigator.share === 'function' && navigator.canShare) {
+    const file = new File([blob], 'reel-result.png', { type: 'image/png' })
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          text: shareText,
+        })
+        return 'shared'
+      } catch {
+        // キャンセルや権限拒否 → フォールバック
+      }
+    }
+  }
+
+  // ── デスクトップ: クリップボード + X ウィンドウ ──────────────
   let copied = false
-  try {
-    const blob = await generateQuizResultImage(params)
-    if (navigator.clipboard && 'ClipboardItem' in window) {
+  if (blob && navigator.clipboard && 'ClipboardItem' in window) {
+    try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
       copied = true
-    }
-  } catch {}
-  // コピー成功時は少し間を置いてから X を開く（ユーザーがトーストを読む時間）
+    } catch {}
+  }
+
   const delay = copied ? 600 : 0
   setTimeout(() => {
     window.open(
@@ -209,5 +239,6 @@ export async function openXShare(params: ShareParams): Promise<boolean> {
       'noopener,noreferrer',
     )
   }, delay)
-  return copied
+
+  return copied ? 'copied' : 'opened'
 }
