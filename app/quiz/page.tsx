@@ -9,6 +9,7 @@ import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
 import type { ExplainResponse } from '../api/quiz/explain/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
+import { generateQuizResultImage, getShareText } from '@/lib/share-image'
 
 interface QuizPhrase {
   id: string
@@ -98,6 +99,7 @@ function QuizContent() {
   const [speaking, setSpeaking] = useState<string | null>(null)
   const [speed, setSpeed] = useState<Speed>('normal')
   const [saveState, setSaveState] = useState<'saving' | 'saved' | 'failed' | null>(null)
+  const [sharing, setSharing] = useState(false)
   const [explanation, setExplanation] = useState<string | null>(null)
   const [explaining, setExplaining] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -272,13 +274,42 @@ function QuizContent() {
     setIndex(next); setAnswer(''); setJudgment(null); setStep('question')
   }
 
-  function handleShare(pct: number) {
-    const text = `Engineer English で ${pct}% 達成！${score.correct}/${total} 正解 #エンジニア英語`
-    if (navigator.share) {
-      navigator.share({ text }).catch(() => {})
-    } else {
-      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`
-      window.open(url, '_blank', 'noopener,noreferrer')
+  async function handleShare(pct: number) {
+    if (sharing) return
+    setSharing(true)
+    const params = { pct, correct: score.correct, total, partial: score.partial, incorrect: score.incorrect }
+    try {
+      const shareText = getShareText(params)
+      let blob: Blob | null = null
+      try { blob = await generateQuizResultImage(params) } catch {}
+
+      // モバイル: Web Share API で画像ごと共有
+      if (blob) {
+        const file = new File([blob], 'engineer-english-result.png', { type: 'image/png' })
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ files: [file], text: shareText })
+          return
+        }
+      }
+
+      // デスクトップ fallback: 画像ダウンロード + X インテント
+      if (blob) {
+        const objUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = objUrl; a.download = 'engineer-english-result.png'; a.click()
+        URL.revokeObjectURL(objUrl)
+      }
+      window.open(
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+        '_blank', 'noopener,noreferrer',
+      )
+    } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return
+      // 最終 fallback: テキストのみ
+      const text = `Engineer English で ${pct}% 達成！${score.correct}/${total} 正解 #エンジニア英語`
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+    } finally {
+      setSharing(false)
     }
   }
 
@@ -395,10 +426,15 @@ function QuizContent() {
             </button>
             <button
               onClick={() => handleShare(pct)}
-              className="flex-1 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+              disabled={sharing}
+              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors ${
+                sharing
+                  ? 'bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-slate-500 animate-pulse cursor-not-allowed'
+                  : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-white/20'
+              }`}
               title="結果をシェア"
             >
-              𝕏 シェア
+              {sharing ? '生成中...' : '𝕏 シェア'}
             </button>
           </div>
           <button

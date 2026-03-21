@@ -33,6 +33,8 @@ app/
   library/
     import/page.tsx           # テキストインポート（サンプルテキスト付き）
     jobs/page.tsx             # ジョブ一覧（アクティブジョブあり時のみ5秒ポーリング、完了後停止）
+  streak/page.tsx             # 学習カレンダー（過去6ヶ月、正解率別色分け）
+                              #   統計: 現在連続日数 / 最長記録 / 総学習日数
     jobs/[id]/page.tsx        # ジョブ詳細 + フレーズ保存 + クイズ導線
   admin/                      # 旧パス (redirect stub のみ、削除不可)
     import/page.tsx           # → /library/import にリダイレクト
@@ -53,6 +55,7 @@ app/
     admin/jobs/route.ts          # GET: ジョブ一覧 (user_id フィルタ)
     admin/jobs/[id]/route.ts     # GET: ジョブ詳細
     history/route.ts             # GET: { sessions, daily_accuracy[], by_difficulty[], by_scene[] }
+    history/calendar/route.ts    # GET: { activity[{ date, correct, total }] } — 過去6ヶ月の日別実績
     stats/route.ts               # GET: { phrase_count, source_count, streak, today_done, weak_count }
 
 lib/
@@ -68,10 +71,15 @@ lib/
   settings.tsx          # 音声・クイズ・テーマ設定 (localStorage)
                         #   voicePreset, voice, skipMastered, contextHint, showPronunciation
                         #   colorTheme: 'light' | 'dark' | 'system'
+  share-image.ts        # Canvas でクイズ結果シェア画像生成 (1200×630px PNG)
+                        #   generateQuizResultImage(params) → Blob
+                        #   getShareText(params) → X 投稿テキスト
+  social.ts             # X_URL 定数
+  utils.ts              # cn() (Tailwind merge), formatTime(iso)
 
 components/
   HomeContent.tsx       # ホーム画面 (Client Component, TutorialGuide を含む)
-                        #   streak 🔥, today_done, weak_count → フォーカスクイズ導線
+                        #   streak 🔥 → タップで /streak カレンダーへ遷移
   ThemeProvider.tsx     # settings.colorTheme を監視し <html> に .dark を付与/除去
   TutorialGuide.tsx     # 初回チュートリアルポップアップ (localStorage で既読管理)
   BottomNav.tsx         # モバイル固定タブバー (phrases/history/library 画面のみ表示)
@@ -111,6 +119,7 @@ app_logs:      level, endpoint, message, detail(JSONB), created_at
 | 010 | app_logs_ttl — ログ自動削除ポリシー | Supabase SQL Editor |
 | 011 | rate_limits — `api_rate_limits` テーブル + `check_and_increment_rate_limit()` RPC | Supabase SQL Editor |
 | 012 | phrase_explanation — `phrases.explanation TEXT` カラム追加 | Supabase SQL Editor |
+| 013 | response_time — `quiz_answers.response_time_ms INT` + インデックス | Supabase SQL Editor |
 
 ## Supabase クライアント使い分け
 
@@ -243,6 +252,20 @@ ANTHROPIC_API_KEY
 - `phrases` GET クエリパラメータ: `?q=`, `?difficulty=1-5`, `?scene=daily|technical|business|other`, `?source=`
   - Cache-Control: `private, max-age=30, stale-while-revalidate=60`
 - `history` GET — 同上 Cache-Control 設定済み
+- `history/calendar` GET — `{ activity[{ date, correct, total }] }` (過去6ヶ月)
+
+## クイズ結果シェア
+クイズ10問完了時に「𝕏 シェア」ボタンが表示される。
+- Canvas API で 1200×630px PNG を生成（スコア・正解率・日付・URL 入り）
+- モバイル: `navigator.share({ files })` で画像ごとネイティブ共有シート
+- デスクトップ: PNG をダウンロード + X インテント URL を開く
+- 正解率によるスコアカラー: ≥80% emerald / ≥60% amber / <60% red
+
+## 学習カレンダー (`/streak`)
+ホーム画面の 🔥 連続日数バッジをタップで遷移。
+- 過去6ヶ月分のカレンダー（月別グリッド、正解率で色分け）
+- 統計: 現在連続日数 / 最長記録 / 総学習日数
+- `computeStreaks()` はクライアント側でアクティビティデータから算出
 
 ## PWA
 - `app/manifest.ts` で PWA マニフェスト定義（Next.js 14 App Router）
