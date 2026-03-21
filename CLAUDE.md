@@ -1,9 +1,12 @@
-# Engineer English App — Claude Code Guide
+# Reel — Claude Code Guide
 
 ## 概要
-エンジニア向け英語フレーズ学習アプリ。
-会話録・ドキュメントをアップロード → Claude がフレーズ抽出 → クイズで学習。
-**マルチユーザー対応済み**（Supabase Auth + RLS）。
+実際の会話・文書から英語フレーズを手繰り寄せて学ぶアプリ。
+テキストをアップロード → Claude がフレーズ抽出 → クイズで定着。
+**マルチユーザー対応**（Supabase Auth + RLS）。
+
+タグライン（JA）: 実際の会話からフレーズを手繰り寄せる
+タグライン（EN）: Reel in the words from your real conversations.
 
 ## スタック
 - **Framework**: Next.js 14 App Router (TypeScript)
@@ -14,10 +17,12 @@
   - 判定: `claude-haiku-4-5-20251001`, max_tokens: 300
   - 解説: `claude-haiku-4-5-20251001`, max_tokens: 600
 - **UI**: Tailwind CSS + shadcn/ui
-  - ライト（デフォルト）/ ダーク / システム設定 の3択テーマ切り替え対応
+  - ライト（デフォルト）/ ダーク / システム設定 の3択テーマ切り替え
   - ライト: `bg-slate-50` / `bg-white`、ダーク: `dark:bg-gray-900` / `dark:bg-gray-800`
   - `darkMode: ["class"]` — `.dark` を `<html>` に付与して切り替え
   - FOUC 防止: `app/layout.tsx` の `<head>` 内インラインスクリプトで localStorage を先読み
+- **Analytics**: `@next/third-parties/google` の `GoogleTagManager` (GTM-PWNWXD23)
+- **AdSense**: `ca-pub-3375981541016037` — `<head>` に直接埋め込み（クローラー検知のため GTM 非経由）
 - **Deploy**: Railway (master push → 自動デプロイ)
 
 ## ディレクトリ構成
@@ -28,13 +33,13 @@ app/
   onboarding/page.tsx         # 学習アンケート（初回 + 再編集可）
   phrases/page.tsx            # フレーズ一覧 + 論理削除
   quiz/page.tsx               # クイズ (Client Component)
-  history/page.tsx            # チャレンジ記録
-  settings/page.tsx           # 設定（音声/クイズ/学習プロフィール）
+  history/page.tsx            # チャレンジ記録 + セッション別 X シェア
+  settings/page.tsx           # 設定（音声/クイズ/テーマ/学習プロフィール）
+  streak/page.tsx             # 学習カレンダー（過去6ヶ月、正解率別色分け）
+                              #   統計: 現在連続日数 / 最長記録 / 総学習日数
   library/
     import/page.tsx           # テキストインポート（サンプルテキスト付き）
     jobs/page.tsx             # ジョブ一覧（アクティブジョブあり時のみ5秒ポーリング、完了後停止）
-  streak/page.tsx             # 学習カレンダー（過去6ヶ月、正解率別色分け）
-                              #   統計: 現在連続日数 / 最長記録 / 総学習日数
     jobs/[id]/page.tsx        # ジョブ詳細 + フレーズ保存 + クイズ導線
   admin/                      # 旧パス (redirect stub のみ、削除不可)
     import/page.tsx           # → /library/import にリダイレクト
@@ -45,17 +50,19 @@ app/
     auth/signout/route.ts     # サインアウト
     user/onboarding/route.ts  # 学習設定保存 + シードフレーズ挿入
     phrases/route.ts          # GET: 一覧 (?q, ?difficulty=1-5, ?scene, ?source フィルタ)
+                              #   Cache-Control: private, max-age=30, stale-while-revalidate=60
     phrases/[id]/route.ts     # PATCH: 論理削除 (user_id 一致チェック)
-    quiz/route.ts             # POST: 出題 (mode: 'normal'|'focus', 弱点フォーカス対応)
+    quiz/route.ts             # POST: 出題 (mode: 'normal'|'focus', 弱点フォーカス + 即答済み降格)
     quiz/judge/route.ts       # POST: AI判定
-    quiz/complete/route.ts    # POST: セッション保存
+    quiz/complete/route.ts    # POST: セッション保存 (response_time_ms を記録)
     quiz/explain/route.ts     # POST: フレーズ詳細解説 (Claude Haiku)
     admin/import-async/route.ts  # POST: 非同期インポートジョブ作成
     admin/save/route.ts          # POST: フレーズ DB 登録 (upsert)
     admin/jobs/route.ts          # GET: ジョブ一覧 (user_id フィルタ)
-    admin/jobs/[id]/route.ts     # GET: ジョブ詳細
+    admin/jobs/[id]/route.ts     # GET/PATCH: ジョブ詳細 / キャンセル
     history/route.ts             # GET: { sessions, daily_accuracy[], by_difficulty[], by_scene[] }
-    history/calendar/route.ts    # GET: { activity[{ date, correct, total }] } — 過去6ヶ月の日別実績
+                                 #   Cache-Control: private, max-age=30, stale-while-revalidate=60
+    history/calendar/route.ts    # GET: { activity[{ date, correct, total }] } — 過去6ヶ月
     stats/route.ts               # GET: { phrase_count, source_count, streak, today_done, weak_count }
 
 lib/
@@ -69,24 +76,26 @@ lib/
   parse-transcript.ts   # テキスト前処理
   i18n.tsx              # JA/EN 言語切り替え
   settings.tsx          # 音声・クイズ・テーマ設定 (localStorage)
-                        #   voicePreset, voice, skipMastered, contextHint, showPronunciation
-                        #   colorTheme: 'light' | 'dark' | 'system'
+                        #   voicePreset, voice, skipMastered, contextHint,
+                        #   showPronunciation, colorTheme: 'light'|'dark'|'system'
   share-image.ts        # Canvas でクイズ結果シェア画像生成 (1200×630px PNG)
-                        #   generateQuizResultImage(params) → Blob
+                        #   generateQuizResultImage(params) → Blob  ※テーマ対応
                         #   getShareText(params) → X 投稿テキスト
+                        #   ShareParams: { pct, correct, total, partial, incorrect,
+                        #                  theme?, studyPurpose? }
   social.ts             # X_URL 定数
   utils.ts              # cn() (Tailwind merge), formatTime(iso)
 
 components/
-  HomeContent.tsx       # ホーム画面 (Client Component, TutorialGuide を含む)
+  HomeContent.tsx       # ホーム画面 (Client Component)
                         #   streak 🔥 → タップで /streak カレンダーへ遷移
   ThemeProvider.tsx     # settings.colorTheme を監視し <html> に .dark を付与/除去
   TutorialGuide.tsx     # 初回チュートリアルポップアップ (localStorage で既読管理)
-  BottomNav.tsx         # モバイル固定タブバー (phrases/history/library 画面のみ表示)
+  BottomNav.tsx         # モバイル固定タブバー (phrases/history/library 画面のみ)
 
 middleware.ts           # セッションリフレッシュ + ルート保護 + オンボーディング誘導
 types/index.ts          # 全型定義
-supabase/migrations/    # 001〜012 SQL (手動実行)
+supabase/migrations/    # 001〜013 SQL (手動実行)
 ```
 
 ## DB スキーマ（主要カラム）
@@ -99,27 +108,28 @@ phrases:       id, user_id, phrase, meaning_ja, original_context, pronunciation,
                explanation TEXT  -- AI解説キャッシュ (migration 012)
 
 quiz_sessions: id, user_id, total_questions, correct_count, completed_at
-quiz_answers:  session_id, phrase_id, user_answer, is_correct, ai_feedback, answered_at
+quiz_answers:  session_id, phrase_id, user_answer, is_correct, ai_feedback,
+               answered_at, response_time_ms INT  -- 回答までの時間(ms) (migration 013)
 import_jobs:   id, user_id, type(file|url), source_name, status, phrase_count,
                phrases(JSONB), error_text, created_at, completed_at
-user_progress: id, user_id, phrase_id, is_mastered (RLS済み、Phase 4 用)
+user_progress: id, user_id, phrase_id, is_mastered (RLS済み)
 app_logs:      level, endpoint, message, detail(JSONB), created_at
 ```
 
 ### マイグレーション実行状況
-| ファイル | 内容 | 実行方法 |
-|----------|------|---------|
-| 001〜003 | 初期スキーマ、app_logs | Supabase SQL Editor |
-| 004 | import_jobs | Supabase SQL Editor |
-| 005 | phrases に user_id + RLS | Supabase SQL Editor |
-| 006 | quiz_sessions/answers に user_id + RLS | Supabase SQL Editor |
-| 007 | import_jobs に user_id + RLS | Supabase SQL Editor |
-| 008 | user_progress に user_id + is_mastered + RLS | Supabase SQL Editor |
-| 009 | indexes_and_fk — パフォーマンスインデックス | Supabase SQL Editor |
-| 010 | app_logs_ttl — ログ自動削除ポリシー | Supabase SQL Editor |
-| 011 | rate_limits — `api_rate_limits` テーブル + `check_and_increment_rate_limit()` RPC | Supabase SQL Editor |
-| 012 | phrase_explanation — `phrases.explanation TEXT` カラム追加 | Supabase SQL Editor |
-| 013 | response_time — `quiz_answers.response_time_ms INT` + インデックス | Supabase SQL Editor |
+| ファイル | 内容 | 状態 |
+|----------|------|------|
+| 001〜003 | 初期スキーマ、app_logs | 実行済み |
+| 004 | import_jobs | 実行済み |
+| 005 | phrases に user_id + RLS | 実行済み |
+| 006 | quiz_sessions/answers に user_id + RLS | 実行済み |
+| 007 | import_jobs に user_id + RLS | 実行済み |
+| 008 | user_progress に user_id + is_mastered + RLS | 実行済み |
+| 009 | indexes_and_fk — パフォーマンスインデックス | 実行済み |
+| 010 | app_logs_ttl — ログ自動削除ポリシー | 実行済み |
+| 011 | rate_limits — `api_rate_limits` + `check_and_increment_rate_limit()` | 実行済み |
+| 012 | phrase_explanation — `phrases.explanation TEXT` | 実行済み |
+| 013 | response_time — `quiz_answers.response_time_ms INT` + インデックス | **手動実行が必要** |
 
 ## Supabase クライアント使い分け
 
@@ -134,9 +144,6 @@ app_logs:      level, endpoint, message, detail(JSONB), created_at
 **重要ルール:**
 - Route Handler では **全テーブル** `getSupabaseAdmin()` を使い、必ず `.eq('user_id', user.id)` でフィルタする
   → `getSupabase()` (ANON key) は Route Handler では `auth.uid()` が null になりデータが0件になる
-- `getSupabase()` は現在 lib/supabase.ts に残っているが Route Handler では使用しない
-- `lib/supabase-server.ts` は `next/headers` を import するため Server Component / Route Handler 専用
-- `lib/supabase-browser.ts` は Client Component 専用（`next/headers` を使わない）
 
 ## 認証フロー
 ```
@@ -146,16 +153,7 @@ app_logs:      level, endpoint, message, detail(JSONB), created_at
        → 完了なら / → TutorialGuide ポップアップ（初回のみ）
 ```
 
-### middleware.ts の挙動
-1. セッション Cookie をリフレッシュ（必須）
-2. PUBLIC_PATHS (`/login`, `/auth/callback`) は認証不要
-3. 未認証 → `/login` へリダイレクト
-4. 認証済み + `/login` → `/` へリダイレクト
-5. 認証済み + `onboarding_complete` 未設定 + 非 ONBOARDING_EXEMPT パス → `/onboarding` へリダイレクト
-   - ONBOARDING_EXEMPT: `/onboarding`, `/api/`, `/auth/`
-
 ## ユーザー設定（user_metadata）
-Supabase の `auth.users.raw_user_meta_data` に保存:
 ```typescript
 {
   study_purpose: 'meeting' | 'review' | 'reading' | 'interview' | 'general'
@@ -164,31 +162,61 @@ Supabase の `auth.users.raw_user_meta_data` に保存:
   onboarding_complete: true
 }
 ```
-- Route Handler から更新: `db.auth.admin.updateUserById(user.id, { user_metadata: {...} })`
-- Client Component から参照: `useAuth().user?.user_metadata`
 
-## UserContext (フレーズ抽出プロンプトへの反映)
-```typescript
-// lib/extract-phrases.ts
-interface UserContext {
-  study_purpose?: string
-  study_level?: string
-  study_domain?: string
-}
-extractPhrasesWithClaude(text, userContext?)
+## クイズ仕様
+
+### 出題ロジック (quiz/route.ts)
+- `mode=normal`: 通常出題。即答済みフレーズ（直近10セッションで3回以上 <3500ms で正解）を末尾に降格
+- `mode=focus`: 直近5セッションで2回以上不正解のフレーズを優先出題（不足時は normal にフォールバック）
+
+### レスポンスタイム計測
+- 問題表示時に `Date.now()` をセット → 回答送信時に差分を `response_time_ms` として記録
+- `quiz_answers.response_time_ms` に保存（migration 013 が必要）
+
+## X シェア機能
+
+### 動作フロー（quiz完了時 / 記録ページ各セッション）
+1. Canvas API で 1200×630px PNG を生成（ユーザーのテーマ設定に合わせた配色）
+2. PNG を自動ダウンロード (`reel-result.png`)
+3. X 投稿画面を直接オープン（Web Share API / 共有ダイアログなし）
+
+### 投稿テキスト形式
 ```
-- `import-async/route.ts` の `processJob` が `db.auth.admin.getUserById(userId)` でメタデータを取得して渡す
-- `study_domain` は専門領域・興味（例: データエンジニア、ワイン・料理）
+【Reel】クイズ完了 📊
+{pct}% 正解（{correct}/{total}問）
+
+Reel — 実際の会話から学ぶ英語フレーズ
+{appUrl}
+
+#英語学習 #フレーズ学習 #{study_purposeラベル}
+```
+
+### study_purpose → ハッシュタグ対応
+| 値 | ハッシュタグ |
+|----|------------|
+| meeting | #ミーティング英語 |
+| review | #コードレビュー英語 |
+| reading | #技術文書英語 |
+| interview | #面接英語 |
+| general | #ビジネス英語 |
+
+### シェア画像テーマ
+- `settings.colorTheme === 'light'`: 白ベースグラデーション背景
+- `settings.colorTheme === 'dark'` / `system` でダーク判定: slate-900 ベースグラデーション
+- スコアカラー: ≥80% emerald / ≥60% amber / <60% red
+
+## 学習カレンダー (`/streak`)
+- ホーム画面の 🔥 連続日数バッジをタップで遷移
+- 過去6ヶ月分のカレンダー（月別グリッド、正解率で色分け）
+- `computeStreaks()` はクライアント側で計算（サーバー側の streak 計算と独立した実装）
 
 ## 重要パターン
 
 ### 論理削除
-`phrases` に `deleted_at TIMESTAMPTZ` + `delete_reason TEXT`。
-一覧・クイズ取得は必ず `.is('deleted_at', null)` を付ける。
+`phrases.deleted_at TIMESTAMPTZ`。一覧・クイズ取得は必ず `.is('deleted_at', null)` を付ける。
 
 ### Upsert（save route）
-同一ユーザーの同一フレーズ（大文字小文字無視）は UPDATE、新規は INSERT。
-`user_id` フィルタを忘れると他ユーザーのフレーズを更新してしまうため必須。
+同一ユーザーの同一フレーズ（大文字小文字無視）は UPDATE、新規は INSERT。`user_id` フィルタ必須。
 
 ### JSON 部分回復 (extract-phrases.ts)
 Claude の max_tokens 超過で JSON 途中切断された場合の3段階フォールバック:
@@ -196,28 +224,17 @@ Claude の max_tokens 超過で JSON 途中切断された場合の3段階フォ
 2. 未エスケープ改行をサニタイズして再試行
 3. `{` `}` のブレース数えで完結オブジェクトを個別抽出
 
-### TutorialGuide の既読管理
-`localStorage.getItem('tutorial_seen_{user.id}')` で判定。
-`null` なら表示、`'1'` なら非表示。ユーザー ID をキーに含めることで複数アカウントに対応。
-
 ### Railway リバースプロキシ対応
 `auth/callback/route.ts` では `request.url` が `localhost:8080` になるため、
 `x-forwarded-host` / `x-forwarded-proto` ヘッダーから正しい origin を構築する。
 
-### セキュリティ実装済み
+### セキュリティ
 - UUID v4 形式バリデーション (phrases/[id], jobs/[id])
 - 入力長制限: phrase(200) / user_answer(500) / context(1000) / file(2MB, 200k chars) / domain(100)
 - allowlist: source_type / delete_reason / study_purpose / study_level
 - PostgREST インジェクション対策: `.or()` 文字列から `%_,.()*"'` をストリップ
 - SSRF 対策: import URL のプライベート IP 拒否 (`isAllowedHost`)
 - Security headers: X-Frame-Options, CSP, HSTS 等 (next.config.mjs)
-- CSP connect-src に Supabase URL を追加（ブラウザから Auth XHR のため）
-
-### ログ
-```typescript
-log({ level: 'error'|'warn'|'info', endpoint: '/api/...', message: 'code', detail: {...} })
-```
-console + Supabase `app_logs` テーブルに非同期書き込み (fire-and-forget)。
 
 ## 環境変数
 ```
@@ -227,52 +244,16 @@ SUPABASE_SERVICE_ROLE_KEY   # 全 Route Handler の DB 操作に必要 (Railway 
 ANTHROPIC_API_KEY
 ```
 
-## モバイル対応の注意点
+## モバイル対応
 - input の `font-size` は必ず `style={{ fontSize: '16px' }}` でインライン指定 (iOS Safari 自動ズーム防止)
-- `min-h-[100dvh]` は使わない — キーボード展開時に `dvh` が変わりレイアウトシフト発生
-- `min-h-screen` (100vh) は iOS では keyboard 表示で変化しないので安定
-
-## API 設計メモ
-- `quiz` POST body: `{ limit?, exclude?: string[], mode?: 'normal'|'focus' }`
-  - `mode=focus`: 直近5セッションで2回以上不正解のフレーズを優先出題（不足時は normal にフォールバック）
-- `quiz/judge` レスポンス: `{ correct, status: 'correct'|'partial'|'incorrect', feedback, context_ja? }`
-  - レート制限: 60/hr per user。完全一致はローカルチェックで即時返却（Claude 呼び出しなし）
-- `quiz/explain` レスポンス: `{ explanation: string }` — 語源・ニュアンス・使用場面・注意点
-  - レート制限: 20/hr per user。`phrases.explanation` にキャッシュ（2回目以降は DB から即時返却）
-- `admin/import-async`: ジョブ作成後 `processJob()` を fire-and-forget で実行
-- `user/onboarding` POST: アンケート保存 + フレーズ0件時のみシード10問挿入
-- `stats` GET: `{ phrase_count, source_count, streak, today_done, weak_count }`
-  - `streak`: 連続学習日数（UTC 日付ベース）
-  - `today_done`: 今日クイズ完了済みフラグ
-  - `weak_count`: 直近20セッションで2回以上不正解のフレーズ数
-- `history` GET: `{ sessions[], daily_accuracy[], by_difficulty[], by_scene[] }`
-  - `daily_accuracy`: 直近14日の日別 `{ date, correct, total }`
-  - `by_difficulty`: 難易度別 `{ difficulty, correct, total }`
-  - `by_scene`: シーン別 `{ scene, correct, total }`
-- `phrases` GET クエリパラメータ: `?q=`, `?difficulty=1-5`, `?scene=daily|technical|business|other`, `?source=`
-  - Cache-Control: `private, max-age=30, stale-while-revalidate=60`
-- `history` GET — 同上 Cache-Control 設定済み
-- `history/calendar` GET — `{ activity[{ date, correct, total }] }` (過去6ヶ月)
-
-## クイズ結果シェア
-クイズ10問完了時に「𝕏 シェア」ボタンが表示される。
-- Canvas API で 1200×630px PNG を生成（スコア・正解率・日付・URL 入り）
-- モバイル: `navigator.share({ files })` で画像ごとネイティブ共有シート
-- デスクトップ: PNG をダウンロード + X インテント URL を開く
-- 正解率によるスコアカラー: ≥80% emerald / ≥60% amber / <60% red
-
-## 学習カレンダー (`/streak`)
-ホーム画面の 🔥 連続日数バッジをタップで遷移。
-- 過去6ヶ月分のカレンダー（月別グリッド、正解率で色分け）
-- 統計: 現在連続日数 / 最長記録 / 総学習日数
-- `computeStreaks()` はクライアント側でアクティビティデータから算出
+- `min-h-[100dvh]` は使わない — キーボード展開時にレイアウトシフト発生
+- `min-h-screen` (100vh) を使用
+- 戻るボタン: `text-2xl p-2 -ml-2` で統一（約40px タップ領域）
 
 ## PWA
-- `app/manifest.ts` で PWA マニフェスト定義（Next.js 14 App Router）
-- `app/icon.tsx` / `app/apple-icon.tsx` でアイコン自動生成（ImageResponse）
-- **必須**: `export const runtime = 'edge'` を icon ファイルに追加
-  （Node.js runtime だと Windows ビルド時に `@vercel/og` が `Invalid URL` エラー）
-- manifest の `icons[].purpose` は `'any'` と `'maskable'` を別エントリに分ける
+- `app/manifest.ts` — name: "Reel", short_name: "Reel"
+- `app/icon.tsx` / `app/apple-icon.tsx` でアイコン自動生成
+- icon ファイルに `export const runtime = 'edge'` 必須（Windows ビルドで `@vercel/og` が Invalid URL エラー）
 
 ## デプロイ
 ```bash
@@ -284,4 +265,3 @@ git add <files> && git commit -m "..." && git push origin master
 ## Supabase ダッシュボード設定（本番）
 - Authentication → URL Configuration → **Site URL**: Railway の本番 URL
 - Authentication → URL Configuration → **Redirect URLs**: `{本番URL}/auth/callback`
-- これがないとメール確認リンクが localhost を向く
