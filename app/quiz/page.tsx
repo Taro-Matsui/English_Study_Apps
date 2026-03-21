@@ -490,7 +490,10 @@ function QuizContent() {
               <div className="space-y-2">
                 <input
                   ref={inputRef}
+                  id="quiz-answer"
+                  name="quiz-answer"
                   type="text"
+                  autoComplete="off"
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}

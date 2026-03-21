@@ -42,7 +42,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://tgqfnsmrwvpycmhmfpyv.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net",
+              "connect-src 'self' https://tgqfnsmrwvpycmhmfpyv.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://ep1.adtrafficquality.google",
               "frame-src https://www.googletagmanager.com https://accounts.google.com https://tpc.googlesyndication.com https://googleads.g.doubleclick.net",
               "frame-ancestors 'none'",
             ].join('; '),
