@@ -194,9 +194,29 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
 }
 
 /**
+ * Supabase Storage の share-images バケットに画像をアップロードする。
+ * 認証済みユーザーのみ書き込み可、バケットはパブリック読み取り。
+ * アップロード成功時は公開 URL を返す。失敗時は null を返す。
+ */
+export async function uploadShareImage(blob: Blob, sessionId: string): Promise<string | null> {
+  try {
+    const { createBrowserSupabaseClient } = await import('@/lib/supabase-browser')
+    const supabase = createBrowserSupabaseClient()
+    const { error } = await supabase.storage
+      .from('share-images')
+      .upload(`${sessionId}.png`, blob, { contentType: 'image/png', upsert: true })
+    if (error) return null
+    const { data } = supabase.storage.from('share-images').getPublicUrl(`${sessionId}.png`)
+    return data.publicUrl
+  } catch {
+    return null
+  }
+}
+
+/**
  * 結果をシェア。
- * sessionId あり → Twitter Cards（シェアURLをツイートに含める。画像は自動表示）
- * sessionId なし（モバイル）→ Web Share API でファイルシェート
+ * sessionId あり → Canvas 画像を Storage にアップロード後、Twitter Cards URL ツイート
+ * sessionId なし（モバイル）→ Web Share API でファイルシェア
  * sessionId なし（デスクトップ）→ クリップボードコピー + X 投稿画面を開く
  *
  * 戻り値: 'shared' | 'copied' | 'opened'
@@ -206,8 +226,13 @@ export async function openXShare(params: ShareParams): Promise<'shared' | 'copie
   const shareText = getShareText(params)
 
   // ── Twitter Cards: sessionId がある場合 ──────────────────────
-  // シェアURLをツイートに含めると Twitter が og:image を自動取得して表示する
+  // 画像を Storage にアップロード → Twitter がog:imageを自動取得してカード表示
   if (sessionId && typeof window !== 'undefined') {
+    const blob = await generateQuizResultImage(params).catch(() => null)
+    if (blob) {
+      // アップロードは投稿前に完了させる（Twitter クローラーが即時取得できるように）
+      await uploadShareImage(blob, sessionId)
+    }
     const shareUrl = `${window.location.origin}/share/${sessionId}`
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,

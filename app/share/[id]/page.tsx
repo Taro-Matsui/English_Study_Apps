@@ -27,6 +27,28 @@ function getBaseUrl() {
   return `${proto}://${host}`
 }
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
+
+function getOgImageUrl(params: {
+  id: string
+  pct: number
+  correctCount: number
+  totalQuestions: number
+  completedAt: string
+  base: string
+}): string {
+  const { id, pct, correctCount, totalQuestions, completedAt, base } = params
+  const sessionAge = Date.now() - new Date(completedAt).getTime()
+  const incorrect = totalQuestions - correctCount
+
+  // 1日以内 → Supabase Storage の静的画像（Twitter クローラーが高速に取得可能）
+  if (sessionAge < ONE_DAY_MS) {
+    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/share-images/${id}.png`
+  }
+  // 1日超 → edge runtime で動的生成（Storage の画像は削除済みの可能性）
+  return `${base}/api/og?pct=${pct}&correct=${correctCount}&total=${totalQuestions}&partial=0&incorrect=${incorrect}`
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const session = await fetchSession(params.id)
   if (!session) return { title: 'Reel' }
@@ -34,10 +56,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const pct = session.total_questions
     ? Math.round((session.correct_count / session.total_questions) * 100)
     : 0
-  const incorrect = session.total_questions - session.correct_count
 
   const base = getBaseUrl()
-  const ogUrl = `${base}/api/og?pct=${pct}&correct=${session.correct_count}&total=${session.total_questions}&partial=0&incorrect=${incorrect}`
+  const ogUrl = getOgImageUrl({
+    id: params.id,
+    pct,
+    correctCount: session.correct_count,
+    totalQuestions: session.total_questions,
+    completedAt: session.completed_at,
+    base,
+  })
 
   return {
     title: `Reel クイズ結果 ${pct}% — 実際の会話から学ぶ英語フレーズ`,
