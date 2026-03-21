@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
+import { useSettings } from '@/lib/settings'
+import { useAuth } from '@/lib/auth-context'
+import { generateQuizResultImage, getShareText } from '@/lib/share-image'
 
 interface AnswerRow {
   is_correct: boolean
@@ -53,9 +56,51 @@ const SCENE_LABELS: Record<string, string> = {
 
 export default function HistoryPage() {
   const { lang, t } = useLanguage()
+  const { settings } = useSettings()
+  const { user } = useAuth()
   const [data, setData] = useState<HistoryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState<string | null>(null)
+  const [sharing, setSharing] = useState<string | null>(null)
+
+  async function handleShareSession(ses: Session) {
+    if (sharing) return
+    setSharing(ses.id)
+    const pct = ses.total_questions ? Math.round((ses.correct_count / ses.total_questions) * 100) : 0
+    const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
+    const isDark = settings.colorTheme === 'dark' ||
+      (settings.colorTheme === 'system' &&
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches)
+    const params = {
+      pct,
+      correct: ses.correct_count,
+      total: ses.total_questions,
+      partial: 0,
+      incorrect: ses.total_questions - ses.correct_count,
+      theme: isDark ? 'dark' as const : 'light' as const,
+      studyPurpose,
+    }
+    try {
+      const shareText = getShareText(params)
+      try {
+        const blob = await generateQuizResultImage(params)
+        const objUrl = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = objUrl
+        a.download = 'phrase-up-result.png'
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(objUrl), 1000)
+      } catch {}
+      window.open(
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+        '_blank',
+        'noopener,noreferrer',
+      )
+    } finally {
+      setSharing(null)
+    }
+  }
 
   useEffect(() => {
     fetch('/api/history').then((r) => r.json()).then((d) => {
@@ -237,7 +282,21 @@ export default function HistoryPage() {
                       <p className="text-xs text-gray-400 dark:text-slate-400 mt-0.5">{summaryStr}</p>
                     </div>
                   </div>
-                  <span className={`text-gray-300 dark:text-slate-500 transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleShareSession(ses) }}
+                      disabled={sharing === ses.id}
+                      className={`text-xs px-2 py-1 rounded-lg transition-colors ${
+                        sharing === ses.id
+                          ? 'text-gray-300 dark:text-slate-600 animate-pulse'
+                          : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-white/10'
+                      }`}
+                      title="Xにシェア"
+                    >
+                      𝕏
+                    </button>
+                    <span className={`text-gray-300 dark:text-slate-500 transition-transform ${isOpen ? 'rotate-90' : ''}`}>›</span>
+                  </div>
                 </button>
 
                 {isOpen && (

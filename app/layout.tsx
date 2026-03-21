@@ -39,6 +39,10 @@ export const viewport: Viewport = {
 
 const FOUC_SCRIPT = `try{var t=JSON.parse(localStorage.getItem('app_settings')||'{}').colorTheme;if(t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}`
 
+const GTM_ID = 'GTM-PWNWXD23'
+const GTM_SCRIPT = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`
+const GTM_NOSCRIPT = `<iframe src="https://www.googletagmanager.com/ns.html?id=${GTM_ID}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -48,10 +52,12 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script dangerouslySetInnerHTML={{ __html: FOUC_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: GTM_SCRIPT }} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <noscript dangerouslySetInnerHTML={{ __html: GTM_NOSCRIPT }} />
         <LanguageProvider>
           <SettingsProvider>
             <ThemeProvider>
