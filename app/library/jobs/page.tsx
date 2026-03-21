@@ -16,7 +16,7 @@ interface Job {
 }
 
 const STATUS_CONFIG = {
-  pending:    { label: '待機中',  cls: 'bg-slate-500/20 text-slate-400' },
+  pending:    { label: '待機中',  cls: 'bg-amber-100 text-amber-600' },
   processing: { label: '処理中',  cls: 'bg-amber-500/20 text-amber-400 animate-pulse' },
   done:       { label: '完了',    cls: 'bg-emerald-500/20 text-emerald-400' },
   error:      { label: 'エラー',  cls: 'bg-red-500/20 text-red-400' },
@@ -57,13 +57,13 @@ export default function LibraryJobsPage() {
 
   return (
     <div className="min-h-screen bg-amber-50 text-gray-900 pb-24">
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-gray-200">
+      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-amber-100">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
           <Link href="/library/import" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
           <h1 className="flex-1 text-sm font-semibold">インポート ジョブ一覧</h1>
           <button
             onClick={fetchJobs}
-            className="text-xs px-3 py-1 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+            className="text-xs px-3 py-1 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
           >
             更新
           </button>
@@ -91,7 +91,7 @@ export default function LibraryJobsPage() {
         {!loading && !apiError && jobs.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-400 text-sm">ジョブがありません</p>
-            <Link href="/library/import" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
+            <Link href="/library/import" className="text-amber-700 text-sm hover:underline mt-2 inline-block">
               インポートを開始 →
             </Link>
           </div>
@@ -104,7 +104,7 @@ export default function LibraryJobsPage() {
               <Link
                 key={job.id}
                 href={`/library/jobs/${job.id}`}
-                className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 p-4 rounded-xl border border-amber-100 bg-white/90 hover:bg-amber-50/50 transition-colors"
               >
                 <span className="text-lg">{job.type === 'file' ? '📄' : '🌐'}</span>
                 <div className="flex-1 min-w-0">
