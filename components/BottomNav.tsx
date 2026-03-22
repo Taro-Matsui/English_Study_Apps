@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
-  { href: '/quiz',            icon: '🎯', label: 'プラクティス' },
+  { href: '/quiz',            icon: '🎯', label: 'チャレンジ' },
   { href: '/phrases',         icon: '📚', label: 'マイ ピック' },
-  { href: '/history',         icon: '📊', label: '記録' },
-  { href: '/library/import',  icon: '🎸', label: 'ソース' },
+  { href: '/history',         icon: '📊', label: 'チャレンジ記録' },
+  { href: '/library/import',  icon: '🎸', label: '英語Pick' },
 ]
 
 // これらのパスプレフィックスで表示する

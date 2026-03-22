@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'お問い合わせ | Reel',
+  title: 'お問い合わせ | Pick',
 }
 
 export default function ContactPage() {
@@ -33,7 +33,7 @@ export default function ContactPage() {
           <div className="space-y-2">
             <h2 className="font-bold text-gray-900">お問い合わせの前に</h2>
             <ul className="list-disc list-inside space-y-1 text-gray-600 pl-2">
-              <li>件名に「Reelに関するお問い合わせ」とご記入ください。</li>
+              <li>件名に「Pickに関するお問い合わせ」とご記入ください。</li>
               <li>アカウント削除のご依頼は、登録済みのメールアドレスからご連絡ください。</li>
               <li>通常3営業日以内を目安にご返信しますが、お時間をいただく場合があります。</li>
             </ul>

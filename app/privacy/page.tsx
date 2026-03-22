@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'プライバシーポリシー | Reel',
+  title: 'プライバシーポリシー | Pick',
 }
 
 export default function PrivacyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
           <section className="space-y-2">
             <h2 className="font-bold text-gray-900 text-base">1. 事業者情報</h2>
-            <p>本サービス「Reel」（以下「当サービス」）は、個人が運営するウェブアプリケーションです。</p>
+            <p>本サービス「Pick」（以下「当サービス」）は、個人が運営するウェブアプリケーションです。</p>
           </section>
 
           <section className="space-y-2">

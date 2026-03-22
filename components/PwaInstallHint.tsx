@@ -79,7 +79,7 @@ export function PwaInstallHint() {
       <img src="/icon.png" alt="" width={40} height={40} className="rounded-xl flex-shrink-0 shadow-sm" />
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-amber-900">Reel をホーム画面に追加</p>
+        <p className="text-sm font-bold text-amber-900">Pick をホーム画面に追加</p>
         {isAndroid ? (
           <p className="text-xs text-amber-700/70 mt-0.5">
             アプリとしてインストールするとより快適に使えます

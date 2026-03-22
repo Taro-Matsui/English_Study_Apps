@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: '運営者情報 | Reel',
+  title: '運営者情報 | Pick',
 }
 
 export default function AboutPage() {
@@ -18,7 +18,7 @@ export default function AboutPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-4">
               <dt className="font-medium text-gray-500">サービス名</dt>
-              <dd className="col-span-2 font-semibold text-gray-900">Reel（リール）</dd>
+              <dd className="col-span-2 font-semibold text-gray-900">Pick（リール）</dd>
             </div>
             <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-4">
               <dt className="font-medium text-gray-500">運営者</dt>
@@ -45,7 +45,7 @@ export default function AboutPage() {
           <div className="border-t border-gray-100 pt-5 space-y-2">
             <h2 className="font-bold text-gray-900">サービスについて</h2>
             <p>
-              Reel は、実際の会話や文書から自分に必要な英語フレーズをPickして学ぶアプリです。
+              Pick は、実際の会話や文書から自分に必要な英語フレーズをPickして学ぶアプリです。
               議事録・YouTube字幕・技術記事などのリアルなテキストを追加すると、
               AIがあなたの学習目的に合ったフレーズを自動でPickし、Practiceで定着をサポートします。
             </p>

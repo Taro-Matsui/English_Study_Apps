@@ -174,7 +174,7 @@ export default function LibraryJobDetailPage() {
             <p className="text-red-500 font-semibold text-sm">処理に失敗しました</p>
             <p className="text-red-400 text-xs">{job.error_text}</p>
             <Link href="/library/import" className="text-blue-600 text-xs hover:underline block mt-2">
-              Source を追加 →
+              英語をPickする →
             </Link>
           </div>
         )}
@@ -270,7 +270,7 @@ export default function LibraryJobDetailPage() {
           <div className="text-center py-8">
             <p className="text-gray-400 text-sm">Pickが0件です</p>
             <Link href="/library/import" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
-              Source を追加 →
+              英語をPickする →
             </Link>
           </div>
         )}

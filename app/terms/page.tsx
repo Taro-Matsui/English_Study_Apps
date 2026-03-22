@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 export const metadata = {
-  title: '利用規約 | Reel',
+  title: '利用規約 | Pick',
 }
 
 export default function TermsPage() {
@@ -19,7 +19,7 @@ export default function TermsPage() {
           <section className="space-y-2">
             <h2 className="font-bold text-gray-900 text-base">1. サービスの概要</h2>
             <p>
-              「Reel」（以下「当サービス」）は、ユーザーが提供する英語テキストからフレーズをAIで抽出し、
+              「Pick」（以下「当サービス」）は、ユーザーが提供する英語テキストからフレーズをAIで抽出し、
               クイズ形式で学習できる英語学習サービスです。
               本規約はユーザーと運営者との間に適用されます。
             </p>

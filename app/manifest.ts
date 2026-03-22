@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Reel',
-    short_name: 'Reel',
+    name: 'Pick',
+    short_name: 'Pick',
     description: '実際の会話・文書から英語フレーズをPickして学ぶアプリ',
     start_url: '/',
     display: 'standalone',

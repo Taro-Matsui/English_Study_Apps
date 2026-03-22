@@ -135,7 +135,7 @@ export default function LoginPage() {
             <span className="text-lg">💬</span>
             <span className="text-xl">👨‍💻</span>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Reel</h1>
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Pick</h1>
           <p className="text-gray-500 text-sm leading-relaxed">
             実際の会話から、フレーズをPickする学習アプリ。<br />
             自分のリアルなテキストで、使える英語を身につけよう。

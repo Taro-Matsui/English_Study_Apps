@@ -66,12 +66,12 @@ export async function GET(req: NextRequest) {
             flexShrink: 0,
           }}
         >
-          <div style={{ fontSize: 60, lineHeight: 1, marginBottom: 16 }}>🎣</div>
+          <div style={{ fontSize: 60, lineHeight: 1, marginBottom: 16 }}>🎸</div>
           <div style={{ fontSize: 68, fontWeight: 800, color: '#4a3020', lineHeight: 1, marginBottom: 12 }}>
-            Reel
+            Pick
           </div>
           <div style={{ fontSize: 22, color: '#8b6340', marginBottom: 40 }}>
-            実際の会話から学ぶ英語フレーズ
+            会話からフレーズをPickして学ぼう
           </div>
           <div style={{ fontSize: 18, color: '#a08060', marginBottom: 10 }}>{dateStr}</div>
           <div style={{ fontSize: 17, color: 'rgba(139,99,64,0.55)' }}>

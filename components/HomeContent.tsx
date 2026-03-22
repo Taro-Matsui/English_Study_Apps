@@ -129,8 +129,8 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <span className="text-xl">👨‍💻</span>
           </div>
           <div className="text-center space-y-1">
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Reel</h1>
-            <p className="text-gray-500 text-sm">実際の会話からフレーズを手繰り寄せる</p>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pick</h1>
+            <p className="text-gray-500 text-sm">会話からフレーズをPickして学ぼう</p>
           </div>
           <div className="flex gap-1.5 mt-2">
             {[0, 1, 2].map((i) => (
@@ -158,7 +158,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <span className="text-lg">💬</span>
             <span className="text-xl">👨‍💻</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Reel</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pick</h1>
           <p className="text-gray-500 text-sm">{t('tagline')}</p>
         </div>
 
@@ -173,7 +173,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             </Link>
             {displayTodayDone && (
               <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                ✓ {lang === 'ja' ? '今日のプラクティス完了' : "Today's Practice done"}
+                ✓ {lang === 'ja' ? '今日のチャレンジ完了' : "Today's Practice done"}
               </span>
             )}
           </div>

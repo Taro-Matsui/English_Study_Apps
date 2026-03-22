@@ -89,7 +89,7 @@ export function WelcomeGuide() {
           <>
             <div className="space-y-1">
               <h1 className="text-5xl font-bold tracking-tight" style={{ color: '#4a3020', fontFamily: 'Georgia, serif' }}>
-                Reel
+                Pick
               </h1>
               <p className="text-sm font-medium" style={{ color: '#8b6340' }}>会話からフレーズをPickして学ぼう</p>
             </div>
@@ -98,7 +98,7 @@ export function WelcomeGuide() {
               {!imgError ? (
                 <Image
                   src="/logo.png"
-                  alt="Reel"
+                  alt="Pick"
                   width={224}
                   height={224}
                   className="object-contain drop-shadow-xl"

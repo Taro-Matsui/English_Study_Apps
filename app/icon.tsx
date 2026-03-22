@@ -19,7 +19,7 @@ export default function Icon() {
           borderRadius: '112px',
         }}
       >
-        <div style={{ fontSize: '280px', lineHeight: 1 }}>🎣</div>
+        <div style={{ fontSize: '280px', lineHeight: 1 }}>🎸</div>
         <div
           style={{
             fontSize: '72px',
@@ -30,7 +30,7 @@ export default function Icon() {
             fontFamily: 'Georgia, serif',
           }}
         >
-          Reel
+          Pick
         </div>
       </div>
     ),

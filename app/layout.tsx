@@ -19,7 +19,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Reel",
+  title: "Pick",
   description: "実際の会話・文書から英語フレーズをPickして学ぶアプリ",
   icons: {
     // iOS Safari ホーム画面アイコン → logo.png を使用（apple-icon.tsx より優先）
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Reel",
+    title: "Pick",
   },
 };
 

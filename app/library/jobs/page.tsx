@@ -92,7 +92,7 @@ export default function LibraryJobsPage() {
           <div className="text-center py-12">
             <p className="text-gray-400 text-sm">まだ Source がありません</p>
             <Link href="/library/import" className="text-amber-700 text-sm hover:underline mt-2 inline-block">
-              Source を追加 →
+              英語をPickする →
             </Link>
           </div>
         )}

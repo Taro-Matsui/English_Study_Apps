@@ -32,7 +32,7 @@ export function getShareText({ pct, correct, total, studyPurpose, studySubcatego
   const categoryTag = effectivePurpose && PURPOSE_SHARE_LABELS[effectivePurpose]
     ? ` #${PURPOSE_SHARE_LABELS[effectivePurpose].replace(/\s/g, '')}` : ''
   return [
-    `【Reel】プラクティス完了 📊`,
+    `【Pick】チャレンジ完了 📊`,
     `${pct}% 正解（${correct}/${total}問）`,
     ``,
     `#英語学習 #フレーズ学習${categoryTag}`,
@@ -106,7 +106,7 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
 
   ctx.fillStyle = '#4a3020'
   ctx.font = font(64, 'bold')
-  ctx.fillText('Reel', LX, CY - 30)
+  ctx.fillText('Pick', LX, CY - 30)
 
   ctx.fillStyle = '#8b6340'
   ctx.font = font(22)
