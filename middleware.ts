@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // 認証不要なパス
-const PUBLIC_PATHS = ['/login', '/auth/callback']
+const PUBLIC_PATHS = ['/login', '/auth/callback', '/share', '/api/og']
 
 // 認証状態に関わらず通過するパス（デモモード）
 const GUEST_PATHS = ['/demo', '/api/demo']
