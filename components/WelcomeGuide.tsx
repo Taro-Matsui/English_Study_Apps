@@ -91,7 +91,7 @@ export function WelcomeGuide() {
               <h1 className="text-5xl font-bold tracking-tight" style={{ color: '#4a3020', fontFamily: 'Georgia, serif' }}>
                 Reel
               </h1>
-              <p className="text-sm font-medium" style={{ color: '#8b6340' }}>英語を楽しく、リアルに学ぶ</p>
+              <p className="text-sm font-medium" style={{ color: '#8b6340' }}>会話からフレーズをPickして学ぼう</p>
             </div>
 
             <div className="w-56 h-56 flex items-center justify-center">

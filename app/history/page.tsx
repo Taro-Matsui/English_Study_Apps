@@ -152,7 +152,7 @@ export default function HistoryPage() {
             {daily.some((d) => d.total > 0) && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  直近14日の Practice 記録
+                  直近14日のプラクティス記録
                 </p>
                 <div className="flex items-end gap-1 h-20">
                   {daily.map((d) => {

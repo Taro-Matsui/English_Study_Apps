@@ -32,7 +32,7 @@ export function getShareText({ pct, correct, total, studyPurpose, studySubcatego
   const categoryTag = effectivePurpose && PURPOSE_SHARE_LABELS[effectivePurpose]
     ? ` #${PURPOSE_SHARE_LABELS[effectivePurpose].replace(/\s/g, '')}` : ''
   return [
-    `【Reel】クイズ完了 📊`,
+    `【Reel】プラクティス完了 📊`,
     `${pct}% 正解（${correct}/${total}問）`,
     ``,
     `#英語学習 #フレーズ学習${categoryTag}`,

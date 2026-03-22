@@ -73,16 +73,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 
   return {
-    title: `Reel クイズ結果 ${pct}% — 実際の会話から学ぶ英語フレーズ`,
+    title: `Reel プラクティス結果 ${pct}% — 会話からフレーズをPickして学ぼう`,
     description: `${pct}% 正解（${session.correct_count}/${session.total_questions}問）`,
     openGraph: {
-      title: `Reel クイズ結果 ${pct}%`,
+      title: `Reel プラクティス結果 ${pct}%`,
       description: `${session.correct_count}/${session.total_questions}問正解`,
       images: [{ url: ogUrl, width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Reel クイズ結果 ${pct}%`,
+      title: `Reel プラクティス結果 ${pct}%`,
       description: `${session.correct_count}/${session.total_questions}問正解`,
       images: [ogUrl],
     },
@@ -95,7 +95,7 @@ export default async function SharePage({ params }: Props) {
   if (!session) {
     return (
       <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
-        <p className="text-4xl">🎣</p>
+        <p className="text-4xl">🎸</p>
         <p className="text-sm text-gray-500">このシェアリンクは見つかりませんでした</p>
         <Link href="/" className="text-sm text-blue-600 hover:underline">Reel を始める</Link>
       </div>
@@ -119,14 +119,14 @@ export default async function SharePage({ params }: Props) {
       <div className="w-full max-w-sm space-y-6 text-center">
         {/* ヘッダー */}
         <div>
-          <p className="text-4xl mb-2">🎣</p>
+          <p className="text-4xl mb-2">🎸</p>
           <p className="text-2xl font-bold text-amber-900">Reel</p>
-          <p className="text-sm text-amber-700 mt-1">実際の会話から学ぶ英語フレーズ</p>
+          <p className="text-sm text-amber-700 mt-1">会話からフレーズをPickして学ぼう</p>
         </div>
 
         {/* スコアカード */}
         <div className="bg-white/80 rounded-3xl border border-amber-200 shadow-sm p-8 space-y-3">
-          <p className="text-sm text-amber-700 font-medium">クイズ結果</p>
+          <p className="text-sm text-amber-700 font-medium">プラクティス結果</p>
           <p className={`text-7xl font-bold ${scoreColor}`}>{pct}<span className="text-3xl">%</span></p>
           <div className={`inline-flex items-center gap-1.5 ${bgColor} rounded-full px-4 py-1.5`}>
             <span className={`text-sm font-semibold ${scoreColor}`}>

@@ -365,10 +365,10 @@ function QuizContent() {
     <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
       <p className="text-gray-500 text-sm">
-        {isFocusMode ? 'Repickフレーズが見つかりません。通常Practiceに切り替えます。' : t('quiz_empty')}
+        {isFocusMode ? 'Repickフレーズが見つかりません。通常プラクティスに切り替えます。' : t('quiz_empty')}
       </p>
       {isFocusMode
-        ? <Link href="/quiz" className="text-sm text-blue-600 hover:underline">Practice を開始</Link>
+        ? <Link href="/quiz" className="text-sm text-blue-600 hover:underline">プラクティスを開始</Link>
         : <Link href="/library/import" className="text-sm text-blue-600 hover:underline">{t('quiz_empty_link')}</Link>
       }
     </div>
@@ -378,7 +378,7 @@ function QuizContent() {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
     const motivationMsg = pct >= 80
-      ? "Today's Practice done. Pick Streak を続けよう！"
+      ? '今日のプラクティス完了！ Pick Streak を続けよう！'
       : pct >= 60
       ? '毎日Pickで着実に上達！'
       : 'Repickで苦手を克服しよう！'
@@ -409,8 +409,8 @@ function QuizContent() {
               className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors">
               <span className="text-xl">🚀</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-emerald-300">Add a Source でレベルアップ！</p>
-                <p className="text-xs text-emerald-400/70 mt-0.5">Add a Source</p>
+                <p className="text-sm font-semibold text-emerald-300">Source を追加してレベルアップ！</p>
+                <p className="text-xs text-emerald-400/70 mt-0.5">Source を追加</p>
               </div>
               <span className="text-emerald-400">›</span>
             </Link>

@@ -173,7 +173,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             </Link>
             {displayTodayDone && (
               <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                ✓ {lang === 'ja' ? "Today's Practice done" : "Today's Practice done"}
+                ✓ {lang === 'ja' ? '今日のプラクティス完了' : "Today's Practice done"}
               </span>
             )}
           </div>

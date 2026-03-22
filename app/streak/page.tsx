@@ -123,7 +123,7 @@ export default function StreakPage() {
             <p className="text-xl mb-0.5">📅</p>
             <p className="text-2xl font-bold text-gray-900">{loading ? '—' : totalDays}</p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-              {lang === 'ja' ? '総 Practice 日数' : 'Total Practice days'}
+              {lang === 'ja' ? '総プラクティス日数' : 'Total Practice days'}
             </p>
           </div>
         </div>

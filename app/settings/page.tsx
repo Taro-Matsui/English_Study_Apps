@@ -322,7 +322,7 @@ export default function SettingsPage() {
         {/* クイズ設定 */}
         <section className="space-y-3">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            {ja ? 'Practice 設定' : 'Practice Settings'}
+            {ja ? 'プラクティス設定' : 'Practice Settings'}
           </h2>
 
           <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-colors">
@@ -354,7 +354,7 @@ export default function SettingsPage() {
                 {ja ? 'コンテキストヒントを表示' : 'Show context hint'}
               </p>
               <p className="text-xs text-gray-400 mt-0.5">
-                {ja ? 'Practice中に例文（フレーズ部分をマスク）を表示します' : 'Show example sentence with phrase masked during Practice'}
+                {ja ? 'プラクティス中に例文（フレーズ部分をマスク）を表示します' : 'Show example sentence with phrase masked during Practice'}
               </p>
             </div>
           </label>
