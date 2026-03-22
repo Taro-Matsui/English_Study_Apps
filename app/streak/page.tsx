@@ -97,7 +97,7 @@ export default function StreakPage() {
         <div className="max-w-sm mx-auto flex items-center gap-2">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
           <h1 className="text-base font-bold text-gray-800">
-            Pick Streak
+            連続日数
           </h1>
         </div>
       </div>
@@ -109,14 +109,14 @@ export default function StreakPage() {
             <p className="text-xl mb-0.5">🔥</p>
             <p className="text-2xl font-bold text-gray-900">{loading ? '—' : streak}</p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-              Pick Streak
+              連続日数
             </p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center">
             <p className="text-xl mb-0.5">🏆</p>
             <p className="text-2xl font-bold text-gray-900">{loading ? '—' : longest}</p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-              Best Pick Streak
+              最長連続日数
             </p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center">

@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { href: '/quiz',            icon: '🎯', label: 'チャレンジ' },
   { href: '/phrases',         icon: '📚', label: 'マイ ピック' },
   { href: '/history',         icon: '📊', label: 'チャレンジ記録' },
-  { href: '/library/import',  icon: '🎸', label: '英語Pick' },
+  { href: '/library/import',  icon: '🎸', label: '英語ピック' },
 ]
 
 // これらのパスプレフィックスで表示する

@@ -22,7 +22,7 @@ const FEATURES = [
   {
     icon: '📊',
     title: 'Repickで弱点を克服',
-    desc: '正解率・Pick Streak・Repickフレーズをトラッキング。苦手なPickを重点的に復習できます。',
+    desc: '正解率・連続日数・Repickフレーズをトラッキング。苦手なPickを重点的に復習できます。',
   },
 ]
 

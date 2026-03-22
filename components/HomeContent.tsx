@@ -98,9 +98,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       bg: 'bg-blue-50 hover:bg-blue-100',
       border: 'border-blue-200',
       iconBg: 'from-blue-500 to-blue-600',
-      badge: displayPhraseCount !== null
-        ? lang === 'ja' ? `${displayPhraseCount}件` : `${displayPhraseCount} phrases`
-        : null,
+      badge: null as string | null,
     },
     {
       href: '/library/import',
@@ -110,9 +108,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       bg: 'bg-violet-50 hover:bg-violet-100',
       border: 'border-violet-200',
       iconBg: 'from-violet-500 to-violet-600',
-      badge: displaySourceCount !== null
-        ? lang === 'ja' ? `${displaySourceCount}ファイル` : `${displaySourceCount} files`
-        : null,
+      badge: null as string | null,
     },
   ]
 
@@ -123,11 +119,6 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
     return (
       <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
         <div className="flex flex-col items-center gap-6 animate-fade-in">
-          <div className="inline-flex items-center justify-center gap-1 px-5 h-14 rounded-2xl bg-amber-100">
-            <span className="text-xl">👩‍💻</span>
-            <span className="text-lg">💬</span>
-            <span className="text-xl">👨‍💻</span>
-          </div>
           <div className="text-center space-y-1">
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pick</h1>
             <p className="text-gray-500 text-sm">会話からフレーズをPickして学ぼう</p>
@@ -153,29 +144,41 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
         {/* ヘッダー */}
         <div className="text-center space-y-1">
-          <div className="inline-flex items-center justify-center gap-1 px-5 h-14 rounded-2xl bg-amber-100 backdrop-blur-sm mb-1">
-            <span className="text-xl">👩‍💻</span>
-            <span className="text-lg">💬</span>
-            <span className="text-xl">👨‍💻</span>
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pick</h1>
           <p className="text-gray-500 text-sm">{t('tagline')}</p>
         </div>
 
-        {/* ストリーク表示 */}
-        {displayStreak > 0 && (
-          <div className="flex items-center justify-center gap-2.5">
-            <Link href="/streak" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
-              <span className="text-lg">🔥</span>
-              <span className="text-gray-800 font-bold text-base">
-                {lang === 'ja' ? `Pick Streak ${displayStreak}日` : `${displayStreak}-day Pick Streak`}
-              </span>
-            </Link>
-            {displayTodayDone && (
-              <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                ✓ {lang === 'ja' ? '今日のチャレンジ完了' : "Today's Practice done"}
-              </span>
-            )}
+        {/* サマリーカード */}
+        <div className="grid grid-cols-3 gap-2">
+          <Link href="/phrases" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-amber-50 transition-colors">
+            <p className="text-xl font-bold text-gray-900">
+              {displayPhraseCount !== null ? displayPhraseCount : '—'}
+            </p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">マイピック</p>
+          </Link>
+          <Link href="/streak" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-amber-50 transition-colors">
+            <p className="text-xl font-bold text-gray-900 flex items-center justify-center gap-0.5">
+              {displayStreak > 0 && <span className="text-base">🔥</span>}
+              {displayStreak}
+            </p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
+              {lang === 'ja' ? '連続日数' : 'Streak'}
+            </p>
+          </Link>
+          <Link href="/library/jobs" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-amber-50 transition-colors">
+            <p className="text-xl font-bold text-gray-900">
+              {displaySourceCount !== null ? displaySourceCount : '—'}
+            </p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">あなたの出会い数</p>
+          </Link>
+        </div>
+
+        {/* 今日完了バッジ */}
+        {displayTodayDone && (
+          <div className="flex justify-center">
+            <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+              ✓ {lang === 'ja' ? '今日のチャレンジ完了' : "Today's Challenge done"}
+            </span>
           </div>
         )}
 

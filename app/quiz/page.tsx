@@ -378,7 +378,7 @@ function QuizContent() {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
     const motivationMsg = pct >= 80
-      ? '今日のチャレンジ完了！ Pick Streak を続けよう！'
+      ? '今日のチャレンジ完了！ 連続日数を伸ばそう！'
       : pct >= 60
       ? '毎日Pickで着実に上達！'
       : 'Repickで苦手を克服しよう！'
@@ -409,8 +409,8 @@ function QuizContent() {
               className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors">
               <span className="text-xl">🚀</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-emerald-300">英語をPickするしてレベルアップ！</p>
-                <p className="text-xs text-emerald-400/70 mt-0.5">英語をPickする</p>
+                <p className="text-sm font-semibold text-emerald-300">英語をピックしてレベルアップ！</p>
+                <p className="text-xs text-emerald-400/70 mt-0.5">英語をピックする</p>
               </div>
               <span className="text-emerald-400">›</span>
             </Link>

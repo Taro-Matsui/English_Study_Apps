@@ -163,7 +163,7 @@ export default function LibraryImportPage() {
         <div className="max-w-lg mx-auto px-4 py-2 flex items-center gap-2">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-800">英語をPickする</p>
+            <p className="text-sm font-bold text-gray-800">英語をピックする</p>
             <p className="text-[11px] text-gray-400 leading-tight">会話録・記事・字幕を追加してAIがPickします</p>
           </div>
           <Link href="/library/jobs" className="text-xs text-amber-700 hover:text-amber-800 border border-amber-200 rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors whitespace-nowrap">
