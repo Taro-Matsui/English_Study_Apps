@@ -104,7 +104,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
     },
     {
       href: '/library/import',
-      icon: '⚙️',
+      icon: '📥',
       title: t('nav_import'),
       desc: t('nav_import_desc'),
       bg: 'bg-violet-50 hover:bg-violet-100',
@@ -212,10 +212,10 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <span className="text-xl flex-shrink-0">📥</span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-violet-700">
-                自分のテキストをインポートしよう
+                あなたのコンテキストを追加しよう
               </p>
               <p className="text-xs text-violet-500 mt-0.5">
-                会話録・記事・字幕からフレーズを自動抽出
+                会話・記事・字幕からフレーズを手繰り寄せる
               </p>
             </div>
             <span className="text-violet-400 flex-shrink-0">›</span>
@@ -266,7 +266,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
                 <HintBubble
                   key={c.href}
                   hintId="home-import"
-                  message={'⚙️ 会議録やドキュメントを貼り付けるとAIがフレーズを自動抽出します'}
+                  message={'📥 会話・記事・字幕を取り込むとAIがフレーズを自動抽出します'}
                   userId={user?.id}
                   position="top"
                   prerequisiteHintId="home-quiz"
