@@ -18,7 +18,7 @@ const SLIDES = [
     image: false,
     icon: '📥',
     heading: 'Sourceを貼るだけ',
-    title: '議事録・会議録・動画の文字起こしから、\nコピーするだけでPickが始まります。',
+    title: '議事録・会議録・動画の文字起こしから、\nコピーするだけでピックが始まります。',
     sub: '',
     cta: '次へ',
   },

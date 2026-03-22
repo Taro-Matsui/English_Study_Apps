@@ -410,7 +410,7 @@ function QuizContent() {
               <span className="text-xl">🚀</span>
               <div className="flex-1">
                 <p className="text-sm font-semibold text-emerald-300">英語をピックしてレベルアップ！</p>
-                <p className="text-xs text-emerald-400/70 mt-0.5">英語をピックする</p>
+                <p className="text-xs text-emerald-400/70 mt-0.5">出会いから英語をピックする</p>
               </div>
               <span className="text-emerald-400">›</span>
             </Link>

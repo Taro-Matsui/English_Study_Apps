@@ -154,7 +154,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <p className="text-xl font-bold text-gray-900">
               {displayPhraseCount !== null ? displayPhraseCount : '—'}
             </p>
-            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">マイピック</p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">マイピックリスト</p>
           </Link>
           <Link href="/streak" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-amber-50 transition-colors">
             <p className="text-xl font-bold text-gray-900 flex items-center justify-center gap-0.5">
@@ -215,10 +215,10 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <span className="text-xl flex-shrink-0">📥</span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-violet-700">
-                最初のフレーズをPickしよう 🎸
+                最初のフレーズをピックしよう 🎸
               </p>
               <p className="text-xs text-violet-500 mt-0.5">
-                会話録・記事・字幕からAIがフレーズをPickします
+                会話録・記事・字幕からAIがフレーズをピックします
               </p>
             </div>
             <span className="text-violet-400 flex-shrink-0">›</span>

@@ -21,18 +21,18 @@ export const TRANSLATIONS = {
     // home
     tagline: '会話からフレーズをPickして学ぼう',
     nav_quiz: 'チャレンジ',
-    nav_quiz_desc: 'Pickしたフレーズを練習しよう',
+    nav_quiz_desc: 'ピックしたフレーズを練習しよう',
     nav_history: 'チャレンジ記録',
     nav_history_desc: '連続日数や正解率を確認',
-    nav_phrases: 'マイ ピック',
-    nav_phrases_desc: 'Pickしたフレーズを検索・確認',
-    nav_import: '英語をピックする',
-    nav_import_desc: '会話録・記事・字幕を追加してPickが始まります',
+    nav_phrases: 'マイピックリスト',
+    nav_phrases_desc: 'ピックしたフレーズを検索・確認',
+    nav_import: '出会いから英語をピックする',
+    nav_import_desc: '会話録・記事・字幕を追加してピックが始まります',
 
     // quiz
     quiz_loading: '読み込み中...',
     quiz_empty: 'まだPickがありません',
-    quiz_empty_link: '英語をピックする →',
+    quiz_empty_link: '出会いから英語をピックする →',
     quiz_placeholder: '日本語で意味を入力...',
     quiz_submit: '判定する',
     quiz_judging: 'AIが判定中...',
@@ -72,11 +72,11 @@ export const TRANSLATIONS = {
     history_correct_prefix: '正解',
 
     // phrases
-    phrases_title: 'マイ ピック',
+    phrases_title: 'マイピックリスト',
     phrases_search: 'フレーズ・意味で検索...',
     phrases_all: 'すべて',
     phrases_empty: 'フレーズが見つかりません',
-    phrases_import_link: '英語をピックする →',
+    phrases_import_link: '出会いから英語をピックする →',
     phrases_delete_title: 'フレーズを削除しますか？',
     phrases_delete_reason: '削除理由',
     phrases_cancel: 'キャンセル',

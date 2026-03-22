@@ -174,7 +174,7 @@ export default function LibraryJobDetailPage() {
             <p className="text-red-500 font-semibold text-sm">処理に失敗しました</p>
             <p className="text-red-400 text-xs">{job.error_text}</p>
             <Link href="/library/import" className="text-blue-600 text-xs hover:underline block mt-2">
-              英語をピックする →
+              出会いから英語をピックする →
             </Link>
           </div>
         )}
@@ -239,7 +239,7 @@ export default function LibraryJobDetailPage() {
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
                 {extractedPhrases.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider">Pickしたフレーズ ({extractedPhrases.length}件)</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider">ピックしたフレーズ ({extractedPhrases.length}件)</p>
                     {extractedPhrases.map((p) => (
                       <PhraseRow key={p.phrase} phrase={p} onRemove={() => setPhrases((prev) => prev.filter((x) => x !== p))} disabled={saving} />
                     ))}
@@ -270,7 +270,7 @@ export default function LibraryJobDetailPage() {
           <div className="text-center py-8">
             <p className="text-gray-400 text-sm">Pickが0件です</p>
             <Link href="/library/import" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
-              英語をピックする →
+              出会いから英語をピックする →
             </Link>
           </div>
         )}
