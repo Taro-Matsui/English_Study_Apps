@@ -168,12 +168,12 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <Link href="/streak" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
               <span className="text-lg">🔥</span>
               <span className="text-gray-800 font-bold text-base">
-                {displayStreak}{lang === 'ja' ? '日連続' : '-day streak'}
+                {lang === 'ja' ? `Pick Streak ${displayStreak}日` : `${displayStreak}-day Pick Streak`}
               </span>
             </Link>
             {displayTodayDone && (
               <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                ✓ {lang === 'ja' ? '本日クリア済' : 'Done today'}
+                ✓ {lang === 'ja' ? "Today's Practice done" : "Today's Practice done"}
               </span>
             )}
           </div>
@@ -229,10 +229,10 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <span className="text-xl flex-shrink-0">⚠️</span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-red-600">
-                {lang === 'ja' ? `弱点フレーズ ${displayWeakCount}件` : `${displayWeakCount} weak phrases`}
+                {lang === 'ja' ? `Repick ${displayWeakCount}件` : `${displayWeakCount} Repicks`}
               </p>
               <p className="text-xs text-red-400 mt-0.5">
-                {lang === 'ja' ? '苦手なフレーズを重点的に復習' : 'Focus on phrases you often miss'}
+                {lang === 'ja' ? '苦手なPickを重点的に復習' : 'Focus on your Repicks'}
               </p>
             </div>
             <span className="text-red-400 flex-shrink-0">›</span>

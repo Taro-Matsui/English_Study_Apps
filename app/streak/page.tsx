@@ -97,7 +97,7 @@ export default function StreakPage() {
         <div className="max-w-sm mx-auto flex items-center gap-2">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
           <h1 className="text-base font-bold text-gray-800">
-            {lang === 'ja' ? '学習カレンダー' : 'Study Calendar'}
+            Pick Streak
           </h1>
         </div>
       </div>
@@ -109,21 +109,21 @@ export default function StreakPage() {
             <p className="text-xl mb-0.5">🔥</p>
             <p className="text-2xl font-bold text-gray-900">{loading ? '—' : streak}</p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-              {lang === 'ja' ? '現在の連続' : 'Current streak'}
+              Pick Streak
             </p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center">
             <p className="text-xl mb-0.5">🏆</p>
             <p className="text-2xl font-bold text-gray-900">{loading ? '—' : longest}</p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-              {lang === 'ja' ? '最長記録' : 'Best streak'}
+              Best Pick Streak
             </p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center">
             <p className="text-xl mb-0.5">📅</p>
             <p className="text-2xl font-bold text-gray-900">{loading ? '—' : totalDays}</p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">
-              {lang === 'ja' ? '総学習日数' : 'Total days'}
+              {lang === 'ja' ? '総 Practice 日数' : 'Total Practice days'}
             </p>
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function StreakPage() {
                     return (
                       <div
                         key={dateStr}
-                        title={act ? `${act.correct}/${act.total} 正解` : dateStr}
+                        title={act ? `${act.correct}/${act.total} Good Pick` : dateStr}
                         className={`aspect-square rounded-md flex items-center justify-center text-[11px] font-medium transition-all ${
                           isFuture ? 'opacity-25' : ''
                         } ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''} ${bgCls}`}

@@ -356,7 +356,7 @@ function QuizContent() {
   if (step === 'loading') return (
     <div className="min-h-screen bg-amber-50 flex items-center justify-center">
       <p className="text-gray-400 text-sm animate-pulse">
-        {isFocusMode ? '⚠️ 弱点フレーズを読み込み中...' : t('quiz_loading')}
+        {isFocusMode ? '⚠️ Repick を読み込み中...' : t('quiz_loading')}
       </p>
     </div>
   )
@@ -365,10 +365,10 @@ function QuizContent() {
     <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
       <p className="text-gray-500 text-sm">
-        {isFocusMode ? '弱点フレーズが見つかりません。通常クイズに切り替えます。' : t('quiz_empty')}
+        {isFocusMode ? 'Repickフレーズが見つかりません。通常Practiceに切り替えます。' : t('quiz_empty')}
       </p>
       {isFocusMode
-        ? <Link href="/quiz" className="text-sm text-blue-600 hover:underline">通常クイズを開始</Link>
+        ? <Link href="/quiz" className="text-sm text-blue-600 hover:underline">Practice を開始</Link>
         : <Link href="/library/import" className="text-sm text-blue-600 hover:underline">{t('quiz_empty_link')}</Link>
       }
     </div>
@@ -378,10 +378,10 @@ function QuizContent() {
     const pct = Math.round((score.correct / total) * 100)
     const grade = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '💪'
     const motivationMsg = pct >= 80
-      ? 'この調子で明日も続けよう！'
+      ? "Today's Practice done. Pick Streak を続けよう！"
       : pct >= 60
-      ? '毎日続ければ必ず上達する！'
-      : '挑戦を続けることが上達の近道！'
+      ? '毎日Pickで着実に上達！'
+      : 'Repickで苦手を克服しよう！'
     const isHighScore = pct >= 80
     return (
       <div className="min-h-screen bg-amber-50 flex flex-col p-4">
@@ -409,8 +409,8 @@ function QuizContent() {
               className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors">
               <span className="text-xl">🚀</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-emerald-300">フレーズを追加してレベルアップ！</p>
-                <p className="text-xs text-emerald-400/70 mt-0.5">新しいフレーズをPickする</p>
+                <p className="text-sm font-semibold text-emerald-300">Add a Source でレベルアップ！</p>
+                <p className="text-xs text-emerald-400/70 mt-0.5">Add a Source</p>
               </div>
               <span className="text-emerald-400">›</span>
             </Link>
@@ -420,8 +420,8 @@ function QuizContent() {
               className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/15 transition-colors text-left">
               <span className="text-xl">⚠️</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-red-300">弱点を復習する</p>
-                <p className="text-xs text-red-400/70 mt-0.5">間違えたフレーズを重点的に練習</p>
+                <p className="text-sm font-semibold text-red-300">Repick Mode</p>
+                <p className="text-xs text-red-400/70 mt-0.5">間違えたPickを重点的に練習</p>
               </div>
               <span className="text-red-400">›</span>
             </button>
@@ -501,7 +501,7 @@ function QuizContent() {
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex items-center gap-3">
             {isFocusMode && (
-              <span className="text-xs bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full font-medium">⚠ 弱点</span>
+              <span className="text-xs bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full font-medium">⚠ Repick</span>
             )}
             <span className="text-xs text-emerald-500 font-semibold">✓ {score.correct}</span>
             <span className="text-xs text-amber-500 font-semibold">△ {score.partial}</span>
@@ -570,7 +570,7 @@ function QuizContent() {
                 </button>
                 <button onClick={handleSkip}
                   className="w-full py-2.5 rounded-2xl border border-gray-200 bg-white text-gray-400 text-sm hover:bg-gray-50 transition-colors">
-                  分かりません
+                  Skip
                 </button>
               </div>
             )}
@@ -652,7 +652,7 @@ function QuizContent() {
                   )}
                   {explanation && (
                     <div className="rounded-2xl border border-blue-500/20 bg-blue-50 p-3 space-y-1.5">
-                      <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">💡 AI解説</p>
+                      <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">💡 Coach からのアドバイス</p>
                       <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{explanation}</p>
                     </div>
                   )}

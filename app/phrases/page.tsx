@@ -30,7 +30,7 @@ const SCENE_LABELS: Record<string, string> = {
 }
 
 export default function PhrasesPage() {
-  const { lang, t } = useLanguage()
+  const { t } = useLanguage()
   const { settings } = useSettings()
   const [phrases, setPhrases] = useState<Phrase[]>([])
   const [loading, setLoading] = useState(true)
@@ -123,7 +123,7 @@ export default function PhrasesPage() {
   const hasMore = filteredPhrases.length > visibleCount
 
   const masteredCount = phrases.filter((p) => masteredSet.has(p.id)).length
-  const countLabel = lang === 'ja' ? `${filteredPhrases.length}件` : `${filteredPhrases.length} phrases`
+  const countLabel = `${filteredPhrases.length} Picks`
 
   const hasFilters = !!q || !!source || diffFilter !== null || !!sceneFilter || onlyUnmastered
 
@@ -211,7 +211,7 @@ export default function PhrasesPage() {
                 onlyUnmastered ? 'bg-amber-800 text-white' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
               }`}
             >
-              未習得のみ
+              Unpicked のみ
             </button>
             {hasFilters && (
               <button
@@ -244,7 +244,7 @@ export default function PhrasesPage() {
             </div>
             <div className="space-y-1">
               <p className="text-base font-semibold text-amber-900">
-                {hasFilters ? 'フレーズが見つかりません' : 'まだフレーズがありません'}
+                {hasFilters ? 'フレーズが見つかりません' : 'まだPickがありません'}
               </p>
               <p className="text-sm text-amber-700/60">
                 {hasFilters
@@ -283,7 +283,7 @@ export default function PhrasesPage() {
                       </span>
                       {isMastered && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700">
-                          ✓ 習得済み
+                          ✓ Picked
                         </span>
                       )}
                     </div>

@@ -248,7 +248,7 @@ export default function OnboardingPage() {
                 </>
               ) : (
                 <>
-                  <p className="text-4xl">🎣</p>
+                  <p className="text-4xl">🎸</p>
                   <h1 className="text-xl font-bold" style={{ color: C.text }}>Reel へようこそ</h1>
                   <p className="text-sm" style={{ color: C.sub }}>あなたの学習スタイルを教えてください。</p>
                 </>
@@ -444,7 +444,7 @@ export default function OnboardingPage() {
               </h2>
               <p className="text-sm mt-2" style={{ color: C.sub }}>
                 「<span className="font-semibold" style={{ color: C.accent }}>{domain}</span>」のコンテキストに合わせたフレーズを優先的に出題します。
-                テキストをインポートすると、さらにあなただけの学習が始まります。
+                Sourceを追加すると、さらにあなただけの学習が始まります。
               </p>
             </div>
             <div
@@ -468,7 +468,7 @@ export default function OnboardingPage() {
               className="w-full py-4 rounded-2xl text-base font-bold shadow-md transition-opacity active:opacity-80 disabled:opacity-60"
               style={{ background: C.accent, color: '#fff' }}
             >
-              {saving ? '設定を保存中...' : 'さあ始めよう！🎣'}
+              {saving ? '設定を保存中...' : 'さあ始めよう！🎸'}
             </button>
             <button
               onClick={fetchAndStartProficiency}
@@ -633,7 +633,7 @@ export default function OnboardingPage() {
                   ? '素晴らしい！上級者向けフレーズも積極的に学んでいきましょう 🚀'
                   : correctCount >= 5
                   ? 'いい調子！実践的なフレーズで着実にレベルアップしていきましょう 📈'
-                  : '基礎から丁寧に学んでいきましょう。Reel があなたをサポートします 🎣'}
+                  : '基礎から丁寧に学んでいきましょう。Reel があなたをサポートします 🎸'}
               </p>
             </div>
 
@@ -650,7 +650,7 @@ export default function OnboardingPage() {
               className="w-full py-4 rounded-2xl text-base font-bold shadow-md transition-opacity active:opacity-80 disabled:opacity-60"
               style={{ background: C.accent, color: '#fff' }}
             >
-              {saving ? '設定を保存中...' : 'さあ始めよう！🎣'}
+              {saving ? '設定を保存中...' : 'さあ始めよう！🎸'}
             </button>
           </div>
         </div>

@@ -152,7 +152,7 @@ export default function HistoryPage() {
             {daily.some((d) => d.total > 0) && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                  直近14日の学習記録
+                  直近14日の Practice 記録
                 </p>
                 <div className="flex items-end gap-1 h-20">
                   {daily.map((d) => {
@@ -195,7 +195,7 @@ export default function HistoryPage() {
             {/* 難易度別正解率 */}
             {(data?.by_difficulty.length ?? 0) > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">難易度別 正解率</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">難易度別 Accuracy</p>
                 {data!.by_difficulty.map((d) => {
                   const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0
                   return (
@@ -219,7 +219,7 @@ export default function HistoryPage() {
             {/* シーン別 */}
             {(data?.by_scene.length ?? 0) > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">シーン別 正解率</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">シーン別 Accuracy</p>
                 {data!.by_scene.map((d) => {
                   const pct = d.total > 0 ? Math.round((d.correct / d.total) * 100) : 0
                   return (
@@ -256,8 +256,8 @@ export default function HistoryPage() {
             const isOpen = open === ses.id
             const dateStr = ses.completed_at ? formatTime(ses.completed_at) : '—'
             const summaryStr = lang === 'ja'
-              ? `${ses.total_questions}問 / 正解 ${ses.correct_count}問`
-              : `${ses.total_questions}Q / ${ses.correct_count} correct`
+              ? `${ses.total_questions} Picks / Good Pick ${ses.correct_count}`
+              : `${ses.total_questions} Picks / ${ses.correct_count} Good Pick`
             return (
               <div key={ses.id} className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
                 <button
