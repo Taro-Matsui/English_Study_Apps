@@ -178,12 +178,12 @@ export default function LibraryImportPage() {
         {dupConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
             <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full space-y-4">
-              <p className="text-base font-semibold text-gray-900">同じ内容をまた取り込みますか？</p>
-              <p className="text-sm text-gray-500">このファイル／テキストはすでに取り込まれています。重複フレーズが生成される場合があります。</p>
+              <p className="text-base font-semibold text-gray-900">同じ内容をまたPickしますか？</p>
+              <p className="text-sm text-gray-500">このファイル／テキストはすでにPickされています。重複フレーズが生成される場合があります。</p>
               <div className="flex gap-3">
                 <button onClick={() => { setDupConfirm(false); submit(true) }}
                   className="flex-1 rounded-xl bg-amber-800 text-white text-sm font-medium py-2.5 hover:bg-amber-700 transition-colors">
-                  続けて取り込む
+                  続けてPickする
                 </button>
                 <button onClick={() => setDupConfirm(false)}
                   className="flex-1 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium py-2.5 hover:bg-gray-50 transition-colors">
@@ -411,16 +411,16 @@ export default function LibraryImportPage() {
               <div className="flex gap-2">
                 <Link href={`/library/jobs/${jobId}`}
                   className="flex-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors text-center">
-                  この取り込みの詳細
+                  このSourceの詳細
                 </Link>
                 <button onClick={handleReset}
                   className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                  続けて取り込む
+                  続けてPickする
                 </button>
               </div>
               <Link href="/quiz"
                 className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition-colors text-center">
-                今すぐクイズで確認する →
+                今すぐPracticeで確認する →
               </Link>
             </div>
           </div>

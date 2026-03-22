@@ -25,7 +25,7 @@ const SLIDES = [
   {
     step: 3,
     image: false,
-    icon: '🎣',
+    icon: '🎸',
     heading: 'Pickして、練習して、使える',
     title: 'その場で聞こえていた英語が、\n今日から自分のものになります。',
     sub: '',
@@ -106,7 +106,7 @@ export function WelcomeGuide() {
                   priority
                 />
               ) : (
-                <span className="text-9xl select-none">🎣</span>
+                <span className="text-9xl select-none">🎸</span>
               )}
             </div>
           </>

@@ -122,7 +122,7 @@ export default function LibraryJobDetailPage() {
   if (error && !job) return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4">
       <p className="text-red-500 text-sm">{error}</p>
-      <Link href="/library/jobs" className="text-blue-600 text-sm hover:underline">← 取り込み履歴に戻る</Link>
+      <Link href="/library/jobs" className="text-blue-600 text-sm hover:underline">← Sources に戻る</Link>
     </div>
   )
 
@@ -136,7 +136,7 @@ export default function LibraryJobDetailPage() {
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
           <Link href="/library/jobs" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{job?.source_name ?? '取り込み詳細'}</p>
+            <p className="text-sm font-semibold truncate">{job?.source_name ?? 'Source 詳細'}</p>
             {job && (
               <p className="text-xs text-gray-400">
                 {formatTime(job.created_at)}
@@ -157,7 +157,7 @@ export default function LibraryJobDetailPage() {
         {(job?.status === 'pending' || job?.status === 'processing') && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center space-y-3">
             <p className="text-2xl animate-spin">⚙</p>
-            <p className="text-amber-600 font-semibold text-sm">Claude APIでフレーズを抽出中...</p>
+            <p className="text-amber-600 font-semibold text-sm">Pickしています...</p>
             <p className="text-gray-400 text-xs">自動的に更新されます。このページを開いたままにしてください。</p>
             <button
               onClick={handleCancel}
@@ -174,7 +174,7 @@ export default function LibraryJobDetailPage() {
             <p className="text-red-500 font-semibold text-sm">処理に失敗しました</p>
             <p className="text-red-400 text-xs">{job.error_text}</p>
             <Link href="/library/import" className="text-blue-600 text-xs hover:underline block mt-2">
-              取り込みをやり直す →
+              Add a Source →
             </Link>
           </div>
         )}
@@ -189,8 +189,8 @@ export default function LibraryJobDetailPage() {
               <p className="text-gray-500 text-xs">{saveResult.skipped}件はスキップ</p>
             )}
             <div className="flex gap-2 mt-2 flex-wrap">
-              <Link href="/quiz" className="text-xs px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors font-medium">今すぐクイズで確認する →</Link>
-              <Link href="/library/import" className="text-xs text-blue-600 hover:underline self-center">続けて取り込む →</Link>
+              <Link href="/quiz" className="text-xs px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors font-medium">今すぐPracticeで確認する →</Link>
+              <Link href="/library/import" className="text-xs text-blue-600 hover:underline self-center">続けてPickする →</Link>
               <Link href="/" className="text-xs text-gray-400 hover:underline self-center">ホームへ →</Link>
             </div>
           </div>
@@ -229,7 +229,7 @@ export default function LibraryJobDetailPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold">
-                  フレーズ <span className="text-gray-400">({phrases.length}件)</span>
+                  Picks <span className="text-gray-400">({phrases.length}件)</span>
                   {suggestedPhrases.length > 0 && (
                     <span className="ml-2 text-xs text-violet-500">うち提案 {suggestedPhrases.length}件</span>
                   )}
@@ -239,7 +239,7 @@ export default function LibraryJobDetailPage() {
               <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
                 {extractedPhrases.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider">テキストから抽出 ({extractedPhrases.length}件)</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider">Pickしたフレーズ ({extractedPhrases.length}件)</p>
                     {extractedPhrases.map((p) => (
                       <PhraseRow key={p.phrase} phrase={p} onRemove={() => setPhrases((prev) => prev.filter((x) => x !== p))} disabled={saving} />
                     ))}
@@ -260,7 +260,7 @@ export default function LibraryJobDetailPage() {
                 disabled={phrases.length === 0 || saving}
                 className="w-full py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {saving ? '追加中...' : `${phrases.length}件を学習フレーズに追加する`}
+                {saving ? '追加中...' : `${phrases.length}件をPickする`}
               </button>
             </div>
           </>
@@ -268,9 +268,9 @@ export default function LibraryJobDetailPage() {
 
         {job?.status === 'done' && phrases.length === 0 && !saveResult && (
           <div className="text-center py-8">
-            <p className="text-gray-400 text-sm">フレーズが0件です</p>
+            <p className="text-gray-400 text-sm">Pickが0件です</p>
             <Link href="/library/import" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
-              取り込みに戻る →
+              Add a Source →
             </Link>
           </div>
         )}

@@ -20,7 +20,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Reel",
-  description: "実際の会話・文書から英語フレーズを手繰り寄せて学ぶアプリ",
+  description: "実際の会話・文書から英語フレーズをPickして学ぶアプリ",
   icons: {
     // iOS Safari ホーム画面アイコン → logo.png を使用（apple-icon.tsx より優先）
     apple: [{ url: '/logo.png', sizes: '1024x1024', type: 'image/png' }],

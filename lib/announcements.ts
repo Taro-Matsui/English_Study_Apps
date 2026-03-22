@@ -15,8 +15,8 @@ export const ANNOUNCEMENTS: Announcement[] = [
     id: '2026-03-22-dontknow',
     date: '2026-03-22',
     type: 'update',
-    title: '「分かりません」ボタンを追加',
-    body: 'クイズに「分かりません」ボタンが追加されました。思い出せないときはタップするとAIが正解と解説を表示します。あてずっぽうで答えるより、正確なレベル把握ができます。',
+    title: '「Skip」ボタンを追加',
+    body: 'Practiceに「Skip」ボタンが追加されました。思い出せないときはタップするとAIが正解と解説を表示します。あてずっぽうで答えるより、正確なレベル把握ができます。',
   },
   {
     id: '2026-03-22-auto-explain',
@@ -29,8 +29,8 @@ export const ANNOUNCEMENTS: Announcement[] = [
     id: '2026-03-22-new-phrase-priority',
     date: '2026-03-22',
     type: 'update',
-    title: '新しくインポートしたフレーズを優先出題',
-    body: 'クイズで、直近7日以内にインポートしたフレーズを優先的に出題するようになりました。新しい素材を貼ったらすぐ学習できます。',
+    title: '新しくPickしたフレーズを優先出題',
+    body: 'Practiceで、直近7日以内にPickしたフレーズを優先的に出題するようになりました。新しいSourceを追加したらすぐ学習できます。',
   },
   {
     id: '2026-03-20-purpose-update',

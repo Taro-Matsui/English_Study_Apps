@@ -45,9 +45,9 @@ export default function AboutPage() {
           <div className="border-t border-gray-100 pt-5 space-y-2">
             <h2 className="font-bold text-gray-900">サービスについて</h2>
             <p>
-              Reel は「実際の会話から英語フレーズを手繰り寄せる」をコンセプトにした英語学習アプリです。
-              議事録・YouTube字幕・技術記事などのリアルなテキストを貼り付けると、
-              AIがあなたの学習目的に合ったフレーズを自動で抽出し、クイズで定着をサポートします。
+              Reel は、実際の会話や文書から自分に必要な英語フレーズをPickして学ぶアプリです。
+              議事録・YouTube字幕・技術記事などのリアルなテキストを追加すると、
+              AIがあなたの学習目的に合ったフレーズを自動でPickし、Practiceで定着をサポートします。
             </p>
             <p>
               エンジニア・ビジネスパーソン・英語学習者など、

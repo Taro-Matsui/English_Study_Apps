@@ -29,7 +29,7 @@ export default function DemoPage() {
             <div className="flex items-center gap-4">
               <div className="text-3xl">🎯</div>
               <div>
-                <p className="font-bold text-white text-lg">クイズ体験</p>
+                <p className="font-bold text-white text-lg">Practice 体験</p>
                 <p className="text-emerald-200 text-sm mt-0.5">
                   よく使う20フレーズからランダム10問。AI が回答を判定します。
                 </p>
@@ -45,7 +45,7 @@ export default function DemoPage() {
             <div className="flex items-center gap-4">
               <div className="text-3xl">📋</div>
               <div>
-                <p className="font-bold text-white text-lg">フレーズ抽出体験</p>
+                <p className="font-bold text-white text-lg">Pick 体験</p>
                 <p className="text-blue-200 text-sm mt-0.5">
                   英語テキストを貼り付けると、AI がフレーズを自動抽出します。
                 </p>
@@ -71,7 +71,7 @@ export default function DemoPage() {
             無料アカウント登録 / ログイン
           </Link>
           <p className="text-center text-xs text-slate-500">
-            登録するとクイズ履歴の保存・自分のテキストのインポートが可能になります
+            登録するとPractice記録の保存・自分のSourceのPickが可能になります
           </p>
         </div>
         {/* フッター */}

@@ -322,7 +322,7 @@ export default function SettingsPage() {
         {/* クイズ設定 */}
         <section className="space-y-3">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            {ja ? 'クイズ設定' : 'Quiz Settings'}
+            {ja ? 'Practice 設定' : 'Practice Settings'}
           </h2>
 
           <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-colors">
@@ -354,7 +354,7 @@ export default function SettingsPage() {
                 {ja ? 'コンテキストヒントを表示' : 'Show context hint'}
               </p>
               <p className="text-xs text-gray-400 mt-0.5">
-                {ja ? 'クイズ中に例文（フレーズ部分をマスク）を表示します' : 'Show example sentence with phrase masked during quiz'}
+                {ja ? 'Practice中に例文（フレーズ部分をマスク）を表示します' : 'Show example sentence with phrase masked during Practice'}
               </p>
             </div>
           </label>
@@ -371,14 +371,14 @@ export default function SettingsPage() {
                 {ja ? '発音（カタカナ）を表示' : 'Show pronunciation (katakana)'}
               </p>
               <p className="text-xs text-gray-400 mt-0.5">
-                {ja ? 'フレーズ一覧にカタカナ読みを表示します' : 'Show katakana reading in the phrase list'}
+                {ja ? 'My Picksにカタカナ読みを表示します' : 'Show katakana reading in My Picks'}
               </p>
             </div>
           </label>
 
           <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white">
             <div>
-              <p className="text-sm font-medium">{ja ? '習得済みフレーズ' : 'Mastered phrases'}</p>
+              <p className="text-sm font-medium">{ja ? 'Pickedフレーズ' : 'Picked phrases'}</p>
               <p className="text-xs text-gray-400 mt-0.5">
                 {settings.masteredIds.length}{ja ? ' 件' : ' phrases'}
               </p>

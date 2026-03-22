@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Reel',
     short_name: 'Reel',
-    description: '実際の会話・文書から英語フレーズを手繰り寄せて学ぶアプリ',
+    description: '実際の会話・文書から英語フレーズをPickして学ぶアプリ',
     start_url: '/',
     display: 'standalone',
     orientation: 'portrait',
