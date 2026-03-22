@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pick — サービスコンセプト</title>
+<style>
+  :root {
+    --amber-50: #fdf6ec;
+    --amber-100: #fde8c8;
+    --amber-800: #92400e;
+    --amber-700: #b45a09;
+    --emerald: #059669;
+    --slate-800: #1e293b;
+    --gray-600: #4b5563;
+    --gray-400: #9ca3af;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; background: #fdf6ec; color: #1a1a1a; line-height: 1.7; }
+
+  /* ヒーロー */
+  .hero { background: var(--amber-800); color: white; padding: 72px 48px; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 60% 40%, rgba(255,255,255,0.07) 0%, transparent 60%); }
+  .hero-icon { font-size: 56px; margin-bottom: 16px; }
+  .hero h1 { font-size: 52px; font-weight: 800; letter-spacing: -2px; margin-bottom: 8px; }
+  .hero .kana { font-size: 18px; color: #fde8c8; letter-spacing: .1em; margin-bottom: 24px; }
+  .hero .tagline-ja { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .hero .tagline-en { font-size: 15px; color: #fde8c8; font-style: italic; margin-bottom: 32px; }
+  .hero .url { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 6px 20px; font-size: 13px; }
+
+  /* ナビ */
+  nav { background: var(--slate-800); padding: 0 48px; display: flex; gap: 0; overflow-x: auto; }
+  nav a { color: #94a3b8; text-decoration: none; font-size: 13px; padding: 12px 18px; white-space: nowrap; border-bottom: 2px solid transparent; transition: all .2s; }
+  nav a:hover { color: white; border-color: var(--amber-700); }
+
+  main { max-width: 960px; margin: 0 auto; padding: 56px 48px 80px; }
+
+  section { margin-bottom: 64px; }
+  h2 { font-size: 24px; font-weight: 800; color: var(--amber-800); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+  h2 span { font-size: 28px; }
+  h3 { font-size: 14px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; margin-top: 28px; }
+
+  /* カード */
+  .card { background: white; border: 1px solid var(--amber-100); border-radius: 16px; padding: 24px; }
+  .card-grid { display: grid; gap: 16px; }
+  .card-grid.col2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* 問題 vs 解決 */
+  .vs-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; }
+  .problem-card { background: #fff1f2; border: 1px solid #fecaca; border-radius: 16px; padding: 24px; }
+  .solution-card { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 16px; padding: 24px; }
+  .vs-divider { background: var(--amber-800); color: white; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+  .problem-card h4 { font-size: 14px; font-weight: 700; color: #991b1b; margin-bottom: 12px; }
+  .solution-card h4 { font-size: 14px; font-weight: 700; color: #065f46; margin-bottom: 12px; }
+  .problem-card li, .solution-card li { font-size: 13px; margin-bottom: 8px; padding-left: 6px; list-style: none; }
+  .problem-card li::before { content: '✕ '; color: #ef4444; }
+  .solution-card li::before { content: '✓ '; color: var(--emerald); }
+
+  /* コンセプト一文 */
+  .concept-box { background: var(--amber-800); color: white; border-radius: 20px; padding: 40px; text-align: center; }
+  .concept-box .main { font-size: 26px; font-weight: 800; line-height: 1.4; margin-bottom: 12px; }
+  .concept-box .sub { font-size: 15px; color: #fde8c8; line-height: 1.6; }
+
+  /* ユーザーセグメント */
+  .segment { border-radius: 16px; overflow: hidden; border: 1px solid; }
+  .segment-header { padding: 16px 20px; }
+  .segment-header .icon { font-size: 28px; margin-bottom: 8px; }
+  .segment-header h4 { font-size: 16px; font-weight: 700; }
+  .segment-header p { font-size: 13px; margin-top: 4px; opacity: .85; }
+  .segment-body { background: white; padding: 16px 20px; }
+  .segment-row { display: flex; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+  .segment-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+  .seg-eng { background: #eff6ff; border-color: #bfdbfe; }
+  .seg-eng .segment-header { background: #1d4ed8; color: white; }
+  .seg-eng .segment-label { background: #dbeafe; color: #1e40af; }
+  .seg-biz { background: #f0fdf4; border-color: #bbf7d0; }
+  .seg-biz .segment-header { background: var(--emerald); color: white; }
+  .seg-biz .segment-label { background: #dcfce7; color: #065f46; }
+  .seg-hob { background: #fff7ed; border-color: var(--amber-100); }
+  .seg-hob .segment-header { background: var(--amber-700); color: white; }
+  .seg-hob .segment-label { background: #fef3c7; color: #92400e; }
+
+  /* フィーチャー */
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .feature { background: white; border: 1px solid var(--amber-100); border-radius: 14px; padding: 18px; }
+  .feature .icon { font-size: 28px; margin-bottom: 10px; }
+  .feature h4 { font-size: 14px; font-weight: 700; color: var(--amber-800); margin-bottom: 6px; }
+  .feature p { font-size: 12.5px; color: var(--gray-600); line-height: 1.6; }
+
+  /* プラン */
+  .plan-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .plan { border-radius: 16px; overflow: hidden; border: 1px solid; }
+  .plan-header { padding: 20px; text-align: center; }
+  .plan h4 { font-size: 18px; font-weight: 800; }
+  .plan .price { font-size: 28px; font-weight: 800; margin: 8px 0 4px; }
+  .plan .period { font-size: 12px; opacity: .8; }
+  .plan-body { background: white; padding: 16px 20px; }
+  .plan-body li { font-size: 13px; padding: 5px 0; border-bottom: 1px solid #f3f0eb; list-style: none; display: flex; align-items: center; gap: 8px; }
+  .plan-body li:last-child { border-bottom: none; }
+  .plan-free { border-color: #e5e7eb; }
+  .plan-free .plan-header { background: #f9fafb; color: #374151; }
+  .plan-starter { border-color: var(--amber-200); }
+  .plan-starter .plan-header { background: var(--amber-800); color: white; }
+  .plan-pro { border-color: #c4b5fd; }
+  .plan-pro .plan-header { background: #5b21b6; color: white; }
+
+  /* ブランド用語 */
+  .term-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .term { background: white; border: 1px solid var(--amber-100); border-radius: 10px; padding: 12px 16px; display: flex; gap: 12px; align-items: flex-start; }
+  .term-ja { font-weight: 700; color: var(--amber-800); font-size: 14px; min-width: 140px; flex-shrink: 0; }
+  .term-desc { font-size: 12.5px; color: var(--gray-600); }
+
+  /* ロードマップ */
+  .roadmap { display: flex; flex-direction: column; gap: 12px; }
+  .rm-item { background: white; border: 1px solid var(--amber-100); border-radius: 12px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start; }
+  .rm-phase { background: var(--amber-800); color: white; border-radius: 8px; padding: 4px 12px; font-size: 11px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+  .rm-phase.done { background: var(--emerald); }
+  .rm-phase.next { background: #1d4ed8; }
+  .rm-phase.future { background: #6b7280; }
+  .rm-title { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+  .rm-detail { font-size: 12.5px; color: var(--gray-600); margin-top: 4px; }
+
+  /* タグ */
+  .tag { display: inline-block; background: var(--amber-50); border: 1px solid var(--amber-100); border-radius: 6px; padding: 2px 10px; font-size: 12px; color: var(--amber-800); margin: 2px; }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 24px; }
+    header, nav, main { padding-left: 20px; padding-right: 20px; }
+    .vs-grid { grid-template-columns: 1fr; }
+    .vs-divider { display: none; }
+    .card-grid.col2, .card-grid.col3, .feature-grid, .plan-grid { grid-template-columns: 1fr; }
+    .term-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ヒーロー -->
+<div class="hero">
+  <div class="hero-icon">🎸</div>
+  <h1>Pick</h1>
+  <div class="kana">ピック</div>
+  <div class="tagline-ja">会話からフレーズをピックして学ぼう</div>
+  <div class="tagline-en">Pick the words from your real conversations.</div>
+  <div class="url">englishstudyapps-production.up.railway.app</div>
+</div>
+
+<nav>
+  <a href="#problem">課題</a>
+  <a href="#concept">コンセプト</a>
+  <a href="#users">ユーザー</a>
+  <a href="#features">機能</a>
+  <a href="#brand">ブランド</a>
+  <a href="#plans">プラン</a>
+  <a href="#roadmap">ロードマップ</a>
+</nav>
+
+<main>
+
+<!-- ===== 課題 ===== -->
+<section id="problem">
+  <h2><span>😔</span> 解いている課題</h2>
+
+  <div class="vs-grid">
+    <div class="problem-card">
+      <h4>既存の英語学習アプリの問題</h4>
+      <ul>
+        <li>教材フレーズは覚えても実務で使えない</li>
+        <li>自分の仕事・趣味の文脈と完全に乖離している</li>
+        <li>「会議で使えた」「読めた」実感が得られない</li>
+        <li>インプット体験と学習が完全に分断されている</li>
+        <li>継続するモチベーションが続かない</li>
+      </ul>
+    </div>
+    <div class="vs-divider">VS</div>
+    <div class="solution-card">
+      <h4>Pick のアンサー</h4>
+      <ul>
+        <li>自分の議事録・字幕・技術記事がそのまま教材になる</li>
+        <li>AI が「あなたの目的」に合うフレーズを自動でピック</li>
+        <li>チャレンジで即日確認 → 翌日から使える感覚</li>
+        <li>出会い（インプット）→ ピック → チャレンジが1アプリ完結</li>
+        <li>Pick Streak・Progress でゲーミフィケーション</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== コンセプト ===== -->
+<section id="concept">
+  <h2><span>💡</span> サービスコンセプト</h2>
+
+  <div class="concept-box">
+    <div class="main">「 出会った英語をそのまま学習素材にする 」</div>
+    <div class="sub">
+      体験と学習の距離をゼロにする。<br>
+      あなたが今日聞いた・読んだ英語が、今日から学習素材になる。<br>
+      汎用教材ではなく、あなたの文脈に最適化されたパーソナル学習。
+    </div>
+  </div>
+
+  <div class="card-grid col3" style="margin-top: 20px;">
+    <div class="card" style="text-align:center; padding: 28px 20px;">
+      <div style="font-size:36px; margin-bottom:12px;">📋</div>
+      <div style="font-weight:800; font-size:16px; color: var(--amber-800); margin-bottom:8px;">Source を貼るだけ</div>
+      <div style="font-size:13px; color: var(--gray-600);">議事録・YouTube字幕・技術記事・Slack ログ。コピペするだけで AI がピックを開始。</div>
+    </div>
+    <div class="card" style="text-align:center; padding: 28px 20px;">
+      <div style="font-size:36px; margin-bottom:12px;">🤖</div>
+      <div style="font-weight:800; font-size:16px; color: var(--amber-800); margin-bottom:8px;">AI が自動ピック</div>
+      <div style="font-size:13px; color: var(--gray-600);">Claude Sonnet があなたの学習目的・レベルに合わせた「使えるフレーズ」だけを抽出。</div>
+    </div>
+    <div class="card" style="text-align:center; padding: 28px 20px;">
+      <div style="font-size:36px; margin-bottom:12px;">🎯</div>
+      <div style="font-weight:800; font-size:16px; color: var(--amber-800); margin-bottom:8px;">チャレンジで定着</div>
+      <div style="font-size:13px; color: var(--gray-600);">AI 採点 × Coach 解説 × Pick Streak で記憶に定着。苦手は自動でピックアップ チャレンジへ。</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 24px; background: white; border: 1px solid var(--amber-100); border-radius: 16px; padding: 24px;">
+    <h3>設計の3原則</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 4px;">
+      <div>
+        <div style="font-size: 12px; font-weight: 700; color: var(--amber-800); margin-bottom: 6px;">① 文脈一致</div>
+        <div style="font-size: 13px; color: var(--gray-600);">ユーザーが実際に体験したテキストだけを教材にする。汎用フレーズ集は作らない。</div>
+      </div>
+      <div>
+        <div style="font-size: 12px; font-weight: 700; color: var(--amber-800); margin-bottom: 6px;">② 能動性</div>
+        <div style="font-size: 13px; color: var(--gray-600);">「選び取る主体はユーザー」。AI はピックを提案するが、最終的な学習意図はユーザーにある。</div>
+      </div>
+      <div>
+        <div style="font-size: 12px; font-weight: 700; color: var(--amber-800); margin-bottom: 6px;">③ 即時性</div>
+        <div style="font-size: 13px; color: var(--gray-600);">今日出会ったフレーズを今日チャレンジできる。体験から学習までのラグを最小化。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ユーザー ===== -->
+<section id="users">
+  <h2><span>👥</span> ターゲットユーザー</h2>
+
+  <div class="card-grid col3">
+    <div class="segment seg-eng">
+      <div class="segment-header">
+        <div class="icon">🧑‍💻</div>
+        <h4>エンジニア</h4>
+        <p>海外チーム連携・技術文書読解が必要</p>
+      </div>
+      <div class="segment-body">
+        <div class="segment-row"><span class="segment-label seg-eng" style="background:#dbeafe;color:#1e40af">Source</span>会議録・PR レビュー・技術記事</div>
+        <div class="segment-row"><span class="segment-label seg-eng" style="background:#dbeafe;color:#1e40af">目的</span>ミーティング・コードレビュー・カンファレンス</div>
+        <div class="segment-row"><span class="segment-label seg-eng" style="background:#dbeafe;color:#1e40af">価値</span>「あの表現また出た」を学習機会に変換</div>
+      </div>
+    </div>
+    <div class="segment seg-biz">
+      <div class="segment-header">
+        <div class="icon">💼</div>
+        <h4>ビジネスパーソン</h4>
+        <p>会議・プレゼン・メール英語を強化したい</p>
+      </div>
+      <div class="segment-body">
+        <div class="segment-row"><span class="segment-label" style="background:#dcfce7;color:#065f46">Source</span>議事録・字幕・ビジネスメール</div>
+        <div class="segment-row"><span class="segment-label" style="background:#dcfce7;color:#065f46">目的</span>ビジネス一般・プレゼン</div>
+        <div class="segment-row"><span class="segment-label" style="background:#dcfce7;color:#065f46">価値</span>業務直結フレーズを翌日から使える</div>
+      </div>
+    </div>
+    <div class="segment seg-hob">
+      <div class="segment-header">
+        <div class="icon">📚</div>
+        <h4>英語学習者（趣味）</h4>
+        <p>洋画・読書・ポッドキャスト好き</p>
+      </div>
+      <div class="segment-body">
+        <div class="segment-row"><span class="segment-label" style="background:#fef3c7;color:#92400e">Source</span>字幕・小説・ポッドキャスト文字起こし</div>
+        <div class="segment-row"><span class="segment-label" style="background:#fef3c7;color:#92400e">目的</span>旅行・ライフスタイル・読書</div>
+        <div class="segment-row"><span class="segment-label" style="background:#fef3c7;color:#92400e">価値</span>好きなコンテンツが最強の教材になる</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 20px;">
+    <h3>共通の提供価値</h3>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 4px;">
+      <span class="tag">自分ごと化した素材</span>
+      <span class="tag">AI 自動抽出（目的別最適化）</span>
+      <span class="tag">AI 採点で即フィードバック</span>
+      <span class="tag">Pick Streak で継続サポート</span>
+      <span class="tag">ピックアップ チャレンジで弱点克服</span>
+      <span class="tag">モバイルファースト PWA</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 機能 ===== -->
+<section id="features">
+  <h2><span>⚡</span> 主要機能</h2>
+
+  <div class="feature-grid">
+    <div class="feature">
+      <div class="icon">📋</div>
+      <h4>ソース追加（ピック）</h4>
+      <p>テキストを貼り付けるだけ。Claude Sonnet が学習目的・レベルに合わせてフレーズを自動抽出。JSON 部分回復機能で大量テキストも安全処理。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🎯</div>
+      <h4>チャレンジ</h4>
+      <p>テキスト入力で回答 → Claude Haiku が correct / almost / repick の3段階で即時採点。「スキップ」ボタンで AI 採点なしの即解説も可能。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">💡</div>
+      <h4>AI Coach 解説</h4>
+      <p>不正解・惜しい時に自動表示。「話すとき」「聴くとき」「使い分け」「NG パターン」の4セクション構成。解説は DB キャッシュで再表示高速化。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🔄</div>
+      <h4>ピックアップ チャレンジ</h4>
+      <p>直近5セッションで2回以上不正解のフレーズを優先出題する focus モード。不足時は通常チャレンジに自動フォールバック。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">📊</div>
+      <h4>Progress & Streak</h4>
+      <p>14日間チャート・難易度別/シーン別 Accuracy・連続日数カレンダー（過去6ヶ月・正解率別色分け）。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">𝕏</div>
+      <h4>X（Twitter）シェア</h4>
+      <p>チャレンジ結果を 1200×630px Canvas PNG で生成・Supabase Storage にアップロード → Twitter Cards 自動表示。Safari の suspend 問題に完全対応。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">📱</div>
+      <h4>PWA</h4>
+      <p>iOS Safari「共有→ホーム画面追加」バナー / Android Chrome ネイティブインストール。ホーム画面から直接起動可能。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🎓</div>
+      <h4>オンボーディング</h4>
+      <p>学習目的（2階層）・レベル・英語力チェック（多肢選択）→ プロフィールに合ったシードフレーズを自動挿入。</p>
+    </div>
+    <div class="feature">
+      <div class="icon">💳</div>
+      <h4>サブスクリプション</h4>
+      <p>Stripe 連携。Free / Starter(¥500/月) / Pro(¥1,200/月) の3プラン。Checkout・Webhook・Customer Portal を完全実装。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ブランド ===== -->
+<section id="brand">
+  <h2><span>🎨</span> ブランド & デザイン</h2>
+
+  <div class="card-grid col2">
+    <div class="card">
+      <h3>カラーパレット（ウォームベージュ統一）</h3>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px;height:32px;background:#fdf6ec;border-radius:6px;border:1px solid #e5e7eb;flex-shrink:0;"></div>
+          <div><div style="font-size:12px;font-weight:700;">ベース背景</div><div style="font-size:11px;color:#9ca3af;">bg-amber-50 / #fdf6ec</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px;height:32px;background:#ffffff;border-radius:6px;border:1px solid #e5e7eb;flex-shrink:0;"></div>
+          <div><div style="font-size:12px;font-weight:700;">カード</div><div style="font-size:11px;color:#9ca3af;">bg-white/90 border-amber-100</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px;height:32px;background:#92400e;border-radius:6px;flex-shrink:0;"></div>
+          <div><div style="font-size:12px;font-weight:700;">ボタン Primary</div><div style="font-size:11px;color:#9ca3af;">bg-amber-800 / #92400e</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px;height:32px;background:#059669;border-radius:6px;flex-shrink:0;"></div>
+          <div><div style="font-size:12px;font-weight:700;">CTA（チャレンジ）</div><div style="font-size:11px;color:#9ca3af;">bg-emerald-600 / #059669</div></div>
+        </div>
+      </div>
+      <div style="margin-top:14px; padding:10px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; font-size:12px; color:#92400e;">
+        dark: クラスは全廃。ThemeProvider は no-op。ウォームベージュで統一。
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>ブランドの声（トーン）</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+        <div style="background: #fdf6ec; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--amber-800); margin-bottom: 4px;">エンジニアに刺さる日本語</div>
+          <div style="font-size: 13px; color: #374151;">技術的に正確、簡潔、媚びない。学習アプリらしい「ガンバロ！」トーンを避ける。</div>
+        </div>
+        <div style="background: #fdf6ec; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--amber-800); margin-bottom: 4px;">「Pick」動詞を軸にした能動表現</div>
+          <div style="font-size: 13px; color: #374151;">ピックする・ピックアップ・マイピック・Pick Streak。ユーザーが主体的に選ぶ表現を一貫させる。</div>
+        </div>
+        <div style="background: #fdf6ec; border-radius: 8px; padding: 12px 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--amber-800); margin-bottom: 4px;">英語は英語のまま</div>
+          <div style="font-size: 13px; color: #374151;">Good Pick! / Almost! / Let's Repick this one. ゲーム感覚の英語フィードバックで学習体験を演出。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>ブランド用語集</h3>
+  <div class="term-grid">
+    <div class="term">
+      <div class="term-ja">ピックする</div>
+      <div class="term-desc">フレーズを選び取る行為（動詞）。英語の "pick" のカタカナ表記で統一。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">チャレンジ</div>
+      <div class="term-desc">クイズ画面 /quiz。「Practice」ではなく日本語で統一。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">マイピックリスト</div>
+      <div class="term-desc">ピック済みフレーズ一覧 /phrases。旧: フレーズ一覧。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">ピックアップ チャレンジ</div>
+      <div class="term-desc">苦手フレーズ復習モード（focus）。旧: 弱点復習。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">連続日数</div>
+      <div class="term-desc">学習継続日数 /streak。英語ラベルは「Pick Streak」。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">Add a Source</div>
+      <div class="term-desc">テキスト追加 /library/import。日本語: 出会いから英語をピックする。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">Sources</div>
+      <div class="term-desc">取り込み履歴 /library/jobs。旧: Pick履歴 / 取り込み履歴。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">Good Pick! 🎸</div>
+      <div class="term-desc">正解フィードバック。旧: ✓ 正解！</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">Almost! 🎸</div>
+      <div class="term-desc">惜しいフィードバック。旧: △ 惜しい。</div>
+    </div>
+    <div class="term">
+      <div class="term-ja">Let's Repick this one.</div>
+      <div class="term-desc">不正解フィードバック。旧: ✗ 不正解。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== プラン ===== -->
+<section id="plans">
+  <h2><span>💳</span> 料金プラン</h2>
+
+  <div class="plan-grid">
+    <div class="plan plan-free">
+      <div class="plan-header">
+        <h4>Free</h4>
+        <div class="price">¥0</div>
+        <div class="period">ずっと無料</div>
+      </div>
+      <div class="plan-body">
+        <ul>
+          <li><span style="color:#059669">✓</span> ピック最大 100 件</li>
+          <li><span style="color:#059669">✓</span> ソース 5 件まで</li>
+          <li><span style="color:#059669">✓</span> AI チャレンジ（基本）</li>
+          <li><span style="color:#059669">✓</span> Pick Streak カレンダー</li>
+          <li><span style="color:#059669">✓</span> PWA 対応</li>
+        </ul>
+      </div>
+    </div>
+    <div class="plan plan-starter">
+      <div class="plan-header">
+        <div style="font-size:11px; background:rgba(255,255,255,0.2); border-radius:10px; padding:2px 10px; display:inline-block; margin-bottom:8px;">おすすめ</div>
+        <h4>Starter</h4>
+        <div class="price">¥500</div>
+        <div class="period">/ 月</div>
+      </div>
+      <div class="plan-body">
+        <ul>
+          <li><span style="color:#059669">✓</span> ピック<strong>無制限</strong></li>
+          <li><span style="color:#059669">✓</span> ソース<strong>無制限</strong></li>
+          <li><span style="color:#059669">✓</span> AI チャレンジ（フル機能）</li>
+          <li><span style="color:#059669">✓</span> ピックアップ チャレンジ</li>
+          <li><span style="color:#059669">✓</span> Progress 詳細統計</li>
+        </ul>
+      </div>
+    </div>
+    <div class="plan plan-pro">
+      <div class="plan-header">
+        <h4>Pro</h4>
+        <div class="price">¥1,200</div>
+        <div class="period">/ 月</div>
+      </div>
+      <div class="plan-body">
+        <ul>
+          <li><span style="color:#059669">✓</span> Starter のすべて</li>
+          <li><span style="color:#a78bfa">◎</span> CSV エクスポート（近日公開）</li>
+          <li><span style="color:#a78bfa">◎</span> チーム共有（近日公開）</li>
+          <li><span style="color:#a78bfa">◎</span> 優先サポート</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 16px; text-align: center; font-size: 13px; color: var(--gray-400);">
+    クレジットカード決済 / Stripe で安全に処理 / いつでも解約可能 / 日割り請求なし
+  </div>
+</section>
+
+<!-- ===== ロードマップ ===== -->
+<section id="roadmap">
+  <h2><span>🚀</span> ロードマップ</h2>
+
+  <div class="roadmap">
+    <div class="rm-item">
+      <div class="rm-phase done">完了</div>
+      <div>
+        <div class="rm-title">コア機能 + MVP 完成</div>
+        <div class="rm-detail">フレーズ抽出・AI チャレンジ・AI Coach 解説・Pick Streak・X シェア・PWA・オンボーディング・AdSense 対応</div>
+      </div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-phase done">完了</div>
+      <div>
+        <div class="rm-title">Stripe サブスクリプション連携</div>
+        <div class="rm-detail">Free / Starter / Pro の3プラン実装。Checkout・Webhook・Customer Portal 完備。</div>
+      </div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-phase done">完了</div>
+      <div>
+        <div class="rm-title">ブランド統一 + Pick Brand Language v1.0</div>
+        <div class="rm-detail">全 UI テキスト・i18n・BottomNav・ウォームベージュカラー統一。brand-terminology.md 策定。</div>
+      </div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-phase next">次フェーズ</div>
+      <div>
+        <div class="rm-title">AdSense 審査通過 → 広告収益化</div>
+        <div class="rm-detail">privacy/terms/about/contact 整備済み。ads.txt 設置済み。審査提出待ち。</div>
+      </div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-phase next">次フェーズ</div>
+      <div>
+        <div class="rm-title">本番ユーザー獲得</div>
+        <div class="rm-detail">X / SNS での認知拡大。デモモード（/demo）でコンバージョン誘導。</div>
+      </div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-phase future">将来</div>
+      <div>
+        <div class="rm-title">Pro 機能実装</div>
+        <div class="rm-detail">CSV エクスポート・チーム共有（複数人でソース共有）・TTS 音声読み上げ。</div>
+      </div>
+    </div>
+    <div class="rm-item">
+      <div class="rm-phase future">将来</div>
+      <div>
+        <div class="rm-title">グロース</div>
+        <div class="rm-detail">Notion / Slack インテグレーション・Anki エクスポート・LINE Bot 連携。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer style="background: var(--slate-800); color: #64748b; text-align:center; padding: 24px; font-size: 12px;">
+  <div style="font-size: 18px; margin-bottom: 6px;">🎸 Pick</div>
+  会話からフレーズをピックして学ぼう<br>
+  <span style="color: #475569;">Pick the words from your real conversations.</span><br><br>
+  2026-03-22 · 個人開発 · Railway デプロイ
+</footer>
+
+</body>
+</html>
