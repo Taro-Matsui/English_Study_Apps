@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
 import type { ProficiencyQuestion } from '@/app/api/proficiency/route'
 
 type StudyPurpose = 'business_general' | 'business_engineer' | 'hobby_lifestyle' | 'hobby_reading'
@@ -196,6 +197,9 @@ export default function OnboardingPage() {
         setSaving(false)
         return
       }
+      // JWT を更新してから遷移（admin.updateUserById 後のメタデータを反映するため）
+      const supabase = createBrowserSupabaseClient()
+      await supabase.auth.refreshSession()
       router.push(isEdit ? '/settings' : '/')
       router.refresh()
     } catch {

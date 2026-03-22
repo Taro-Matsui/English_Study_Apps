@@ -241,6 +241,22 @@ function QuizContent() {
     } catch { setStep('question') }
   }
 
+  function handleSkip() {
+    if (!current) return
+    const responseTimeMs = Date.now() - questionStartTime.current
+    const status: JudgeStatus = 'incorrect'
+    setJudgment({ correct: false, status, feedback: '' })
+    setScore((s) => ({ ...s, incorrect: s.incorrect + 1 }))
+    setAnswers((prev) => [...prev, {
+      phrase_id: current.id, phrase: current.phrase, meaning_ja: current.meaning_ja ?? '',
+      user_answer: '（分かりません）', is_correct: false, ai_feedback: '',
+      status, response_time_ms: responseTimeMs,
+    }])
+    speak(current.phrase, 'phrase')
+    setStep('result')
+    handleExplain()
+  }
+
   async function handleExplain() {
     if (!current || explaining) return
     setExplaining(true)
@@ -545,6 +561,10 @@ function QuizContent() {
                 <button onClick={handleSubmit} disabled={!answer.trim()}
                   className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700">
                   {t('quiz_submit')}
+                </button>
+                <button onClick={handleSkip}
+                  className="w-full py-2.5 rounded-2xl border border-gray-200 bg-white text-gray-400 text-sm hover:bg-gray-50 transition-colors">
+                  分かりません
                 </button>
               </div>
             )}
