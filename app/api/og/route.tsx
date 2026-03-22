@@ -20,6 +20,8 @@ const PURPOSE_LABELS: Record<string, string> = {
 }
 
 export async function GET(req: NextRequest) {
+  const origin = new URL(req.url).origin
+  const logoUrl = `${origin}/pick_logo.png`
   const { searchParams } = new URL(req.url)
   const pct     = Math.max(0, Math.min(100, parseInt(searchParams.get('pct')     ?? '0', 10)))
   const correct = Math.max(0, parseInt(searchParams.get('correct') ?? '0', 10))
@@ -66,12 +68,13 @@ export async function GET(req: NextRequest) {
             flexShrink: 0,
           }}
         >
-          <div style={{ fontSize: 60, lineHeight: 1, marginBottom: 16 }}>🎸</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoUrl} alt="Pick" width={80} height={80} style={{ borderRadius: 16, marginBottom: 16 }} />
           <div style={{ fontSize: 68, fontWeight: 800, color: '#4a3020', lineHeight: 1, marginBottom: 12 }}>
             Pick
           </div>
           <div style={{ fontSize: 22, color: '#8b6340', marginBottom: 40 }}>
-            会話からフレーズをPickして学ぼう
+            会話からフレーズをピックして学ぼう
           </div>
           <div style={{ fontSize: 18, color: '#a08060', marginBottom: 10 }}>{dateStr}</div>
           <div style={{ fontSize: 17, color: 'rgba(139,99,64,0.55)' }}>

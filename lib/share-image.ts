@@ -102,7 +102,7 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
 
   ctx.font = font(56)
   ctx.textAlign = 'left'
-  ctx.fillText('🎣', LX, CY - 110)
+  ctx.fillText('🎸', LX, CY - 110)
 
   ctx.fillStyle = '#4a3020'
   ctx.font = font(64, 'bold')
@@ -110,7 +110,7 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
 
   ctx.fillStyle = '#8b6340'
   ctx.font = font(22)
-  ctx.fillText('実際の会話から学ぶ英語フレーズ', LX, CY + 16)
+  ctx.fillText('会話からフレーズをピックして学ぼう', LX, CY + 16)
 
   // 区切り線（縦）
   ctx.strokeStyle = 'rgba(139,115,85,0.2)'

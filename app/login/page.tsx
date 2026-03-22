@@ -11,18 +11,18 @@ type Mode = 'signin' | 'signup'
 const FEATURES = [
   {
     icon: '🎸',
-    title: '会話録・記事からフレーズをPickする',
-    desc: '議事録・YouTube字幕・技術ブログなどを貼り付けるだけ。AIが使える英語フレーズを自動でPickします。',
+    title: '会話録・記事からフレーズをピックする',
+    desc: '議事録・YouTube字幕・技術ブログなどを貼り付けるだけ。AIが使える英語フレーズを自動でピックします。',
   },
   {
     icon: '🎯',
-    title: 'Practiceで即定着',
-    desc: '日本語の意味を見て英語で答えるシンプルなPractice。AIが回答を採点してフィードバックします。',
+    title: 'チャレンジで即定着',
+    desc: '日本語の意味を見て英語で答えるシンプルなチャレンジ。AIが回答を採点してフィードバックします。',
   },
   {
     icon: '📊',
-    title: 'Repickで弱点を克服',
-    desc: '正解率・連続日数・Repickフレーズをトラッキング。苦手なPickを重点的に復習できます。',
+    title: 'ピックアップで弱点を克服',
+    desc: '正解率・連続日数・ピックアップフレーズをトラッキング。苦手なフレーズを重点的に復習できます。',
   },
 ]
 
@@ -130,14 +130,11 @@ export default function LoginPage() {
 
         {/* ── ヒーロー ── */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center gap-1 px-5 h-14 rounded-2xl bg-amber-100 mb-1">
-            <span className="text-xl">👩‍💻</span>
-            <span className="text-lg">💬</span>
-            <span className="text-xl">👨‍💻</span>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/pick_logo.png" alt="Pick" className="w-20 h-20 rounded-2xl mx-auto mb-1" />
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Pick</h1>
           <p className="text-gray-500 text-sm leading-relaxed">
-            実際の会話から、フレーズをPickする学習アプリ。<br />
+            実際の会話から、フレーズをピックする学習アプリ。<br />
             自分のリアルなテキストで、使える英語を身につけよう。
           </p>
         </div>

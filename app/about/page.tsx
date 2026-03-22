@@ -45,9 +45,9 @@ export default function AboutPage() {
           <div className="border-t border-gray-100 pt-5 space-y-2">
             <h2 className="font-bold text-gray-900">サービスについて</h2>
             <p>
-              Pick は、実際の会話や文書から自分に必要な英語フレーズをPickして学ぶアプリです。
+              Pick は、実際の会話や文書から自分に必要な英語フレーズをピックして学ぶアプリです。
               議事録・YouTube字幕・技術記事などのリアルなテキストを追加すると、
-              AIがあなたの学習目的に合ったフレーズを自動でPickし、Practiceで定着をサポートします。
+              AIがあなたの学習目的に合ったフレーズを自動でピックし、チャレンジで定着をサポートします。
             </p>
             <p>
               エンジニア・ビジネスパーソン・英語学習者など、
