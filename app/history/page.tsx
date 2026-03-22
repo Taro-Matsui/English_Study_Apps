@@ -8,11 +8,11 @@ import { openXShare } from '@/lib/share-image'
 import { formatTime } from '@/lib/utils'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
-function getShareImageUrl(sessionId: string, completedAt: string): string | null {
-  const age = Date.now() - new Date(completedAt).getTime()
-  if (age > ONE_DAY_MS) return null
+// Supabase Storage に永続保存されているため 24h 制限は不要（X Card 用仕様とは別）
+// 画像が存在しない場合は img の onError でバッジ表示にフォールバック
+function getShareImageUrl(sessionId: string): string | null {
+  if (!SUPABASE_URL) return null
   return `${SUPABASE_URL}/storage/v1/object/public/share-images/${sessionId}.png`
 }
 
@@ -265,7 +265,7 @@ export default function HistoryPage() {
             const summaryStr = lang === 'ja'
               ? `${ses.total_questions}問 / 正解 ${ses.correct_count}問`
               : `${ses.total_questions}Q / ${ses.correct_count} correct`
-            const thumbUrl = getShareImageUrl(ses.id, ses.completed_at)
+            const thumbUrl = getShareImageUrl(ses.id)
             return (
               <div key={ses.id} className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
                 <button

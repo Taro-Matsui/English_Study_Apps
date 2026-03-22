@@ -8,36 +8,42 @@ export interface ProficiencyQuestion {
 }
 
 // ── 共通5問（全 purpose に出題）──────────────────────────────
+// 易〜中の段階的構成。仕事でよく耳にするが、直訳すると意味が変わる表現を中心に。
 const GENERAL_QUESTIONS: ProficiencyQuestion[] = [
   {
+    // 易: 日常的に使われ、直感でも分かりやすい
     id: 'g1',
-    text: '"Could you give me a heads-up?"',
-    options: ['事前に知らせてもらえますか', 'まとめてもらえますか', '急いでもらえますか', '正直に言ってもらえますか'],
+    text: '"I\'ll get back to you on that."',
+    options: ['後で改めてご連絡します', '今すぐ確認します', 'それはお断りします', 'あなたに代わりに対応します'],
     correct: 0,
   },
   {
+    // 易: "same page" の比喩的意味を問う
     id: 'g2',
-    text: '"Let\'s touch base tomorrow."',
-    options: ['明日また連絡を取りましょう', '明日基地に集まりましょう', '明日タッチダウンしましょう', '明日の予定を組みましょう'],
-    correct: 0,
+    text: '"Are we on the same page?"',
+    options: ['同じドキュメントを見ていますか', '認識は合っていますか', '同じ立場ですか', '同じ方向に進んでいますか'],
+    correct: 1,
   },
   {
+    // 中: "offline" がビジネスで持つ独特の意味
     id: 'g3',
-    text: '"We\'re on the same page."',
-    options: ['私たちは同じページを見ている', '私たちは同じ認識でいる', '私たちは同じ立場にある', '私たちは同じ目標を持っている'],
-    correct: 1,
-  },
-  {
-    id: 'g4',
-    text: '"Can you loop me in?"',
-    options: ['私をループに入れてください', '私もCCに入れてください', '私に説明してください', '私を巻き込まないでください'],
-    correct: 1,
-  },
-  {
-    id: 'g5',
-    text: '"Let\'s circle back on this later."',
-    options: ['この件を円滑に進めましょう', 'この件に戻ってください', 'この件はあとで改めて話しましょう', 'この件を振り返りましょう'],
+    text: '"Let\'s take this conversation offline."',
+    options: ['オフラインで作業しましょう', '記録に残さず進めましょう', 'この話はミーティング後に個別に話しましょう', 'ネット接続なしで対応しましょう'],
     correct: 2,
+  },
+  {
+    // 中: "loop in" はメール文化では必須だが、直訳では分かりにくい
+    id: 'g4',
+    text: '"Can you loop in the design team?"',
+    options: ['デザインチームにループを作ってもらえますか', 'デザインチームを輪に入れてもらえますか', 'デザインチームにも共有・参加してもらえますか', 'デザインチームの意見を無視してもらえますか'],
+    correct: 2,
+  },
+  {
+    // 難: 直訳するとまったく違う意味になるイディオム
+    id: 'g5',
+    text: '"Let\'s put a pin in it for now."',
+    options: ['今すぐ確定させましょう', 'この話題は一旦保留にしましょう', '詳細を資料にまとめましょう', '重要事項としてマークしましょう'],
+    correct: 1,
   },
 ]
 
@@ -45,168 +51,192 @@ const GENERAL_QUESTIONS: ProficiencyQuestion[] = [
 const PURPOSE_QUESTIONS: Record<string, ProficiencyQuestion[]> = {
   meeting: [
     {
+      // 易: リモートワークで頻出
       id: 'm1',
-      text: '"Can you share your screen?"',
-      options: ['画面を共有してもらえますか', 'スクリーンを見せてもらえますか', 'モニターを準備してもらえますか', '画像を送ってもらえますか'],
+      text: '"Can you mute yourself for a moment?"',
+      options: ['少しの間ミュートにしてもらえますか', '席を外してもらえますか', '音量を上げてもらえますか', '発言を止めてもらえますか'],
       correct: 0,
     },
     {
+      // 易: 会議の口火を切るフレーズ
       id: 'm2',
-      text: '"Let\'s table this for now."',
-      options: ['これをテーブルに置きましょう', 'これを先に進めましょう', 'これは一旦保留にしましょう', 'これは重要ではありません'],
+      text: '"Let\'s kick things off."',
+      options: ['物事を蹴り飛ばしましょう', '早めに終わらせましょう', 'それでは始めましょう', '一旦中断しましょう'],
       correct: 2,
     },
     {
+      // 中: "table" が「保留」を意味する英米差もあるが、ビジネスでは保留が多い
       id: 'm3',
-      text: '"Can you take notes?"',
-      options: ['メモを受け取れますか', '議事録を取ってもらえますか', 'ノートを持ってきてもらえますか', '記録を確認してもらえますか'],
+      text: '"Let\'s table that for now."',
+      options: ['テーブルに置きましょう', 'この件は一旦保留にしましょう', '次のアジェンダに移りましょう', '全員で議論しましょう'],
       correct: 1,
     },
     {
+      // 中: "recap" はビジネスメールで頻出
       id: 'm4',
-      text: '"Let\'s wrap up."',
-      options: ['ラップを食べましょう', '包んで送りましょう', 'まとめて送りましょう', 'そろそろ終わりにしましょう'],
-      correct: 3,
+      text: '"Could you send a quick recap?"',
+      options: ['録画を送ってもらえますか', '返信を送ってもらえますか', '簡単なまとめ・要約を送ってもらえますか', '次回の予定を送ってもらえますか'],
+      correct: 2,
     },
     {
+      // 難: "bandwidth" を人的リソースの意味で使う
       id: 'm5',
-      text: '"Who\'s facilitating today?"',
-      options: ['今日の進行役は誰ですか', '今日の参加者は誰ですか', '今日のファシリティはどこですか', '今日誰が発言しますか'],
-      correct: 0,
+      text: '"Do you have the bandwidth to take this on?"',
+      options: ['インターネット速度は十分ですか', 'この会議室は使えますか', 'これを引き受ける余裕（時間・リソース）はありますか', 'この案件に詳しいですか'],
+      correct: 2,
     },
   ],
   review: [
     {
+      // 易: コードレビューでは必須の略語
       id: 'r1',
-      text: '"LGTM"',
-      options: ['後で確認します', '承認します・問題ありません', '修正が必要です', 'もう少し詳しく説明してください'],
+      text: '"LGTM" (コードレビューで使われる略語)',
+      options: ['後で詳しく確認します', '承認します・問題なさそうです', 'もっと修正が必要です', 'ログを確認してください'],
       correct: 1,
     },
     {
+      // 易: "Nit" は軽微な指摘を表す
       id: 'r2',
-      text: '"This is a breaking change."',
-      options: ['これは大きな変更です', 'これは壊れています', 'これは後方互換性を壊す変更です', 'これは休憩が必要な変更です'],
-      correct: 2,
+      text: '"Nit: this variable name could be clearer."',
+      options: ['重大なバグ：変数名を修正してください', '些細な指摘：変数名をもう少し分かりやすくできそうです', '削除してください：変数名が間違っています', 'マージ不可：変数名が規約違反です'],
+      correct: 1,
     },
     {
+      // 中: "breaking change" は後方互換性の文脈
       id: 'r3',
-      text: '"Nit:" (コードレビューコメントの接頭辞)',
-      options: ['重大なバグです', 'マージできません', '些細な指摘です', '削除してください'],
+      text: '"This is a breaking change."',
+      options: ['これは大きな変更です', 'これは壊れているコードです', 'これは後方互換性を壊す変更です', 'これは破棄すべき変更です'],
       correct: 2,
     },
     {
+      // 中: "follow-up PR" はよく使われる開発フロー用語
       id: 'r4',
       text: '"Let\'s address this in a follow-up PR."',
-      options: ['後続のPRで対応しましょう', 'このPRを閉じましょう', '別の方法で対処しましょう', 'このPRをフォローしてください'],
-      correct: 0,
+      options: ['次のスプリントで対応しましょう', 'このPRで全て対応しましょう', '後続のPRで対応しましょう', 'このPRをクローズしましょう'],
+      correct: 2,
     },
     {
+      // 難: "tech debt" を文脈で判断する
       id: 'r5',
-      text: '"Could you add a test for this?"',
-      options: ['テストを追加してもらえますか', 'テストを削除してもらえますか', 'テストを確認してもらえますか', 'テストを送ってもらえますか'],
-      correct: 0,
+      text: '"We\'re accruing a lot of tech debt here."',
+      options: ['ここで多くの技術費用が発生しています', 'ここで技術的負債が積み上がっています', 'ここに技術チームが集まっています', 'ここで多くの技術的改善が行われています'],
+      correct: 1,
     },
   ],
   reading: [
     {
+      // 易: 技術文書の頻出語
       id: 'rd1',
-      text: '"deprecated"',
-      options: ['推奨される', '非推奨・廃止予定', '最新バージョン', '必須の'],
+      text: '"This API is deprecated."',
+      options: ['このAPIは推奨されます', 'このAPIは非推奨・廃止予定です', 'このAPIは最新バージョンです', 'このAPIは必須です'],
       correct: 1,
     },
     {
+      // 易: 説明文の書き出しで頻出
       id: 'rd2',
-      text: '"prerequisite"',
-      options: ['後から必要なもの', 'オプションの要件', '前提条件・事前に必要なもの', '代替手段'],
+      text: '"At a high level, this system works as follows."',
+      options: ['高いレベルでは、このシステムは以下のように動作します', '詳細には、このシステムは以下のように動作します', '概要として、このシステムは以下のように動作します', '最高水準で、このシステムは以下のように動作します'],
       correct: 2,
     },
     {
+      // 中: "caveat" は注意書きの文脈
       id: 'rd3',
-      text: '"At a high level"',
-      options: ['高い場所から', '詳細に・細かく', '概要として・大まかに', '上位レベルで修正する'],
-      correct: 2,
+      text: '"There is one caveat to this approach."',
+      options: ['このアプローチには利点が一つあります', 'このアプローチには一つ注意点・但し書きがあります', 'このアプローチには代替案が一つあります', 'このアプローチには欠点はありません'],
+      correct: 1,
     },
     {
+      // 中: "out of scope" は仕様書・要件定義で頻出
       id: 'rd4',
-      text: '"by default"',
-      options: ['例外的に', '手動で設定すると', 'デフォルトで・初期設定では', '常に'],
-      correct: 2,
+      text: '"This feature is out of scope for this release."',
+      options: ['この機能はこのリリースの対象外です', 'この機能はこのリリースで必須です', 'この機能はこのリリースで範囲を超えています', 'この機能はこのリリースに含まれています'],
+      correct: 0,
     },
     {
+      // 難: "idiomatic" は言語・コードの文脈で使われる
       id: 'rd5',
-      text: '"This is out of scope."',
-      options: ['これはスコープを超えています', 'これは対象外です', 'これは範囲内です', 'これは範囲を広げます'],
+      text: '"This is not idiomatic Python."',
+      options: ['これはPythonのイディオム（慣用句）ではありません', 'これはPythonらしい自然な書き方ではありません', 'これはPythonで動作しません', 'これはPythonの標準ライブラリではありません'],
       correct: 1,
     },
   ],
   interview: [
     {
+      // 易: 面接で必ず問われる
       id: 'i1',
-      text: '"Could you walk me through your experience?"',
-      options: ['あなたの経験について説明してもらえますか', '私を案内してもらえますか', '私の経験を聞いてもらえますか', '一緒に歩きましょうか'],
+      text: '"Tell me about yourself."',
+      options: ['あなたについて教えてください', '自分自身を評価してください', '自己紹介してください', '過去の経験を教えてください'],
       correct: 0,
     },
     {
+      // 易: 面接の締めくくりで必ず聞かれる
       id: 'i2',
-      text: '"I\'d like to clarify..."',
-      options: ['私は明確にしたいのですが', '私はキャリアを積みたいのですが', '私は説明したくないのですが', '私はクリアしたいのですが'],
-      correct: 0,
-    },
-    {
-      id: 'i3',
-      text: '"I\'m particularly interested in..."',
-      options: ['私は特に興味を持っていないのですが', '私は特に興味を持っているのが～です', '私は部分的に興味があるのが～です', '私が気になるのは～ではありません'],
+      text: '"Do you have any questions for us?"',
+      options: ['何か問題がありますか', '私たちへの質問はありますか', '確認事項はありますか', '何か懸念点はありますか'],
       correct: 1,
     },
     {
-      id: 'i4',
-      text: '"What\'s your greatest strength?"',
-      options: ['あなたの最大の弱点は何ですか', 'あなたはどのくらい強いですか', 'あなたの最大の強みは何ですか', 'あなたが最も苦労したことは何ですか'],
-      correct: 2,
+      // 中: "walk through" は説明を求めるニュアンス
+      id: 'i3',
+      text: '"Could you walk me through your decision-making process?"',
+      options: ['意思決定プロセスを一緒に歩きましょうか', '意思決定プロセスについて順を追って説明してもらえますか', '意思決定プロセスを書き出してもらえますか', '意思決定プロセスを簡潔にまとめてもらえますか'],
+      correct: 1,
     },
     {
+      // 中: 行動面接の典型的な質問
+      id: 'i4',
+      text: '"How do you prioritize when everything feels urgent?"',
+      options: ['全てが緊急に感じるとき、どのように対処しますか', '全てが緊急に感じるとき、どのように優先順位をつけますか', '全てが緊急に感じるとき、誰に相談しますか', '全てが緊急に感じるとき、どのように断りますか'],
+      correct: 1,
+    },
+    {
+      // 難: "ambiguity" は文脈によって訳し方が変わる
       id: 'i5',
-      text: '"Do you have any questions for us?"',
-      options: ['私たちへの質問はありますか', '私たちに何か質問してもいいですか', '私たちの質問に答えられますか', '私たちは質問がありますか'],
+      text: '"How do you deal with ambiguity?"',
+      options: ['曖昧さ・不確実な状況にどう対処しますか', 'あいまいな指示をどう明確にしますか', '難しい上司とどう向き合いますか', '状況が不確かなときにどう決断しますか'],
       correct: 0,
     },
   ],
   general: [
     {
+      // 易: ビジネスでよく耳にする
       id: 'ge1',
-      text: '"Take ownership"',
-      options: ['所有権を取る', '主体的に責任を持って取り組む', '仕事を引き継ぐ', 'オーナーに頼む'],
-      correct: 1,
-    },
-    {
-      id: 'ge2',
       text: '"Low-hanging fruit"',
-      options: ['品質の低いもの', '労力の割に効果が少ないもの', '簡単に達成できる目標', '収穫できないもの'],
+      options: ['品質の低い成果物', '労力の割に効果の少ないもの', '手軽に達成できる目標・すぐに成果が出るもの', '収穫できないもの'],
       correct: 2,
     },
     {
-      id: 'ge3',
-      text: '"Bandwidth" (ビジネス文脈)',
-      options: ['インターネット速度', '時間的余裕・処理能力', '帯域幅の計測値', '周波数帯域'],
+      // 易: 主体的な取り組みを表す
+      id: 'ge2',
+      text: '"Take ownership of this project."',
+      options: ['このプロジェクトの所有権を取得する', 'このプロジェクトを主体的に責任を持って進める', 'このプロジェクトを引き継ぐ', 'このプロジェクトのオーナーに連絡する'],
       correct: 1,
     },
     {
+      // 中: "move the needle" は成果・変化を生む意味
+      id: 'ge3',
+      text: '"This initiative will move the needle."',
+      options: ['この取り組みは針を動かします', 'この取り組みで状況が改善・成果が生まれます', 'この取り組みは指標を変えます', 'この取り組みで方向性が変わります'],
+      correct: 1,
+    },
+    {
+      // 中: "leverage" を動詞で使う場面
       id: 'ge4',
-      text: '"Move the needle"',
-      options: ['針を動かす', '方針を変える', '状況を改善する・成果を出す', '測定値を記録する'],
+      text: '"We should leverage our existing data."',
+      options: ['既存のデータを廃棄すべきです', '既存のデータを別の形式に変換すべきです', '既存のデータをうまく活用すべきです', '既存のデータを守るべきです'],
       correct: 2,
     },
     {
+      // 難: 不可能な大仕事を試みるときに使う皮肉的なイディオム
       id: 'ge5',
-      text: '"Leverage" (動詞)',
-      options: ['持ち上げる', '反論する', '破棄する', '活用する・うまく利用する'],
-      correct: 3,
+      text: '"We don\'t want to boil the ocean here."',
+      options: ['ここで大げさなことは避けたい', 'ここで過度に大規模な取り組みはしたくない', 'ここで全員の意見を聞くことはできない', 'ここで時間をかけすぎたくない'],
+      correct: 1,
     },
   ],
 }
 
 export async function GET(req: NextRequest) {
-  // 認証不要（ゲストでも見せる）— ただし乱用防止のため一応確認
   const { searchParams } = new URL(req.url)
   const purpose = searchParams.get('purpose') ?? 'general'
 

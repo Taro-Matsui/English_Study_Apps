@@ -9,7 +9,7 @@ import type { ProficiencyQuestion } from '@/app/api/proficiency/route'
 type StudyPurpose = 'business_general' | 'business_engineer' | 'hobby_lifestyle' | 'hobby_reading'
 type StudySubcategory = 'meeting' | 'review' | 'conference'
 type StudyLevel = 'beginner' | 'intermediate' | 'advanced'
-type Step = 'survey' | 'loading' | 'proficiency' | 'results'
+type Step = 'survey' | 'loading' | 'proficiency' | 'domain_message' | 'results'
 
 const DOMAIN_PRESETS = [
   'データエンジニア',
@@ -133,15 +133,8 @@ export default function OnboardingPage() {
   // 次に進める条件
   const canProceed = !!purpose && !!level && (purpose !== 'business_engineer' || !!subcategory)
 
-  // ── Step 1 → 2: アンケート完了、英語力チェックへ ────────────
-  async function handleSurveyNext() {
-    if (!canProceed) return
-
-    if (isEdit) {
-      await saveAndRedirect()
-      return
-    }
-
+  // ── 英語力チェック問題を取得して開始 ────────────────────────
+  async function fetchAndStartProficiency() {
     setStep('loading')
     try {
       const profPurpose = getProficiencyPurpose(purpose!, subcategory)
@@ -152,6 +145,24 @@ export default function OnboardingPage() {
     } catch {
       await saveAndRedirect()
     }
+  }
+
+  // ── Step 1 → 2: アンケート完了、英語力チェックへ ────────────
+  async function handleSurveyNext() {
+    if (!canProceed) return
+
+    if (isEdit) {
+      await saveAndRedirect()
+      return
+    }
+
+    // 専門領域・趣味が設定されている場合は汎用チェックをスキップ
+    if (domain.trim()) {
+      setStep('domain_message')
+      return
+    }
+
+    await fetchAndStartProficiency()
   }
 
   // ── プロフィシェンシー: 選択肢タップ ────────────────────────
@@ -418,6 +429,55 @@ export default function OnboardingPage() {
           <div className="text-center space-y-3">
             <p className="text-4xl animate-bounce">🎣</p>
             <p className="text-sm font-medium" style={{ color: C.sub }}>英語力チェックを準備中…</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── ドメインメッセージ（専門領域が設定されている場合） ── */}
+      {step === 'domain_message' && (
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-lg space-y-6 text-center">
+            <p className="text-5xl">🎣</p>
+            <div>
+              <h2 className="text-xl font-bold" style={{ color: C.text }}>
+                あなた専用のフレーズをお届けします
+              </h2>
+              <p className="text-sm mt-2" style={{ color: C.sub }}>
+                「<span className="font-semibold" style={{ color: C.accent }}>{domain}</span>」のコンテキストに合わせたフレーズを優先的に出題します。
+                テキストをインポートすると、さらにあなただけの学習が始まります。
+              </p>
+            </div>
+            <div
+              className="p-4 rounded-2xl text-left space-y-2"
+              style={{ background: C.cardBg, border: `1px solid ${C.border}` }}
+            >
+              <p className="text-xs font-semibold" style={{ color: C.muted }}>英語力チェックについて</p>
+              <p className="text-sm" style={{ color: C.sub }}>
+                汎用の英語力チェックは専門領域が決まっている場合には精度が下がるためスキップします。
+                学習を進める中で自動的にレベルが調整されます。
+              </p>
+            </div>
+            {error && (
+              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+                <p className="text-red-500 text-sm">{error}</p>
+              </div>
+            )}
+            <button
+              onClick={saveAndRedirect}
+              disabled={saving}
+              className="w-full py-4 rounded-2xl text-base font-bold shadow-md transition-opacity active:opacity-80 disabled:opacity-60"
+              style={{ background: C.accent, color: '#fff' }}
+            >
+              {saving ? '設定を保存中...' : 'さあ始めよう！🎣'}
+            </button>
+            <button
+              onClick={fetchAndStartProficiency}
+              className="w-full py-2 text-xs"
+              style={{ color: C.muted }}
+              disabled={saving}
+            >
+              やっぱり英語力チェックを受ける
+            </button>
           </div>
         </div>
       )}
