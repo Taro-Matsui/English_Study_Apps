@@ -59,8 +59,8 @@ export default function LibraryJobsPage() {
     <div className="min-h-screen bg-amber-50 text-gray-900 pb-24">
       <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-amber-100">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
-          <Link href="/library/import" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
-          <h1 className="flex-1 text-sm font-semibold">インポート ジョブ一覧</h1>
+          <Link href="/library/import" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
+          <h1 className="flex-1 text-sm font-semibold">取り込み履歴</h1>
           <button
             onClick={fetchJobs}
             className="text-xs px-3 py-1 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
@@ -73,7 +73,7 @@ export default function LibraryJobsPage() {
       <div className="px-4 pt-4 pb-10 max-w-2xl mx-auto">
         {hasActive && (
           <p className="text-xs text-amber-500 mb-3 animate-pulse">
-            ● 処理中のジョブがあります。自動的に更新されます。
+            ● 処理中の取り込みがあります。自動的に更新されます。
           </p>
         )}
 
@@ -90,9 +90,9 @@ export default function LibraryJobsPage() {
 
         {!loading && !apiError && jobs.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-400 text-sm">ジョブがありません</p>
+            <p className="text-gray-400 text-sm">取り込み履歴がありません</p>
             <Link href="/library/import" className="text-amber-700 text-sm hover:underline mt-2 inline-block">
-              インポートを開始 →
+              テキストを取り込む →
             </Link>
           </div>
         )}

@@ -9,7 +9,7 @@ import { Phrase, SourceType, DeleteReason } from '@/types'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings } from '@/lib/settings'
 
-const SOURCE_TYPES: SourceType[] = ['DSH_Event', 'YouTube', 'Podcast']
+const SOURCE_TYPES: SourceType[] = ['YouTube', 'Podcast', '議事録', '英語記事', 'その他']
 const DELETE_REASONS: DeleteReason[] = ['product_name', 'not_phrase']
 const SCENES = ['daily', 'technical', 'business', 'other'] as const
 type SceneFilter = typeof SCENES[number] | ''

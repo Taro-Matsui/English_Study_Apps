@@ -43,9 +43,9 @@ const LEVEL_CLS: Record<EngineerLevel, string> = {
 }
 
 const STATUS_CLS: Record<JudgeStatus, { cls: string; textCls: string }> = {
-  correct:   { cls: 'bg-emerald-500/20 border-emerald-500/30', textCls: 'text-emerald-400' },
-  partial:   { cls: 'bg-amber-500/20 border-amber-500/30',   textCls: 'text-amber-400'   },
-  incorrect: { cls: 'bg-red-500/20 border-red-500/30',       textCls: 'text-red-400'     },
+  correct:   { cls: 'bg-emerald-50 border-emerald-300', textCls: 'text-emerald-700' },
+  partial:   { cls: 'bg-amber-50 border-amber-300',     textCls: 'text-amber-700'   },
+  incorrect: { cls: 'bg-red-50 border-red-300',         textCls: 'text-red-700'     },
 }
 const RESULT_CLS: Record<JudgeStatus, string> = {
   correct: 'text-emerald-400',
@@ -109,6 +109,7 @@ function QuizContent() {
   const [explaining, setExplaining] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const questionStartTime = useRef<number>(0)
+  const explainPhraseRef = useRef<string | null>(null) // 解説取得中のphrase_id（次問移動時に破棄）
 
   const load = useCallback(async (focusMode = isFocusMode) => {
     setStep('loading'); setAnswers([])
@@ -259,21 +260,25 @@ function QuizContent() {
 
   async function handleExplain() {
     if (!current || explaining) return
+    const phraseId = current.id
+    explainPhraseRef.current = phraseId
     setExplaining(true)
     try {
       const res = await fetch('/api/quiz/explain', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phrase_id: current.id,
+          phrase_id: phraseId,
           phrase: current.phrase,
           meaning_ja: current.meaning_ja,
           original_context: current.original_context ?? undefined,
         }),
       })
       const data: ExplainResponse = await res.json()
+      // 取得完了前に次の問題へ進んでいた場合は破棄
+      if (explainPhraseRef.current !== phraseId) return
       setExplanation(data.explanation || data.error || '解説を取得できませんでした')
     } catch {
-      setExplanation('通信エラーが発生しました')
+      if (explainPhraseRef.current === phraseId) setExplanation('通信エラーが発生しました')
     }
     setExplaining(false)
   }
@@ -281,6 +286,7 @@ function QuizContent() {
   function handleNext() {
     window.speechSynthesis?.cancel(); setSpeaking(null)
     setExplanation(null)
+    explainPhraseRef.current = null
     const next = index + 1
     if (next >= total) {
       setStep('done')
@@ -492,7 +498,7 @@ function QuizContent() {
     <div className="min-h-screen bg-amber-50">
       <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm">
         <div className="px-4 pt-3 pb-1 flex items-center justify-between max-w-lg mx-auto">
-          <Link href="/" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
+          <Link href="/" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex items-center gap-3">
             {isFocusMode && (
               <span className="text-xs bg-red-500/20 text-red-500 px-2 py-0.5 rounded-full font-medium">⚠ 弱点</span>
@@ -590,7 +596,7 @@ function QuizContent() {
                     <p className={`text-base font-bold ${textCls}`}>
                       {t(`status_${status}` as 'status_correct' | 'status_partial' | 'status_incorrect')}
                     </p>
-                    {judgment.feedback && <p className="text-xs text-slate-300 mt-0.5">{judgment.feedback}</p>}
+                    {judgment.feedback && <p className="text-xs text-gray-500 mt-0.5">{judgment.feedback}</p>}
                   </div>
 
                   <div className="bg-white border border-gray-200 rounded-2xl p-3 space-y-2">

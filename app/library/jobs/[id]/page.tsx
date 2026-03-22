@@ -18,7 +18,13 @@ interface Job {
   completed_at: string | null
 }
 
-const SOURCE_TYPES: SourceType[] = ['DSH_Event', 'YouTube', 'Podcast', 'Article']
+const SOURCE_TYPES: { value: SourceType; label: string }[] = [
+  { value: 'YouTube',  label: 'YouTube（字幕）' },
+  { value: 'Podcast',  label: 'Podcast（文字起こし）' },
+  { value: '議事録',   label: '英語の議事録' },
+  { value: '英語記事', label: '英語記事' },
+  { value: 'その他',   label: 'その他' },
+]
 
 const STATUS_CONFIG = {
   pending:    { label: '待機中',  cls: 'text-slate-400',   icon: '⏳' },
@@ -35,7 +41,7 @@ export default function LibraryJobDetailPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [phrases, setPhrases] = useState<ExtractedPhrase[]>([])
-  const [sourceType, setSourceType] = useState<SourceType>('Article')
+  const [sourceType, setSourceType] = useState<SourceType>('その他')
   const [sourceTitle, setSourceTitle] = useState('')
   const [sourceDate, setSourceDate] = useState('')
   const [saving, setSaving] = useState(false)
@@ -116,7 +122,7 @@ export default function LibraryJobDetailPage() {
   if (error && !job) return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4">
       <p className="text-red-500 text-sm">{error}</p>
-      <Link href="/library/jobs" className="text-blue-600 text-sm hover:underline">← 一覧に戻る</Link>
+      <Link href="/library/jobs" className="text-blue-600 text-sm hover:underline">← 取り込み履歴に戻る</Link>
     </div>
   )
 
@@ -128,9 +134,9 @@ export default function LibraryJobDetailPage() {
     <div className="min-h-screen bg-amber-50 text-gray-900 pb-24">
       <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-gray-200">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
-          <Link href="/library/jobs" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
+          <Link href="/library/jobs" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{job?.source_name ?? 'ジョブ詳細'}</p>
+            <p className="text-sm font-semibold truncate">{job?.source_name ?? '取り込み詳細'}</p>
             {job && (
               <p className="text-xs text-gray-400">
                 {formatTime(job.created_at)}
@@ -168,7 +174,7 @@ export default function LibraryJobDetailPage() {
             <p className="text-red-500 font-semibold text-sm">処理に失敗しました</p>
             <p className="text-red-400 text-xs">{job.error_text}</p>
             <Link href="/library/import" className="text-blue-600 text-xs hover:underline block mt-2">
-              インポートをやり直す →
+              取り込みをやり直す →
             </Link>
           </div>
         )}
@@ -184,7 +190,7 @@ export default function LibraryJobDetailPage() {
             )}
             <div className="flex gap-2 mt-2 flex-wrap">
               <Link href="/quiz" className="text-xs px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors font-medium">今すぐクイズで確認する →</Link>
-              <Link href="/library/import" className="text-xs text-blue-600 hover:underline self-center">続けてインポート →</Link>
+              <Link href="/library/import" className="text-xs text-blue-600 hover:underline self-center">続けて取り込む →</Link>
               <Link href="/" className="text-xs text-gray-400 hover:underline self-center">ホームへ →</Link>
             </div>
           </div>
@@ -197,11 +203,11 @@ export default function LibraryJobDetailPage() {
             <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">ソース情報</h2>
               <div className="flex gap-2 flex-wrap">
-                {SOURCE_TYPES.map((t) => (
-                  <button key={t} onClick={() => setSourceType(t)}
+                {SOURCE_TYPES.map(({ value, label }) => (
+                  <button key={value} onClick={() => setSourceType(value)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      sourceType === t ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}>{t}</button>
+                      sourceType === value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    }`}>{label}</button>
                 ))}
               </div>
               <input
@@ -254,7 +260,7 @@ export default function LibraryJobDetailPage() {
                 disabled={phrases.length === 0 || saving}
                 className="w-full py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {saving ? '登録中...' : `${phrases.length}件をDBに登録する`}
+                {saving ? '追加中...' : `${phrases.length}件を学習フレーズに追加する`}
               </button>
             </div>
           </>
@@ -264,7 +270,7 @@ export default function LibraryJobDetailPage() {
           <div className="text-center py-8">
             <p className="text-gray-400 text-sm">フレーズが0件です</p>
             <Link href="/library/import" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
-              インポートに戻る →
+              取り込みに戻る →
             </Link>
           </div>
         )}

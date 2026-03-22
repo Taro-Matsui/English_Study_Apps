@@ -1,6 +1,6 @@
 export type JudgeStatus = 'correct' | 'partial' | 'incorrect'
 
-export type SourceType = 'DSH_Event' | 'YouTube' | 'Podcast' | 'Article'
+export type SourceType = 'YouTube' | 'Podcast' | '議事録' | '英語記事' | 'その他'
 export type DeleteReason = 'product_name' | 'not_phrase'
 export const DELETE_REASON_LABELS: Record<DeleteReason, string> = {
   product_name: '特定の製品・機能名',
