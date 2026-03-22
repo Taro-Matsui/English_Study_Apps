@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
@@ -9,6 +9,10 @@ import { AnnouncementBell } from './AnnouncementBell'
 import { HintBubble } from './HintBubble'
 import { PwaInstallHint } from './PwaInstallHint'
 import { X_URL } from '@/lib/social'
+
+const STATS_CACHE_KEY = 'home_stats_cache'
+
+interface CachedStats { phraseCount: number; sourceCount: number; streak: number; todayDone: boolean; weakCount: number }
 
 interface Props {
   phraseCount: number | null
@@ -21,6 +25,30 @@ interface Props {
 export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakCount }: Props) {
   const { lang, t } = useLanguage()
   const { user } = useAuth()
+
+  // props が null のとき（Suspense fallback）は localStorage の前回値で即時表示
+  const [cachedStats, setCachedStats] = useState<CachedStats | null>(null)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STATS_CACHE_KEY)
+      if (raw) setCachedStats(JSON.parse(raw))
+    } catch {}
+  }, [])
+
+  // 実データが来たらキャッシュを更新
+  useEffect(() => {
+    if (phraseCount === null) return
+    try {
+      localStorage.setItem(STATS_CACHE_KEY, JSON.stringify({ phraseCount, sourceCount, streak, todayDone, weakCount }))
+    } catch {}
+  }, [phraseCount, sourceCount, streak, todayDone, weakCount])
+
+  // 表示値: 実データ優先 → localStorage キャッシュ → null
+  const displayPhraseCount = phraseCount ?? cachedStats?.phraseCount ?? null
+  const displaySourceCount = sourceCount ?? cachedStats?.sourceCount ?? null
+  const displayStreak      = phraseCount !== null ? streak : (cachedStats?.streak ?? 0)
+  const displayTodayDone   = phraseCount !== null ? todayDone : (cachedStats?.todayDone ?? false)
+  const displayWeakCount   = phraseCount !== null ? weakCount : (cachedStats?.weakCount ?? 0)
 
   // クイズページ表示を高速化するためフレーズをバックグラウンドでプリフェッチ
   useEffect(() => {
@@ -68,8 +96,8 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       bg: 'bg-blue-50 hover:bg-blue-100',
       border: 'border-blue-200',
       iconBg: 'from-blue-500 to-blue-600',
-      badge: phraseCount !== null
-        ? lang === 'ja' ? `${phraseCount}件` : `${phraseCount} phrases`
+      badge: displayPhraseCount !== null
+        ? lang === 'ja' ? `${displayPhraseCount}件` : `${displayPhraseCount} phrases`
         : null,
     },
     {
@@ -80,8 +108,8 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       bg: 'bg-violet-50 hover:bg-violet-100',
       border: 'border-violet-200',
       iconBg: 'from-violet-500 to-violet-600',
-      badge: sourceCount !== null
-        ? lang === 'ja' ? `${sourceCount}ファイル` : `${sourceCount} files`
+      badge: displaySourceCount !== null
+        ? lang === 'ja' ? `${displaySourceCount}ファイル` : `${displaySourceCount} files`
         : null,
     },
   ]
@@ -103,15 +131,15 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
         </div>
 
         {/* ストリーク表示 */}
-        {streak > 0 && (
+        {displayStreak > 0 && (
           <div className="flex items-center justify-center gap-2.5">
             <Link href="/streak" className="flex items-center gap-2 hover:opacity-75 transition-opacity">
               <span className="text-lg">🔥</span>
               <span className="text-gray-800 font-bold text-base">
-                {streak}{lang === 'ja' ? '日連続' : '-day streak'}
+                {displayStreak}{lang === 'ja' ? '日連続' : '-day streak'}
               </span>
             </Link>
-            {todayDone && (
+            {displayTodayDone && (
               <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                 ✓ {lang === 'ja' ? '本日クリア済' : 'Done today'}
               </span>
@@ -135,7 +163,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
               <div className="flex-1">
                 <p className="font-bold text-white text-lg">{t('nav_quiz')}</p>
                 <p className="text-emerald-100 text-sm mt-0.5">
-                  {!todayDone
+                  {!displayTodayDone
                     ? (lang === 'ja' ? '今日はまだ学習していません' : "You haven't studied today")
                     : (lang === 'ja' ? '今日のクイズを続ける' : "Continue today's quiz")}
                 </p>
@@ -146,7 +174,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
         </HintBubble>
 
         {/* 初回インポート誘導（シードフレーズのみの状態） */}
-        {sourceCount !== null && sourceCount <= 1 && (
+        {displaySourceCount !== null && displaySourceCount <= 1 && (
           <Link href="/library/import"
             className="flex items-center gap-3 p-3.5 rounded-xl bg-violet-50 border border-violet-200 hover:bg-violet-100 transition-colors">
             <span className="text-xl flex-shrink-0">📥</span>
@@ -163,13 +191,13 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
         )}
 
         {/* 弱点フォーカス */}
-        {weakCount > 0 && (
+        {displayWeakCount > 0 && (
           <Link href="/quiz?mode=focus"
             className="flex items-center gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200 hover:bg-red-100 transition-colors">
             <span className="text-xl flex-shrink-0">⚠️</span>
             <div className="flex-1">
               <p className="text-sm font-semibold text-red-600">
-                {lang === 'ja' ? `弱点フレーズ ${weakCount}件` : `${weakCount} weak phrases`}
+                {lang === 'ja' ? `弱点フレーズ ${displayWeakCount}件` : `${displayWeakCount} weak phrases`}
               </p>
               <p className="text-xs text-red-400 mt-0.5">
                 {lang === 'ja' ? '苦手なフレーズを重点的に復習' : 'Focus on phrases you often miss'}
