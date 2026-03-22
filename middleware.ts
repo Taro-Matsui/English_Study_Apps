@@ -68,9 +68,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/onboarding', request.url))
   }
 
-  // /api/admin/* と /admin/* は ADMIN_EMAILS に含まれるユーザーのみ許可（未設定時は全員許可）
-  // ※ /library/* はユーザー向け機能のため admin 制限から外している
-  if (path.startsWith('/admin') || path.startsWith('/api/admin')) {
+  // /admin/* のみ ADMIN_EMAILS に含まれるユーザーのみ許可（未設定時は全員許可）
+  // ※ /library/* と /api/admin/* はユーザー向け機能のため admin 制限から除外
+  if (path.startsWith('/admin')) {
     const adminEmails = (process.env.ADMIN_EMAILS ?? '')
       .split(',')
       .map((e) => e.trim().toLowerCase())
