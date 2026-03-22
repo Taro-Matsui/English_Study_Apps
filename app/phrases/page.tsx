@@ -249,7 +249,7 @@ export default function PhrasesPage() {
               <p className="text-sm text-amber-700/60">
                 {hasFilters
                   ? 'フィルターを変えて試してみましょう'
-                  : '会話録や記事をインポートして\n英語フレーズを釣り上げよう！'}
+                  : '会話録や記事から\n英語フレーズをPickしよう！'}
               </p>
             </div>
             {!hasFilters && (
@@ -257,7 +257,7 @@ export default function PhrasesPage() {
                 href="/library/import"
                 className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-800 text-white text-sm font-semibold hover:bg-amber-700 transition-colors shadow-sm"
               >
-                テキストをインポート →
+                フレーズをPickする →
               </Link>
             )}
           </div>

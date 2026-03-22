@@ -163,11 +163,11 @@ export default function LibraryImportPage() {
         <div className="max-w-lg mx-auto px-4 py-2 flex items-center gap-2">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-800">コンテキストを取り込む</p>
-            <p className="text-[11px] text-gray-400 leading-tight">会話・記事・字幕からフレーズを手繰り寄せる</p>
+            <p className="text-sm font-bold text-gray-800">フレーズをPickする</p>
+            <p className="text-[11px] text-gray-400 leading-tight">会話録・記事・字幕から、使える英語フレーズをAIがPickします</p>
           </div>
           <Link href="/library/jobs" className="text-xs text-amber-700 hover:text-amber-800 border border-amber-200 rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors whitespace-nowrap">
-            取り込み履歴
+            Pick履歴
           </Link>
         </div>
       </div>
@@ -340,6 +340,23 @@ export default function LibraryImportPage() {
                   </div>
                 </div>
 
+                {/* ソースタイプ補足ヒント */}
+                {sourceType && (() => {
+                  const hints: Record<string, string> = {
+                    'YouTube': 'YouTube Studioから字幕ファイル（.vtt）をダウンロードし、ファイルで追加してください',
+                    'Podcast': 'Whisper・Otter.aiなどで文字起こし後、テキストを貼り付けてください',
+                    '議事録': '会議録のテキストをそのまま貼り付けてください',
+                    '英語記事': 'URLを入力するか、本文テキストを貼り付けてください',
+                    'その他': 'テキストをそのまま貼り付けてください',
+                  }
+                  const hint = hints[sourceType]
+                  return hint ? (
+                    <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed">
+                      💡 {hint}
+                    </p>
+                  ) : null
+                })()}
+
                 {/* タイトル */}
                 <div className="space-y-1.5">
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">タイトル</p>
@@ -368,7 +385,7 @@ export default function LibraryImportPage() {
               disabled={!canSubmit || isSubmitting}
               className="w-full rounded-2xl bg-amber-800 px-4 py-4 text-sm font-bold text-white hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md shadow-amber-800/20"
             >
-              {isSubmitting ? '処理を開始しています...' : 'フレーズを手繰り寄せる →'}
+              {isSubmitting ? '処理を開始しています...' : 'AIでフレーズをPickする →'}
             </button>
 
             {isSubmitting && <Progress value={null} className="h-1 animate-pulse" />}
@@ -381,15 +398,15 @@ export default function LibraryImportPage() {
             <div className="flex items-start gap-3">
               <span className="text-2xl">✅</span>
               <div>
-                <p className="font-semibold text-gray-900">取り込みを受け付けました</p>
-                <p className="text-sm text-gray-500 mt-1">フレーズの抽出には数分かかります。取り込み履歴から確認できます。</p>
+                <p className="font-semibold text-gray-900">フレーズをPickしています</p>
+                <p className="text-sm text-gray-500 mt-1">フレーズの抽出には数分かかります。Pick履歴から確認できます。</p>
               </div>
             </div>
             <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_IMPORT ?? ''} className="rounded-xl" />
             <div className="flex flex-col gap-2">
               <Link href="/library/jobs"
                 className="rounded-xl bg-amber-800 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700 transition-colors text-center">
-                取り込み履歴を確認する →
+                Pick履歴を確認する →
               </Link>
               <div className="flex gap-2">
                 <Link href={`/library/jobs/${jobId}`}

@@ -10,9 +10,9 @@ type Mode = 'signin' | 'signup'
 
 const FEATURES = [
   {
-    icon: '📥',
-    title: '会話録・記事をインポート',
-    desc: '議事録・YouTube字幕・技術ブログなどを貼り付けるだけ。AIが英語フレーズを自動で抽出します。',
+    icon: '🎸',
+    title: '会話録・記事からフレーズをPickする',
+    desc: '議事録・YouTube字幕・技術ブログなどを貼り付けるだけ。AIが使える英語フレーズを自動でPickします。',
   },
   {
     icon: '🎯',
@@ -137,7 +137,7 @@ export default function LoginPage() {
           </div>
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Reel</h1>
           <p className="text-gray-500 text-sm leading-relaxed">
-            実際の会話から英語フレーズを手繰り寄せる学習アプリ。<br />
+            実際の会話から、フレーズをPickする学習アプリ。<br />
             自分のリアルなテキストで、使える英語を身につけよう。
           </p>
         </div>
