@@ -65,6 +65,8 @@ export default function HistoryPage() {
   const [data, setData] = useState<HistoryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState<string | null>(null)
+
+  const HISTORY_CACHE_KEY = 'history_cache'
   const [sharing, setSharing] = useState<string | null>(null)
   const [clipboardId, setClipboardId] = useState<string | null>(null)
 
@@ -88,10 +90,23 @@ export default function HistoryPage() {
   }
 
   useEffect(() => {
+    // キャッシュから即時表示
+    try {
+      const raw = localStorage.getItem(HISTORY_CACHE_KEY)
+      if (raw) {
+        const cached = JSON.parse(raw) as HistoryData
+        if (cached.sessions) { setData(cached); setLoading(false) }
+      }
+    } catch {}
+
+    // バックグラウンドで最新データを取得
     fetch('/api/history').then((r) => r.json()).then((d) => {
-      if (d.sessions) setData(d)
-      else setData({ sessions: Array.isArray(d) ? d : [], daily_accuracy: [], by_difficulty: [], by_scene: [] })
+      const fresh: HistoryData = d.sessions
+        ? d
+        : { sessions: Array.isArray(d) ? d : [], daily_accuracy: [], by_difficulty: [], by_scene: [] }
+      setData(fresh)
       setLoading(false)
+      try { localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(fresh)) } catch {}
     }).catch(() => setLoading(false))
   }, [])
 

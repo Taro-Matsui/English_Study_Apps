@@ -14,6 +14,9 @@ const DELETE_REASONS: DeleteReason[] = ['product_name', 'not_phrase']
 const SCENES = ['daily', 'technical', 'business', 'other'] as const
 type SceneFilter = typeof SCENES[number] | ''
 
+const PHRASES_CACHE_KEY = 'phrases_cache'
+const PAGE_SIZE = 30
+
 const DIFF_CONFIG: Record<number, { label: string; cls: string }> = {
   1: { label: 'Lv.1', cls: 'bg-emerald-100 text-emerald-700' },
   2: { label: 'Lv.2', cls: 'bg-sky-100 text-sky-700' },
@@ -40,9 +43,27 @@ export default function PhrasesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Phrase | null>(null)
   const [deleteReason, setDeleteReason] = useState<DeleteReason>('product_name')
   const [deleting, setDeleting] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  const noFilters = !q && !source && diffFilter === null && !sceneFilter
 
   const fetchPhrases = useCallback(async () => {
-    setLoading(true)
+    // フィルターなし初回: キャッシュから即時表示
+    if (noFilters) {
+      try {
+        const raw = localStorage.getItem(PHRASES_CACHE_KEY)
+        if (raw) {
+          const cached = JSON.parse(raw) as Phrase[]
+          if (Array.isArray(cached) && cached.length) {
+            setPhrases(cached)
+            setLoading(false)
+          }
+        }
+      } catch {}
+    } else {
+      setLoading(true)
+    }
+
     const params = new URLSearchParams()
     if (q) params.set('q', q)
     if (source) params.set('source', source)
@@ -50,12 +71,20 @@ export default function PhrasesPage() {
     if (sceneFilter) params.set('scene', sceneFilter)
     const res = await fetch(`/api/phrases?${params}`)
     const data = await res.json()
-    setPhrases(Array.isArray(data) ? data : [])
+    const result = Array.isArray(data) ? data : []
+    setPhrases(result)
     setLoading(false)
+    setVisibleCount(PAGE_SIZE)
+
+    // フィルターなし結果をキャッシュ
+    if (noFilters) {
+      try { localStorage.setItem(PHRASES_CACHE_KEY, JSON.stringify(result)) } catch {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, source, diffFilter, sceneFilter])
 
   useEffect(() => {
-    const id = setTimeout(fetchPhrases, 300)
+    const id = setTimeout(fetchPhrases, q ? 300 : 0)
     return () => clearTimeout(id)
   }, [fetchPhrases])
 
@@ -86,12 +115,15 @@ export default function PhrasesPage() {
 
   const masteredSet = new Set(settings.masteredIds)
 
-  const displayedPhrases = onlyUnmastered
+  const filteredPhrases = onlyUnmastered
     ? phrases.filter((p) => !masteredSet.has(p.id))
     : phrases
 
+  const displayedPhrases = filteredPhrases.slice(0, visibleCount)
+  const hasMore = filteredPhrases.length > visibleCount
+
   const masteredCount = phrases.filter((p) => masteredSet.has(p.id)).length
-  const countLabel = lang === 'ja' ? `${displayedPhrases.length}件` : `${displayedPhrases.length} phrases`
+  const countLabel = lang === 'ja' ? `${filteredPhrases.length}件` : `${filteredPhrases.length} phrases`
 
   const hasFilters = !!q || !!source || diffFilter !== null || !!sceneFilter || onlyUnmastered
 
@@ -230,63 +262,73 @@ export default function PhrasesPage() {
             )}
           </div>
         ) : (
-          displayedPhrases.map((p) => {
-            const isMastered = masteredSet.has(p.id)
-            return (
-              <div
-                key={p.id}
-                className={`bg-white rounded-2xl border shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow ${
-                  isMastered ? 'border-emerald-200' : 'border-amber-100'
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-gray-900">{p.phrase}</span>
-                    {settings.showPronunciation && p.pronunciation && (
-                      <span className="text-xs text-gray-400">{p.pronunciation}</span>
-                    )}
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${diff(p.difficulty).cls}`}>
-                      {diff(p.difficulty).label}
-                    </span>
-                    {isMastered && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700">
-                        ✓ 習得済み
+          <>
+            {displayedPhrases.map((p) => {
+              const isMastered = masteredSet.has(p.id)
+              return (
+                <div
+                  key={p.id}
+                  className={`bg-white rounded-2xl border shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow ${
+                    isMastered ? 'border-emerald-200' : 'border-amber-100'
+                  }`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-gray-900">{p.phrase}</span>
+                      {settings.showPronunciation && p.pronunciation && (
+                        <span className="text-xs text-gray-400">{p.pronunciation}</span>
+                      )}
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${diff(p.difficulty).cls}`}>
+                        {diff(p.difficulty).label}
                       </span>
+                      {isMastered && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700">
+                          ✓ 習得済み
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-amber-800 mt-1">{p.meaning_ja}</p>
+                    {p.original_context && (
+                      <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">
+                        &quot;{p.original_context}&quot;
+                      </p>
+                    )}
+                    {p.source_title && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{p.source_type}</Badge>
+                        <span className="text-[10px] text-gray-400 truncate">{p.source_title}</span>
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm font-medium text-amber-800 mt-1">{p.meaning_ja}</p>
-                  {p.original_context && (
-                    <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">
-                      &quot;{p.original_context}&quot;
-                    </p>
-                  )}
-                  {p.source_title && (
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">{p.source_type}</Badge>
-                      <span className="text-[10px] text-gray-400 truncate">{p.source_title}</span>
-                    </div>
-                  )}
+                  <div className="flex flex-col gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => speak(p.phrase, p.id)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                        speaking === p.id ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                      }`}
+                    >
+                      🔊
+                    </button>
+                    <button
+                      onClick={() => { setDeleteTarget(p); setDeleteReason('product_name') }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-gray-100 text-gray-300 hover:bg-red-50 hover:text-red-400 transition-colors"
+                      title="削除"
+                    >
+                      🗑
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5 flex-shrink-0">
-                  <button
-                    onClick={() => speak(p.phrase, p.id)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
-                      speaking === p.id ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-                    }`}
-                  >
-                    🔊
-                  </button>
-                  <button
-                    onClick={() => { setDeleteTarget(p); setDeleteReason('product_name') }}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-gray-100 text-gray-300 hover:bg-red-50 hover:text-red-400 transition-colors"
-                    title="削除"
-                  >
-                    🗑
-                  </button>
-                </div>
-              </div>
-            )
-          })
+              )
+            })}
+            {hasMore && (
+              <button
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                className="w-full py-3 rounded-2xl border border-amber-200 bg-white text-amber-700 text-sm font-medium hover:bg-amber-50 transition-colors"
+              >
+                もっと見る（残り {filteredPhrases.length - visibleCount} 件）
+              </button>
+            )}
+          </>
         )}
       </div>
 

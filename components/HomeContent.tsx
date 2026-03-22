@@ -28,11 +28,13 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
   // props が null のとき（Suspense fallback）は localStorage の前回値で即時表示
   const [cachedStats, setCachedStats] = useState<CachedStats | null>(null)
+  const [cacheLoaded, setCacheLoaded] = useState(false)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STATS_CACHE_KEY)
       if (raw) setCachedStats(JSON.parse(raw))
     } catch {}
+    setCacheLoaded(true)
   }, [])
 
   // 実データが来たらキャッシュを更新
@@ -113,6 +115,36 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
         : null,
     },
   ]
+
+  // キャッシュ確認前、またはキャッシュなし＆サーバーデータ未着 → スプラッシュ
+  const showSplash = !cacheLoaded || (phraseCount === null && cachedStats === null)
+
+  if (showSplash) {
+    return (
+      <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-6 animate-fade-in">
+          <div className="inline-flex items-center justify-center gap-1 px-5 h-14 rounded-2xl bg-amber-100">
+            <span className="text-xl">👩‍💻</span>
+            <span className="text-lg">💬</span>
+            <span className="text-xl">👨‍💻</span>
+          </div>
+          <div className="text-center space-y-1">
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Reel</h1>
+            <p className="text-gray-500 text-sm">実際の会話からフレーズを手繰り寄せる</p>
+          </div>
+          <div className="flex gap-1.5 mt-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-amber-400 animate-bounce"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 pb-24">
