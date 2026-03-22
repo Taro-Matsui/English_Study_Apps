@@ -26,12 +26,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No subscription found' }, { status: 404 })
   }
 
-  const origin = getOrigin(req)
+  try {
+    const origin = getOrigin(req)
 
-  const portalSession = await getStripe().billingPortal.sessions.create({
-    customer: data.stripe_customer_id,
-    return_url: `${origin}/settings/billing`,
-  })
+    const portalSession = await getStripe().billingPortal.sessions.create({
+      customer: data.stripe_customer_id,
+      return_url: `${origin}/settings/billing`,
+    })
 
-  return NextResponse.json({ url: portalSession.url })
+    return NextResponse.json({ url: portalSession.url })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('[stripe/portal]', message)
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }

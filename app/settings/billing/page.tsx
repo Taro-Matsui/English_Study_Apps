@@ -69,6 +69,7 @@ function BillingContent() {
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const success = searchParams.get('success') === 'true'
   const canceled = searchParams.get('canceled') === 'true'
@@ -85,36 +86,42 @@ function BillingContent() {
 
   async function handleUpgrade(priceKey: 'starter' | 'pro', plan: Plan) {
     setCheckoutLoading(plan)
+    setErrorMsg(null)
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceKey }),
       })
-      const data = await res.json() as { url?: string; error?: string }
+      const text = await res.text()
+      let data: { url?: string; error?: string }
+      try { data = JSON.parse(text) } catch { data = { error: `HTTP ${res.status}: ${text.slice(0, 200)}` } }
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert(data.error ?? 'エラーが発生しました')
+        setErrorMsg(data.error ?? 'エラーが発生しました')
       }
-    } catch {
-      alert('通信エラーが発生しました')
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : '通信エラーが発生しました')
     }
     setCheckoutLoading(null)
   }
 
   async function handlePortal() {
     setPortalLoading(true)
+    setErrorMsg(null)
     try {
       const res = await fetch('/api/stripe/portal', { method: 'POST' })
-      const data = await res.json() as { url?: string; error?: string }
+      const text = await res.text()
+      let data: { url?: string; error?: string }
+      try { data = JSON.parse(text) } catch { data = { error: `HTTP ${res.status}: ${text.slice(0, 200)}` } }
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert(data.error ?? 'エラーが発生しました')
+        setErrorMsg(data.error ?? 'エラーが発生しました')
       }
-    } catch {
-      alert('通信エラーが発生しました')
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : '通信エラーが発生しました')
     }
     setPortalLoading(false)
   }
@@ -142,6 +149,11 @@ function BillingContent() {
         {canceled && (
           <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
             決済をキャンセルしました。プランは変更されていません。
+          </div>
+        )}
+        {errorMsg && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-800 break-all">
+            ⚠️ {errorMsg}
           </div>
         )}
 
