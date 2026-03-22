@@ -161,6 +161,13 @@ export default function OnboardingPage() {
     setShowAnswer(true)
   }
 
+  // ── プロフィシェンシー: 分かりません ─────────────────────────
+  function handleDontKnow() {
+    if (showAnswer) return
+    setSelectedOption(-1)
+    setShowAnswer(true)
+  }
+
   // ── プロフィシェンシー: 次の問題へ ──────────────────────────
   function handleNextQuestion() {
     const nextAnswers = [...answers, selectedOption ?? -1]
@@ -376,6 +383,18 @@ export default function OnboardingPage() {
               {isEdit ? '設定を更新する' : '英語力をチェックする →'}
             </button>
 
+            {/* 新規ユーザー: スキップして直接保存 */}
+            {!isEdit && canProceed && (
+              <button
+                onClick={saveAndRedirect}
+                disabled={saving}
+                className="w-full py-2 text-xs text-center transition-opacity disabled:opacity-50"
+                style={{ color: C.muted }}
+              >
+                スキップしてすぐ始める
+              </button>
+            )}
+
             {isEdit && (
               <button
                 onClick={() => router.back()}
@@ -488,6 +507,17 @@ export default function OnboardingPage() {
                     </button>
                   )
                 })}
+
+                {/* 分かりません */}
+                {!showAnswer && (
+                  <button
+                    onClick={handleDontKnow}
+                    className="w-full py-3 rounded-xl border text-sm transition-all"
+                    style={{ background: 'rgba(139,99,64,0.05)', borderColor: C.border, color: C.muted }}
+                  >
+                    分かりません
+                  </button>
+                )}
               </div>
 
               {/* 次へボタン */}
@@ -498,6 +528,18 @@ export default function OnboardingPage() {
                   style={{ background: C.accent, color: '#fff' }}
                 >
                   {currentQ + 1 >= questions.length ? '結果を見る →' : '次の問題 →'}
+                </button>
+              )}
+
+              {/* スキップ */}
+              {!showAnswer && (
+                <button
+                  onClick={saveAndRedirect}
+                  disabled={saving}
+                  className="w-full py-2 text-xs text-center transition-opacity disabled:opacity-50"
+                  style={{ color: C.muted }}
+                >
+                  チェックをスキップして始める
                 </button>
               )}
             </div>
