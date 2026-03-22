@@ -205,10 +205,15 @@ export async function uploadShareImage(blob: Blob, sessionId: string): Promise<s
     const { error } = await supabase.storage
       .from('share-images')
       .upload(`${sessionId}.png`, blob, { contentType: 'image/png', upsert: true })
-    if (error) return null
+    if (error) {
+      console.error('[uploadShareImage] Storage upload failed:', error.message, error)
+      return null
+    }
     const { data } = supabase.storage.from('share-images').getPublicUrl(`${sessionId}.png`)
+    console.info('[uploadShareImage] Upload success:', data.publicUrl)
     return data.publicUrl
-  } catch {
+  } catch (e) {
+    console.error('[uploadShareImage] Unexpected error:', e)
     return null
   }
 }

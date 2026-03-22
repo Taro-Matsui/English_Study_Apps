@@ -45,7 +45,7 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googletagmanager.com *.google-analytics.com *.googlesyndication.com *.googleadservices.com *.adtrafficquality.google",
               "script-src-elem 'self' 'unsafe-inline' *.googletagmanager.com *.google-analytics.com *.googlesyndication.com *.googleadservices.com *.adtrafficquality.google",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: *.google-analytics.com *.googletagmanager.com *.doubleclick.net *.googlesyndication.com",
+              "img-src 'self' data: blob: *.supabase.co *.google-analytics.com *.googletagmanager.com *.doubleclick.net *.googlesyndication.com",
               "font-src 'self' data:",
               "connect-src 'self' https://tgqfnsmrwvpycmhmfpyv.supabase.co *.google-analytics.com *.analytics.google.com *.googletagmanager.com *.doubleclick.net *.adtrafficquality.google",
               "frame-src *.googletagmanager.com *.google.com *.doubleclick.net *.googlesyndication.com *.adtrafficquality.google",
