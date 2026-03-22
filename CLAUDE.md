@@ -1,11 +1,11 @@
-# Reel — Claude Code Guide
+# Pick — Claude Code Guide
 
 ## 概要
-実際の会話・文書から英語フレーズを手繰り寄せて学ぶアプリ。
-テキストをアップロード → Claude がフレーズ抽出 → クイズで定着。**マルチユーザー対応**（Supabase Auth + RLS）。
+実際の会話・文書から英語フレーズをピックして学ぶアプリ。
+テキストをアップロード → Claude がフレーズ抽出 → チャレンジで定着。**マルチユーザー対応**（Supabase Auth + RLS）。
 
-タグライン（JA）: 実際の会話からフレーズを手繰り寄せる
-タグライン（EN）: Reel in the words from your real conversations.
+タグライン（JA）: 会話からフレーズをピックして学ぼう
+タグライン（EN）: Pick the words from your real conversations.
 
 ## スタック
 - **Framework**: Next.js 14 App Router (TypeScript)
@@ -28,7 +28,7 @@ app/
   page.tsx               # ホーム (force-dynamic)
   login/page.tsx         # ランディングページ兼ログイン・新規登録
   onboarding/page.tsx    # 学習アンケート + 英語力チェック（初回 + 再編集可）
-  quiz/page.tsx          # クイズ (Client Component)
+  quiz/page.tsx          # チャレンジ (Client Component)
   history/page.tsx       # チャレンジ記録 + X シェア
   settings/page.tsx      # 設定（音声/クイズ/テーマ/学習プロフィール）
   streak/page.tsx        # 学習カレンダー（過去6ヶ月、正解率別色分け）
@@ -128,9 +128,23 @@ type StudySubcategory = 'meeting' | 'review' | 'conference'  // business_enginee
 `lib/announcements.ts` の配列**先頭**に追記するだけ。新しい `id` が追加されると全ユーザーの AnnouncementBell に未読バッジが表示される。`lib/settings/` の `seen_announcements` キーで既読管理。
 
 ## X シェア
-- Canvas API で 1200×630px PNG 生成（テーマ対応）→ X 投稿画面を直接オープン
+- Canvas API で 1200×630px PNG 生成 → Supabase Storage にアップロード → Twitter Cards 表示
 - `share-image.ts`: `generateQuizResultImage()` → `uploadShareImage()` → `openXShare()`
-- Safari 対策: タブがフォアグラウンドのうちに `generateQuizResultImage` + `uploadShareImage` を先行実行
+- **Safari 対策**: タブがフォアグラウンドのうちに（チャレンジ完了時 handleNext 内で）先行アップロード
+  → `window.open()` 後は Safari がタブを suspend するため、シェアボタン押下前にアップロード完了が必須
+- `window.open()` は click ハンドラ内で同期的に呼ぶこと（await 挟むと Safari ポップアップブロック）
+- OG 画像: `app/api/og/route.tsx`（edge runtime, ImageResponse, 1200×630, pick_logo.png 表示）
+- シェアページ: `app/share/[id]/page.tsx`（PUBLIC_PATHS に含める）
+
+## ブランド用語（Pick）
+- ピックする: フレーズを選び取る行為（動詞）
+- チャレンジ: クイズ画面（/quiz）
+- チャレンジ記録: 回答履歴（/history）
+- マイピックリスト: ピック済みフレーズ一覧（/phrases）
+- 出会いから英語をピックする: ソース追加 CTA（/library/import）
+- ピックアップ チャレンジ: 間違えたフレーズの復習モード（mode=focus）
+- 連続日数: Pick Streak（/streak）
+- 📕 詳細は `docs/brand-terminology.md` 参照
 
 ## DB スキーマ（非自明なカラムのみ）
 ```sql
@@ -191,8 +205,9 @@ NEXT_PUBLIC_ADSENSE_SLOT_IMPORT     # 6300711931
 - 戻るボタン: `text-2xl p-2 -ml-2`（約40px タップ領域）
 
 ## PWA
-- `app/manifest.ts` — name: "Reel", short_name: "Reel"
-- icon ファイルに `export const runtime = 'edge'` 必須（Windows で `@vercel/og` が Invalid URL エラー）
+- `app/manifest.ts` — name: "Pick", short_name: "Pick"
+- `app/icon.png` — `public/pick_logo.png` を `app/` にコピーして使用（静的ファイルで edge runtime 不要）
+- Apple icon: `layout.tsx` の `icons.apple` → `/pick_logo.png` 参照
 
 ## デプロイ
 ```bash
