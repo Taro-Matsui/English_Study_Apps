@@ -76,7 +76,8 @@ export default function HistoryPage() {
       const result = await openXShare({
         pct, correct: ses.correct_count, total: ses.total_questions,
         partial: 0, incorrect: ses.total_questions - ses.correct_count,
-        studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
+        studyPurpose:     user?.user_metadata?.study_purpose     as string | undefined,
+        studySubcategory: user?.user_metadata?.study_subcategory as string | undefined,
         sessionId: ses.id,
       })
       if (result === 'copied') {

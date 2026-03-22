@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkDemoRateLimit, getClientIp } from '@/lib/demo-rate-limit'
+import { AI_MODELS } from '@/lib/ai-models'
 
 interface DemoJudgeRequest {
   phrase: string
@@ -74,8 +75,8 @@ export async function POST(req: NextRequest) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 80,
+        model: AI_MODELS.DEMO_JUDGE,
+        max_tokens: 150,
         messages: [{ role: 'user', content: prompt }],
       }),
     })

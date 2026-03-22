@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import type { ProficiencyQuestion } from '@/app/api/proficiency/route'
 
-type StudyPurpose = 'meeting' | 'review' | 'reading' | 'interview' | 'general'
+type StudyPurpose = 'business_general' | 'business_engineer' | 'hobby_lifestyle' | 'hobby_reading'
+type StudySubcategory = 'meeting' | 'review' | 'conference'
 type StudyLevel = 'beginner' | 'intermediate' | 'advanced'
 type Step = 'survey' | 'loading' | 'proficiency' | 'results'
 
@@ -15,16 +16,23 @@ const DOMAIN_PRESETS = [
   'フロントエンド開発',
   'バックエンド開発',
   'セキュリティ',
+  'ワイン・グルメ',
+  '旅行・観光',
+  '映画・小説',
   'ビジネス・マーケティング',
-  'ワイン・料理',
 ]
 
 const PURPOSES: { value: StudyPurpose; icon: string; label: string; desc: string }[] = [
-  { value: 'meeting',   icon: '💬', label: 'ミーティング・日常会話',  desc: 'チームとのやり取りやスタンドアップで使う表現' },
-  { value: 'review',    icon: '👨‍💻', label: 'コードレビュー・Slack',  desc: 'レビューコメントやSlackで使う技術的表現' },
-  { value: 'reading',   icon: '📚', label: '技術ドキュメント読解',     desc: '英語のドキュメントや論文をスムーズに読む' },
-  { value: 'interview', icon: '🎤', label: '採用面接・プレゼン',       desc: 'フォーマルな場で使えるビジネス英語' },
-  { value: 'general',   icon: '🌐', label: '総合的に学びたい',         desc: 'バランスよくエンジニア英語全般を習得' },
+  { value: 'business_general',  icon: '🏢', label: 'ビジネス：一般',             desc: '職場・会議・メール・プレゼンなど仕事全般' },
+  { value: 'business_engineer', icon: '💻', label: 'ビジネス：エンジニア',       desc: 'エンジニアの職場・技術コミュニケーション' },
+  { value: 'hobby_lifestyle',   icon: '🌏', label: '趣味：旅行・ライフスタイル', desc: '旅行・グルメ・ワイン・スポーツなど' },
+  { value: 'hobby_reading',     icon: '📖', label: '趣味：小説・読書',           desc: '英語小説・エッセイ・読書を楽しみたい' },
+]
+
+const SUBCATEGORIES: { value: StudySubcategory; icon: string; label: string; desc: string }[] = [
+  { value: 'meeting',    icon: '💬', label: 'ミーティング・日常会話',             desc: 'チームとのやり取り・スタンドアップ・Slack' },
+  { value: 'review',     icon: '👨‍💻', label: 'コードレビュー・技術ドキュメント', desc: 'レビューコメント・技術文書・専門用語' },
+  { value: 'conference', icon: '🎤', label: '採用面接・プレゼン・カンファレンス', desc: 'フォーマルな発表・カンファ登壇・採用面接' },
 ]
 
 const LEVELS: { value: StudyLevel; label: string; desc: string }[] = [
@@ -32,6 +40,29 @@ const LEVELS: { value: StudyLevel; label: string; desc: string }[] = [
   { value: 'intermediate', label: '中級', desc: '読めるが会話・作文が難しい' },
   { value: 'advanced',     label: '上級', desc: 'ビジネス英語を洗練させたい' },
 ]
+
+// 旧 purpose 値を新しい体系にマッピング（編集モードの後方互換）
+function migrateOldPurpose(old: string): { purpose: StudyPurpose; subcategory?: StudySubcategory } {
+  switch (old) {
+    case 'meeting':   return { purpose: 'business_engineer', subcategory: 'meeting' }
+    case 'review':    return { purpose: 'business_engineer', subcategory: 'review' }
+    case 'reading':   return { purpose: 'business_engineer', subcategory: 'review' }
+    case 'interview': return { purpose: 'business_engineer', subcategory: 'conference' }
+    case 'general':   return { purpose: 'business_engineer', subcategory: 'meeting' }
+    default:          return { purpose: 'business_general' }
+  }
+}
+
+// proficiency API に渡すための purpose マッピング（既存の問題セットに合わせる）
+function getProficiencyPurpose(purpose: StudyPurpose, subcategory: StudySubcategory | null): string {
+  if (purpose === 'business_engineer') {
+    if (subcategory === 'meeting') return 'meeting'
+    if (subcategory === 'review') return 'review'
+    if (subcategory === 'conference') return 'interview'
+  }
+  if (purpose === 'hobby_reading') return 'reading'
+  return 'general'
+}
 
 // ── ウォームベージュ パレット ─────────────────────────────────
 const C = {
@@ -53,6 +84,7 @@ export default function OnboardingPage() {
   // ── 共通 state ──────────────────────────────────────────────
   const [step, setStep] = useState<Step>('survey')
   const [purpose, setPurpose] = useState<StudyPurpose | null>(null)
+  const [subcategory, setSubcategory] = useState<StudySubcategory | null>(null)
   const [level, setLevel] = useState<StudyLevel | null>(null)
   const [domain, setDomain] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -67,35 +99,56 @@ export default function OnboardingPage() {
 
   const isEdit = !!user?.user_metadata?.onboarding_complete
 
-  // 編集モード: 既存の設定を初期値として使う
+  // 編集モード: 既存の設定を初期値として使う（旧フォーマットも変換）
   useEffect(() => {
     if (!user) return
-    const p = user.user_metadata?.study_purpose as StudyPurpose | undefined
+    const p = user.user_metadata?.study_purpose as string | undefined
+    const sub = user.user_metadata?.study_subcategory as StudySubcategory | undefined
     const l = user.user_metadata?.study_level as StudyLevel | undefined
     const d = user.user_metadata?.study_domain as string | undefined
-    if (p && PURPOSES.some((x) => x.value === p)) setPurpose(p)
+
+    if (p) {
+      if (PURPOSES.some((x) => x.value === p)) {
+        // 新フォーマット
+        setPurpose(p as StudyPurpose)
+        if (sub && SUBCATEGORIES.some((x) => x.value === sub)) setSubcategory(sub)
+      } else {
+        // 旧フォーマット → 変換
+        const migrated = migrateOldPurpose(p)
+        setPurpose(migrated.purpose)
+        if (migrated.subcategory) setSubcategory(migrated.subcategory)
+      }
+    }
     if (l && LEVELS.some((x) => x.value === l)) setLevel(l)
     if (d) setDomain(d)
   }, [user])
 
+  // purpose が変わったときにサブカテゴリをリセット
+  function handlePurposeSelect(p: StudyPurpose) {
+    setPurpose(p)
+    if (p !== 'business_engineer') setSubcategory(null)
+  }
+
+  // 次に進める条件
+  const canProceed = !!purpose && !!level && (purpose !== 'business_engineer' || !!subcategory)
+
   // ── Step 1 → 2: アンケート完了、英語力チェックへ ────────────
   async function handleSurveyNext() {
-    if (!purpose || !level) return
+    if (!canProceed) return
 
     if (isEdit) {
-      // 編集モードはプロフィシェンシーをスキップしてすぐ保存
       await saveAndRedirect()
       return
     }
 
     setStep('loading')
     try {
-      const res = await fetch(`/api/proficiency?purpose=${purpose}`)
+      const profPurpose = getProficiencyPurpose(purpose!, subcategory)
+      const res = await fetch(`/api/proficiency?purpose=${profPurpose}`)
       const data = await res.json() as { questions: ProficiencyQuestion[] }
       setQuestions(data.questions)
       setStep('proficiency')
     } catch {
-      // フェッチ失敗でも次に進める
       await saveAndRedirect()
     }
   }
@@ -131,9 +184,10 @@ export default function OnboardingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          study_purpose: purpose,
-          study_level: level,
-          study_domain: domain.trim() || undefined,
+          study_purpose:     purpose,
+          study_subcategory: purpose === 'business_engineer' ? subcategory : undefined,
+          study_level:       level,
+          study_domain:      domain.trim() || undefined,
         }),
       })
       if (!res.ok) {
@@ -179,7 +233,7 @@ export default function OnboardingPage() {
               )}
             </div>
 
-            {/* 学習目的 */}
+            {/* 英語を使う主な目的 */}
             <div className="space-y-3">
               <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.muted }}>
                 英語を使う主な目的は？
@@ -188,7 +242,7 @@ export default function OnboardingPage() {
                 {PURPOSES.map((p) => (
                   <button
                     key={p.value}
-                    onClick={() => setPurpose(p.value)}
+                    onClick={() => handlePurposeSelect(p.value)}
                     className="w-full flex items-start gap-3 px-4 py-3 rounded-xl border text-left transition-all"
                     style={{
                       background: purpose === p.value ? C.selBg : C.cardBg,
@@ -209,6 +263,39 @@ export default function OnboardingPage() {
                 ))}
               </div>
             </div>
+
+            {/* エンジニアのサブカテゴリ（business_engineer 選択時のみ表示） */}
+            {purpose === 'business_engineer' && (
+              <div className="space-y-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.muted }}>
+                  主に使う場面は？
+                </h2>
+                <div className="space-y-2">
+                  {SUBCATEGORIES.map((s) => (
+                    <button
+                      key={s.value}
+                      onClick={() => setSubcategory(s.value)}
+                      className="w-full flex items-start gap-3 px-4 py-3 rounded-xl border text-left transition-all"
+                      style={{
+                        background: subcategory === s.value ? C.selBg : C.cardBg,
+                        borderColor: subcategory === s.value ? C.selBdr : C.border,
+                      }}
+                    >
+                      <span className="text-xl flex-shrink-0 mt-0.5">{s.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium" style={{ color: subcategory === s.value ? C.accent : C.text }}>
+                          {s.label}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: C.muted }}>{s.desc}</p>
+                      </div>
+                      {subcategory === s.value && (
+                        <span className="flex-shrink-0 font-bold" style={{ color: C.accent }}>✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 英語レベル */}
             <div className="space-y-3">
@@ -235,11 +322,11 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            {/* 専門領域（任意） */}
+            {/* 特に学びたい専門領域や興味・趣味（任意） */}
             <div className="space-y-3">
               <div className="flex items-baseline gap-2">
                 <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.muted }}>
-                  専門領域・興味（任意）
+                  特に学びたい専門領域や興味・趣味（任意）
                 </h2>
                 <span className="text-xs" style={{ color: C.muted }}>フレーズ抽出の優先度に反映</span>
               </div>
@@ -264,7 +351,7 @@ export default function OnboardingPage() {
                 type="text"
                 value={domain}
                 onChange={(e) => setDomain(e.target.value.slice(0, 100))}
-                placeholder="または自由に入力（例: 機械学習、クラウドインフラ）"
+                placeholder="または自由に入力（例: ワイン、機械学習、旅行英語）"
                 style={{ fontSize: '16px', background: C.cardBg, borderColor: C.border, color: C.text }}
                 className="w-full rounded-xl px-4 py-3 border placeholder:text-[#c0a888] focus:outline-none transition-colors"
               />
@@ -278,7 +365,7 @@ export default function OnboardingPage() {
 
             <button
               onClick={handleSurveyNext}
-              disabled={!purpose || !level}
+              disabled={!canProceed}
               className="w-full py-4 rounded-2xl text-base font-bold shadow-md transition-opacity active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: C.accent, color: '#fff' }}
             >

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { isRateLimited } from '@/lib/rate-limit'
+import { AI_MODELS } from '@/lib/ai-models'
 import type { JudgeStatus } from '@/types'
 
 export interface JudgeRequest {
@@ -70,22 +71,32 @@ export async function POST(req: NextRequest) {
   }
 
   const contextLine = original_context ? `\n使用例文（英語）: "${original_context}"` : ''
-  const contextInstruction = original_context ? '\n3. 使用例文を自然な日本語に全訳する' : ''
-  const contextField = original_context ? ', "context_ja": "使用例文の日本語全訳"' : ''
+  const contextJaInstruction = original_context
+    ? 'context_ja: 上記使用例文の自然な日本語全訳'
+    : 'context_ja: このフレーズの典型的な使用場面を日本語で一文（例文形式で）'
 
   const prompt = `フレーズ: "${phrase}"
-正解の意味: "${meaning_ja}"
+このフレーズの意味: "${meaning_ja}"
 ユーザーの回答: "${user_answer}"${contextLine}
 
-以下を行ってください：
-1. ユーザーの回答を以下の3段階で評価する:
-   - "correct": 正解の核心を正しく理解している（完全一致不要）
-   - "partial": 方向性は合っているが重要な要素が不足・不正確
-   - "incorrect": 正解と大きく異なる、または見当違い
-2. 判定理由またはヒントを20字以内で作成する${contextInstruction}
+【評価ルール（重要）】
+以下のどちらかを満たせば "correct" と評価します：
+① このフレーズの一般的・辞書的な意味を正しく理解している
+② この使用例での具体的な使われ方・ニュアンスを正しく理解している
+いずれかが正しければ correct、どちらも方向性が合っているが核心がずれていれば partial、全く異なれば incorrect。
+
+3段階評価：
+- "correct": ①または②を満たしている
+- "partial": 方向性は合っているが重要な要素が不足・不正確
+- "incorrect": フレーズの意味と全く関係ない
+
+フィードバック（feedback）の書き方（30字以内）：
+- correct: 「正解」または簡潔な肯定 ＋ あれば「／この例では〜」と文脈補足
+- partial: 何が足りないかのヒント
+- incorrect: 正しい方向性へのヒント
 
 以下のJSONのみを返してください（説明不要）：
-{"status": "correct", "feedback": "理由を一言（20字以内）"${contextField}}`
+{"status": "correct|partial|incorrect", "feedback": "フィードバック（30字以内）", "context_ja": "${contextJaInstruction}"}`
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -96,8 +107,8 @@ export async function POST(req: NextRequest) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+        model: AI_MODELS.JUDGE,
+        max_tokens: 400,
         messages: [{ role: 'user', content: prompt }],
       }),
     })

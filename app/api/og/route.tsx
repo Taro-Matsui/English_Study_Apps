@@ -4,11 +4,19 @@ import { NextRequest } from 'next/server'
 export const runtime = 'edge'
 
 const PURPOSE_LABELS: Record<string, string> = {
-  meeting:   '#ミーティング英語',
-  review:    '#コードレビュー英語',
-  reading:   '#技術文書英語',
-  interview: '#面接英語',
-  general:   '#ビジネス英語',
+  // 新カテゴリ
+  business_general:  '#ビジネス英語',
+  business_engineer: '#エンジニア英語',
+  hobby_lifestyle:   '#旅行英語',
+  hobby_reading:     '#読書英語',
+  // エンジニア サブカテゴリ
+  meeting:           '#ミーティング英語',
+  review:            '#コードレビュー英語',
+  conference:        '#カンファレンス英語',
+  // 後方互換
+  reading:           '#技術文書英語',
+  interview:         '#面接英語',
+  general:           '#ビジネス英語',
 }
 
 export async function GET(req: NextRequest) {

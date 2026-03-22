@@ -5,21 +5,32 @@ export interface ShareParams {
   partial: number
   incorrect: number
   studyPurpose?: string
+  studySubcategory?: string  // エンジニアのサブカテゴリ（より具体的なハッシュタグに使用）
   sessionId?: string
 }
 
 const PURPOSE_SHARE_LABELS: Record<string, string> = {
-  meeting:   'ミーティング英語',
-  review:    'コードレビュー英語',
-  reading:   '技術文書英語',
-  interview: '面接英語',
-  general:   'ビジネス英語',
+  // 新カテゴリ
+  business_general:  'ビジネス英語',
+  business_engineer: 'エンジニア英語',
+  hobby_lifestyle:   '旅行英語',
+  hobby_reading:     '読書英語',
+  // エンジニア サブカテゴリ（より具体的）
+  meeting:           'ミーティング英語',
+  review:            'コードレビュー英語',
+  conference:        'カンファレンス英語',
+  // 後方互換
+  reading:           '技術文書英語',
+  interview:         '面接英語',
+  general:           'ビジネス英語',
 }
 
 /** X 投稿用テキストを生成（URL は別途 &url= で渡すため本文に含めない） */
-export function getShareText({ pct, correct, total, studyPurpose }: ShareParams): string {
-  const categoryTag = studyPurpose && PURPOSE_SHARE_LABELS[studyPurpose]
-    ? ` #${PURPOSE_SHARE_LABELS[studyPurpose].replace(/\s/g, '')}` : ''
+export function getShareText({ pct, correct, total, studyPurpose, studySubcategory }: ShareParams): string {
+  // サブカテゴリ優先（より具体的なハッシュタグを使用）
+  const effectivePurpose = studySubcategory ?? studyPurpose
+  const categoryTag = effectivePurpose && PURPOSE_SHARE_LABELS[effectivePurpose]
+    ? ` #${PURPOSE_SHARE_LABELS[effectivePurpose].replace(/\s/g, '')}` : ''
   return [
     `【Reel】クイズ完了 📊`,
     `${pct}% 正解（${correct}/${total}問）`,
@@ -53,7 +64,7 @@ function fillRoundRect(
  * 左パネル: アプリ情報 / 右パネル: スコア
  */
 export async function generateQuizResultImage(params: ShareParams): Promise<Blob> {
-  const { pct, correct, total, partial, incorrect, studyPurpose } = params
+  const { pct, correct, total, partial, incorrect, studyPurpose, studySubcategory } = params
   const W = 1200, H = 630
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
@@ -113,8 +124,9 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   ctx.font = font(18)
   ctx.fillText(dateStr, LX, CY + 68)
 
-  const categoryTag = studyPurpose && PURPOSE_SHARE_LABELS[studyPurpose]
-    ? ` #${PURPOSE_SHARE_LABELS[studyPurpose].replace(/\s/g, '')}` : ''
+  const effectivePurposeImg = studySubcategory ?? studyPurpose
+  const categoryTag = effectivePurposeImg && PURPOSE_SHARE_LABELS[effectivePurposeImg]
+    ? ` #${PURPOSE_SHARE_LABELS[effectivePurposeImg].replace(/\s/g, '')}` : ''
   ctx.fillStyle = 'rgba(139,99,64,0.5)'
   ctx.font = font(18)
   ctx.fillText(`#英語学習  #フレーズ学習${categoryTag}`, LX, CY + 100)

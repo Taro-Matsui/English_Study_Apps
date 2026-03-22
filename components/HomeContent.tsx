@@ -145,6 +145,23 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
           </Link>
         </HintBubble>
 
+        {/* 初回インポート誘導（シードフレーズのみの状態） */}
+        {sourceCount !== null && sourceCount <= 1 && (
+          <Link href="/library/import"
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-violet-50 border border-violet-200 hover:bg-violet-100 transition-colors">
+            <span className="text-xl flex-shrink-0">📥</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-violet-700">
+                自分のテキストをインポートしよう
+              </p>
+              <p className="text-xs text-violet-500 mt-0.5">
+                会話録・記事・字幕からフレーズを自動抽出
+              </p>
+            </div>
+            <span className="text-violet-400 flex-shrink-0">›</span>
+          </Link>
+        )}
+
         {/* 弱点フォーカス */}
         {weakCount > 0 && (
           <Link href="/quiz?mode=focus"

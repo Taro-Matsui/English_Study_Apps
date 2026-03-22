@@ -11,6 +11,7 @@ import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
 import { openXShare, generateQuizResultImage, uploadShareImage } from '@/lib/share-image'
+import { AdBanner } from '@/components/AdBanner'
 
 interface QuizPhrase {
   id: string
@@ -235,6 +236,8 @@ function QuizContent() {
       }])
       if (status === 'correct') markMastered(current.id)
       speak(current.phrase, 'phrase'); setStep('result')
+      // partial / incorrect は解説を自動取得（correct はユーザーが任意で開ける）
+      if (status !== 'correct') handleExplain()
     } catch { setStep('question') }
   }
 
@@ -286,7 +289,8 @@ function QuizContent() {
               total,
               partial: finalScore.partial,
               incorrect: finalScore.incorrect,
-              studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
+              studyPurpose:     user?.user_metadata?.study_purpose     as string | undefined,
+              studySubcategory: user?.user_metadata?.study_subcategory as string | undefined,
             })
               .then((blob) => uploadShareImage(blob, d.session_id))
               .catch(() => null)
@@ -305,7 +309,8 @@ function QuizContent() {
       const result = await openXShare({
         pct, correct: score.correct, total,
         partial: score.partial, incorrect: score.incorrect,
-        studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
+        studyPurpose:     user?.user_metadata?.study_purpose     as string | undefined,
+        studySubcategory: user?.user_metadata?.study_subcategory as string | undefined,
         sessionId: sessionId ?? undefined,
       })
       if (result === 'copied') {
@@ -369,6 +374,12 @@ function QuizContent() {
               <div><p className="text-3xl font-bold text-red-500">{score.incorrect}</p><p className="text-xs text-gray-400 mt-1">{t('done_incorrect')}</p></div>
             </div>
           </div>
+
+          {/* 広告 */}
+          <AdBanner
+            slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_QUIZ ?? ''}
+            className="rounded-xl"
+          />
 
           {/* ネクストアクション */}
           {isHighScore && (
@@ -587,7 +598,7 @@ function QuizContent() {
                   </div>
 
                   {/* AI解説 */}
-                  {!explanation && (
+                  {!explanation && status === 'correct' && (
                     <button
                       onClick={handleExplain}
                       disabled={explaining}
@@ -599,6 +610,11 @@ function QuizContent() {
                     >
                       {explaining ? t('quiz_explaining') : t('quiz_explain')}
                     </button>
+                  )}
+                  {!explanation && status !== 'correct' && explaining && (
+                    <p className="text-center text-xs text-amber-500 animate-pulse py-1">
+                      💡 {t('quiz_explaining')}
+                    </p>
                   )}
                   {explanation && (
                     <div className="rounded-2xl border border-blue-500/20 bg-blue-50 p-3 space-y-1.5">

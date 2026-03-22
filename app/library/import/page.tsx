@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
 import { SourceType } from '@/types'
+import { AdBanner } from '@/components/AdBanner'
 
 type Step = 'upload' | 'submitting' | 'submitted' | 'error'
 type ImportMode = 'file' | 'url' | 'text'
@@ -319,6 +320,10 @@ export default function LibraryImportPage() {
                   ジョブの実行には数分かかります。後ほどジョブ一覧を確認してください。
                 </p>
               </div>
+              <AdBanner
+                slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_IMPORT ?? ''}
+                className="rounded-xl -mx-1"
+              />
               <div className="flex flex-wrap gap-2">
                 <Link
                   href="/library/jobs"

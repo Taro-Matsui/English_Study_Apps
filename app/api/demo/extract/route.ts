@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkDemoRateLimit, getClientIp } from '@/lib/demo-rate-limit'
 import { ExtractedPhrase } from '@/types'
+import { AI_MODELS } from '@/lib/ai-models'
 
 const DEMO_TEXT_MAX = 3000
 
@@ -64,7 +65,7 @@ ${text}
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: AI_MODELS.DEMO_EXTRACT,
         max_tokens: 2000,
         messages: [{ role: 'user', content: prompt }],
       }),

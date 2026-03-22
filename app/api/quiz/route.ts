@@ -10,7 +10,7 @@ async function fetchPhrases(user: { id: string }, limit: number, excludeIds: str
   // ランダム取得（Supabase は ORDER BY random() を直接サポートしないため件数多めに取得してシャッフル）
   let query = db
     .from('phrases')
-    .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, usage_scene, engineer_level')
+    .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, usage_scene, engineer_level, added_date')
     .is('deleted_at', null)
     .eq('user_id', user.id)
 
@@ -139,7 +139,12 @@ export async function POST(req: NextRequest) {
     }
   } catch {}
 
-  const normal = shuffled.filter((p) => !quickMasteredIds.has(p.id))
-  const quick  = shuffled.filter((p) => quickMasteredIds.has(p.id))
-  return NextResponse.json([...normal, ...quick].slice(0, limit))
+  // 直近7日以内に追加されたフレーズを「新着」として優先出題
+  const recentCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const isRecent = (p: { added_date?: string | null }) => !!p.added_date && p.added_date >= recentCutoff
+
+  const newPhrases = shuffled.filter((p) => isRecent(p) && !quickMasteredIds.has(p.id))
+  const normal     = shuffled.filter((p) => !isRecent(p) && !quickMasteredIds.has(p.id))
+  const quick      = shuffled.filter((p) => quickMasteredIds.has(p.id))
+  return NextResponse.json([...newPhrases, ...normal, ...quick].slice(0, limit))
 }

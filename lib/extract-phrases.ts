@@ -1,23 +1,52 @@
 import { ExtractedPhrase } from '@/types'
+import { AI_MODELS } from '@/lib/ai-models'
 
 const SYSTEM_PROMPT = `あなたはエンジニアの英語学習を支援するAIです。
 与えられた英語テキスト（エンジニアコミュニティの会話録・イベント記録など）から、
-実務で頻出する英語フレーズを抽出・分析してください。
+「聞こえていたが意味を捉えきれていなかった」可能性が高い英語フレーズを選び出してください。
 
-以下の基準でフレーズを選定してください：
-- エンジニアリング文脈で頻出するコロケーション・イディオム・表現
-- 単純な単語ではなく2語以上のフレーズ・表現
-- ビジネス・技術コミュニケーションで実際に使われるもの
-- 難易度：1（簡単）〜5（難しい）で評価
+## 抽出の優先順位（高い順）
+1. 単語単体は知っているのに、組み合わせ（コロケーション）の意味がわからないもの
+   例: "spin up a cluster" → "spin" と "up" は知っていても意味が取りにくい
+2. 直訳すると意味が通じないイディオム・慣用句
+   例: "table the discussion" → 英米で意味が逆になる
+3. ネイティブが当たり前のように使う定型句で、日本語に対応する自然な表現がないもの
+   例: "let me circle back on that"
+
+## 抽出しないもの（重要）
+- 製品名・会社名・サービス名（Snowflake, GitHub, BigQuery, Slack, AWS 等）
+- エンジニアなら誰でも知っている技術単語（query, database, API, PR, bug, deploy 等）
+- 意味が一目瞭然な一般英語（I think, that's right, let's go, good point 等）
+- 単純な形容詞＋名詞の組み合わせ（new feature, important issue 等）
+
+## フレーズの長さ
+- 2〜6語程度のまとまりを基本とする
+- 1語の動詞でも日本人エンジニアが使いこなせていない場合は抽出可（例: elaborate, iterate）
+
+## 難易度基準（日本人エンジニア向け）
+1: 知っているが自分では使えない定番表現（heads-up, wrap up 等）
+2: 意味は推測できるが正確に使えない（circle back, take ownership 等）
+3: ネイティブ感覚が必要。直訳が通じない（take a stab at, in the weeds 等）
+4: 文脈なしでは意味が掴めない上級コロケーション（under the hood, out of the box 等）
+5: ネイティブ同士で使う表現。日本人には馴染みが薄い（punt on, bikeshedding 等）
 
 必ずJSON配列のみを返してください。説明文やコメントは不要です。`
 
 const PURPOSE_LABELS: Record<string, string> = {
-  meeting:   'ミーティング・日常会話（チームでのやり取り、口語的な表現を優先）',
-  review:    'コードレビュー・Slack（技術的な指摘やカジュアルなビジネス表現を優先）',
-  reading:   '技術ドキュメント・論文読解（専門用語、学術的・書き言葉的表現を優先）',
-  interview: '採用面接・プレゼン（フォーマルな表現、自己アピール・説明表現を優先）',
-  general:   '総合的に学びたい（バランスよく幅広く抽出）',
+  // ビジネス top-level
+  business_general:  'ビジネス一般（会議・メール・プレゼン・日常的な職場コミュニケーション全般。エンジニア固有の技術用語は優先しない）',
+  business_engineer: 'エンジニア向けビジネス英語（技術系の職場でのコミュニケーション全般）',
+  // エンジニア サブカテゴリ
+  meeting:           'エンジニアのミーティング・日常会話（チームでのやり取り、口語的な表現を優先）',
+  review:            'コードレビュー・Slack・技術ドキュメント（技術的な指摘、書き言葉・専門用語を含む）',
+  conference:        '採用面接・プレゼン・カンファレンス（フォーマルな表現、発表・質疑応答表現を優先）',
+  // 趣味
+  hobby_lifestyle:   '趣味・ライフスタイル（旅行・グルメ・ワイン・スポーツ等の日常会話・体験記表現を優先。エンジニア・ビジネス用語は不要）',
+  hobby_reading:     '小説・読書（文学的な叙述・感情表現・比喩・慣用句を優先。日常会話や技術用語は不要）',
+  // 後方互換（旧 purpose 値）
+  reading:           '技術ドキュメント・論文読解（専門用語、学術的・書き言葉的表現を優先）',
+  interview:         '採用面接・プレゼン（フォーマルな表現、自己アピール・説明表現を優先）',
+  general:           '総合的に学びたい（バランスよく幅広く抽出）',
 }
 const LEVEL_LABELS: Record<string, string> = {
   beginner:     '初級 → difficulty 1〜3 のフレーズを中心に抽出。難しすぎる表現は避ける',
@@ -27,16 +56,19 @@ const LEVEL_LABELS: Record<string, string> = {
 
 export interface UserContext {
   study_purpose?: string
+  study_subcategory?: string  // エンジニアのサブカテゴリ (meeting / review / conference)
   study_level?: string
   study_domain?: string
 }
 
 const USER_PROMPT_TEMPLATE = (text: string, userContext?: UserContext, maxPhrases = 30, maxSuggested = 10) => {
   const hasContext = userContext?.study_purpose || userContext?.study_level || userContext?.study_domain
+  // サブカテゴリ優先（business_engineer + subcategory の場合はサブカテゴリが主目的を表す）
+  const effectivePurpose = userContext?.study_subcategory ?? userContext?.study_purpose
   const contextSection = hasContext ? `## 学習者プロフィール
-${userContext!.study_purpose ? `- 学習目的: ${PURPOSE_LABELS[userContext!.study_purpose] ?? userContext!.study_purpose}` : ''}
+${effectivePurpose ? `- 学習目的: ${PURPOSE_LABELS[effectivePurpose] ?? effectivePurpose}` : ''}
 ${userContext!.study_level ? `- 英語レベル: ${LEVEL_LABELS[userContext!.study_level] ?? userContext!.study_level}` : ''}
-${userContext!.study_domain ? `- 専門・興味領域: ${userContext!.study_domain}（この領域に関連する専門用語・表現を優先して抽出）` : ''}
+${userContext!.study_domain ? `- 特に学びたい専門領域や興味・趣味: ${userContext!.study_domain}（この領域に関連する専門用語・表現を優先して抽出）` : ''}
 → 上記プロフィールに特に有用なフレーズを優先して抽出・難易度を調整してください。
 
 ` : ''
@@ -53,13 +85,19 @@ ${text}
   {
     "phrase": "フレーズ（英語）",
     "pronunciation": "日本語カタカナ読み（例: データ、むるちくらすたー）",
-    "meaning_ja": "日本語での意味・説明",
+    "meaning_ja": "日本語での意味・説明（下記の書き方を参照）",
     "original_context": "元テキストでの使用例文（英語原文から最大120文字で引用）",
     "difficulty": 3,
     "usage_scene": "daily|technical|business|other のいずれか",
     "engineer_level": "junior|mid|senior のいずれか"
   }
 ]
+
+meaning_ja の書き方：
+- フレーズ単体の一般的な意味を核心として書く（文脈に依存しない普遍的な意味）
+- このテキストでの使われ方に特有のニュアンスがあれば「／ここでは〜」と補足する
+- 例: "前もって知らせること／ここでは「先行して情報共有する」意味で使用"
+- 字数目安: 30〜60字
 
 pronunciation の書き方：
 - 日本人エンジニアが英語を聞いたときの「実際の音の雰囲気」をカタカナで表現してください
@@ -80,22 +118,22 @@ engineer_level の選び方：
 - senior: シニア・リーダー層が多用する高度な表現
 
 さらに、このテキストのドメイン・技術分野に関連し、**テキストには登場しないが実務で広く使われる重要な慣用句・コロケーション** を${maxSuggested}個程度追加してください。
-- エンジニアが日々の業務・MTG・コードレビュー等で頻繁に使う表現を優先
-- テキストから抽出したフレーズと重複しないこと
+- このテキストのトピック・場面と直接関連するものに限る（無関係な表現は追加しない）
+- 同じ場面でネイティブが実際に使う可能性が高いもの
+- すでに抽出したフレーズと重複・類似しないこと
 - これらには必ず \`"suggested": true\` フィールドを追加（抽出フレーズには付けない）
-- original_context にはその表現の典型的な使用例文を英語で作成`
+- original_context には「このフレーズが実際に使われそうな典型的な一文」を英語で作成`
 }
 
 export async function extractPhrasesWithClaude(text: string, userContext?: UserContext): Promise<ExtractedPhrase[]> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY が設定されていません')
 
-  // テキスト長に応じてモデル・出力件数・トークン上限を切り替え
-  // 短文（< 10k chars）: Haiku で十分、低コスト・高速
-  // 長文（>= 10k chars）: Sonnet で精度優先
+  // テキスト長に応じて出力件数・トークン上限を調整
+  // モデルは AI_MODELS.EXTRACT で一元管理（環境変数で上書き可能）
   const isShort = text.length < 10_000
-  const model = isShort ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-6'
-  const maxTokens = isShort ? 3000 : 8192
+  const model = AI_MODELS.EXTRACT
+  const maxTokens = isShort ? 4096 : 8192
   const maxPhrases = isShort ? 15 : 30
   const maxSuggested = isShort ? 5 : 10
 

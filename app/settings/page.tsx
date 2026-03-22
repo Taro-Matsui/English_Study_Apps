@@ -12,11 +12,19 @@ import { ANNOUNCEMENTS } from '@/lib/announcements'
 import { X_URL } from '@/lib/social'
 
 const PURPOSE_LABELS: Record<string, string> = {
-  meeting:   '💬 ミーティング・日常会話',
-  review:    '👨‍💻 コードレビュー・Slack',
-  reading:   '📚 技術ドキュメント読解',
-  interview: '🎤 採用面接・プレゼン',
-  general:   '🌐 総合的に学びたい',
+  // 新カテゴリ
+  business_general:  '🏢 ビジネス：一般',
+  business_engineer: '💻 ビジネス：エンジニア',
+  hobby_lifestyle:   '🌏 趣味：旅行・ライフスタイル',
+  hobby_reading:     '📖 趣味：小説・読書',
+  // エンジニア サブカテゴリ
+  meeting:           '💬 ミーティング・日常会話',
+  review:            '👨‍💻 コードレビュー・技術ドキュメント',
+  conference:        '🎤 採用面接・プレゼン・カンファレンス',
+  // 後方互換
+  reading:           '📚 技術ドキュメント読解',
+  interview:         '🎤 採用面接・プレゼン',
+  general:           '🌐 総合的に学びたい',
 }
 const LEVEL_LABELS: Record<string, string> = {
   beginner:     '初級',
@@ -99,6 +107,7 @@ export default function SettingsPage() {
     setDeleting(false)
   }
   const studyPurpose = user?.user_metadata?.study_purpose as string | undefined
+  const studySubcategory = user?.user_metadata?.study_subcategory as string | undefined
   const studyLevel = user?.user_metadata?.study_level as string | undefined
   const studyDomain = user?.user_metadata?.study_domain as string | undefined
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -162,6 +171,9 @@ export default function SettingsPage() {
                   <span className="text-xs text-gray-400">{ja ? '目的' : 'Purpose'}</span>
                   <span className="text-sm text-gray-900">
                     {studyPurpose ? PURPOSE_LABELS[studyPurpose] ?? studyPurpose : '—'}
+                    {studySubcategory && (
+                      <span className="text-gray-500"> › {PURPOSE_LABELS[studySubcategory] ?? studySubcategory}</span>
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

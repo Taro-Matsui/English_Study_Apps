@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { isRateLimited } from '@/lib/rate-limit'
+import { AI_MODELS } from '@/lib/ai-models'
 
 export interface ExplainRequest {
   phrase_id?: string
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: AI_MODELS.EXPLAIN,
         max_tokens: 600,
         messages: [{ role: 'user', content: prompt }],
       }),

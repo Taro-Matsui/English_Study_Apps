@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Image from 'next/image'
 
@@ -28,11 +29,12 @@ const SLIDES = [
     heading: 'クイズで定着',
     title: '日本語訳を見て英語で答える。\nAIがフィードバックして上達をサポート。',
     sub: '毎日続けることで英語力が伸びていきます。',
-    cta: 'さあ始めよう！',
+    cta: '自分のテキストをインポートする →',
   },
 ]
 
 export function WelcomeGuide() {
+  const router = useRouter()
   const { user } = useAuth()
   const [show, setShow] = useState(false)
   const [slide, setSlide] = useState(0)
@@ -57,6 +59,7 @@ export function WelcomeGuide() {
       setSlide((s) => s + 1)
     } else {
       dismiss()
+      router.push('/library/import')
     }
   }
 

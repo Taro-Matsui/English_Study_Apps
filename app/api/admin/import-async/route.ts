@@ -47,8 +47,9 @@ async function getUserContext(db: ReturnType<typeof getSupabaseAdmin>, jobId: st
     const { data: { user } } = await db.auth.admin.getUserById(job.user_id)
     if (!user) return undefined
     return {
-      study_purpose: user.user_metadata?.study_purpose as string | undefined,
-      study_level: user.user_metadata?.study_level as string | undefined,
+      study_purpose:     user.user_metadata?.study_purpose     as string | undefined,
+      study_subcategory: user.user_metadata?.study_subcategory as string | undefined,
+      study_level:       user.user_metadata?.study_level       as string | undefined,
     }
   } catch {
     return undefined
