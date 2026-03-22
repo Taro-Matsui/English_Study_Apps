@@ -231,19 +231,25 @@ export async function openXShare(params: ShareParams): Promise<'shared' | 'copie
   const shareText = getShareText(params)
 
   // ── Twitter Cards: sessionId がある場合 ──────────────────────
-  // 画像を Storage にアップロード → Twitter がog:imageを自動取得してカード表示
+  // 【重要】window.open() は click ハンドラ内で同期的に呼ぶ必要がある。
+  // await を挟むと Safari がポップアップをブロックする。
+  // → 先に Twitter を開き、画像アップロードはバックグラウンドで行う。
+  // Twitter クローラーは即時スクレイプしないため、数秒後のアップロード完了で問題なし。
   if (sessionId && typeof window !== 'undefined') {
-    const blob = await generateQuizResultImage(params).catch(() => null)
-    if (blob) {
-      // アップロードは投稿前に完了させる（Twitter クローラーが即時取得できるように）
-      await uploadShareImage(blob, sessionId)
-    }
     const shareUrl = `${window.location.origin}/share/${sessionId}`
+
+    // ① 先に Twitter ウィンドウを開く（click イベント内の同期処理）
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
       '_blank',
       'noopener,noreferrer',
     )
+
+    // ② バックグラウンドで画像生成 → Storage アップロード
+    generateQuizResultImage(params)
+      .then((blob) => uploadShareImage(blob, sessionId))
+      .catch(() => null)
+
     return 'opened'
   }
 
