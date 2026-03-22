@@ -49,141 +49,129 @@ function fillRoundRect(
 
 /**
  * クイズ結果シェア画像を Canvas で生成し Blob を返す。
- * 縦長 630×900px、ウォームベージュテーマ。
+ * 横長 1200×630px（Twitter summary_large_image 推奨サイズ）、ウォームベージュテーマ。
+ * 左パネル: アプリ情報 / 右パネル: スコア
  */
 export async function generateQuizResultImage(params: ShareParams): Promise<Blob> {
   const { pct, correct, total, partial, incorrect, studyPurpose } = params
-  const W = 630, H = 900
+  const W = 1200, H = 630
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')!
 
   const scoreColor =
-    pct >= 80 ? '#10b981' :  // emerald
-    pct >= 60 ? '#d97706' :  // amber
-               '#ef4444'     // red
+    pct >= 80 ? '#10b981' :
+    pct >= 60 ? '#d97706' :
+               '#ef4444'
 
   const motivationText =
     pct >= 80 ? '素晴らしい！この調子で 🔥' :
     pct >= 60 ? 'いい調子！また明日も 💡' :
                '続けることが上達の近道 ✨'
 
-  // ── 背景（ウォームベージュグラデーション）────────────────────
+  // ── 背景 ──────────────────────────────────────────────────────
   const bg = ctx.createLinearGradient(0, 0, W, H)
   bg.addColorStop(0, '#f5f0e8')
   bg.addColorStop(1, '#e8ddd0')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
-  // デコレーション：右上のソフト円
-  ctx.fillStyle = `${scoreColor}18`
-  ctx.beginPath(); ctx.arc(W + 60, -60, 300, 0, Math.PI * 2); ctx.fill()
-  // 左下の円
-  ctx.fillStyle = 'rgba(139,99,64,0.08)'
-  ctx.beginPath(); ctx.arc(-60, H + 60, 280, 0, Math.PI * 2); ctx.fill()
+  // デコレーション円（右上・左下）
+  ctx.fillStyle = `${scoreColor}15`
+  ctx.beginPath(); ctx.arc(W - 80, -80, 360, 0, Math.PI * 2); ctx.fill()
+  ctx.fillStyle = 'rgba(139,99,64,0.07)'
+  ctx.beginPath(); ctx.arc(80, H + 80, 320, 0, Math.PI * 2); ctx.fill()
 
-  const font = (size: number, weight: string = 'normal') =>
+  const font = (size: number, weight = 'normal') =>
     `${weight} ${size}px -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif`
 
-  // ── アプリ名ヘッダー ──────────────────────────────────────────
-  const HEADER_Y = 80
+  // ── 左パネル（ブランディング）x: 0〜460 ──────────────────────
+  const LX = 80   // 左パネル テキスト中心
+  const CY = H / 2
 
-  // 🎣 アイコン
-  ctx.font = font(52)
-  ctx.textAlign = 'center'
-  ctx.fillText('🎣', W / 2, HEADER_Y)
+  ctx.font = font(56)
+  ctx.textAlign = 'left'
+  ctx.fillText('🎣', LX, CY - 110)
 
-  // Reel
   ctx.fillStyle = '#4a3020'
-  ctx.font = font(48, 'bold')
-  ctx.textAlign = 'center'
-  ctx.fillText('Reel', W / 2, HEADER_Y + 60)
+  ctx.font = font(64, 'bold')
+  ctx.fillText('Reel', LX, CY - 30)
 
-  // タグライン
   ctx.fillStyle = '#8b6340'
-  ctx.font = font(20)
-  ctx.textAlign = 'center'
-  ctx.fillText('実際の会話から学ぶ英語フレーズ', W / 2, HEADER_Y + 96)
+  ctx.font = font(22)
+  ctx.fillText('実際の会話から学ぶ英語フレーズ', LX, CY + 16)
 
-  // ── 区切り線 ──────────────────────────────────────────────────
-  ctx.strokeStyle = 'rgba(139,115,85,0.25)'
+  // 区切り線（縦）
+  ctx.strokeStyle = 'rgba(139,115,85,0.2)'
   ctx.lineWidth = 1.5
-  ctx.beginPath(); ctx.moveTo(60, HEADER_Y + 120); ctx.lineTo(W - 60, HEADER_Y + 120); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(460, 60); ctx.lineTo(460, H - 60); ctx.stroke()
 
-  // ── スコアカード ──────────────────────────────────────────────
-  const CARD_Y = HEADER_Y + 150
-  const CARD_H = 280
-  ctx.fillStyle = 'rgba(255,255,255,0.7)'
-  fillRoundRect(ctx, 40, CARD_Y, W - 80, CARD_H, 24)
-
-  // モチベーションテキスト
-  ctx.fillStyle = '#7a6248'
-  ctx.font = font(20)
-  ctx.textAlign = 'center'
-  ctx.fillText(motivationText, W / 2, CARD_Y + 46)
-
-  // スコア % （メイン数字）
-  ctx.fillStyle = scoreColor
-  ctx.font = font(110, 'bold')
-  ctx.textAlign = 'center'
-  ctx.fillText(`${pct}%`, W / 2, CARD_Y + 175)
-
-  // 問題数
-  ctx.fillStyle = '#7a6248'
-  ctx.font = font(26)
-  ctx.textAlign = 'center'
-  ctx.fillText(`${correct} / ${total} 問正解`, W / 2, CARD_Y + 225)
-
-  // ── 内訳バッジ（3列）────────────────────────────────────────
-  const BADGE_Y = CARD_Y + CARD_H + 32
-  const bW = 162, bH = 72, bGap = 12
-  const bTotalW = bW * 3 + bGap * 2
-  const bX0 = (W - bTotalW) / 2
-
-  const badges = [
-    { label: '正解', value: correct, bg: 'rgba(16,185,129,0.12)', fg: '#10b981' },
-    { label: '部分', value: partial,  bg: 'rgba(217,119,6,0.12)',  fg: '#d97706' },
-    { label: '誤答', value: incorrect, bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
-  ]
-  badges.forEach(({ label, value, bg, fg }, i) => {
-    const bx = bX0 + i * (bW + bGap)
-    ctx.fillStyle = bg
-    fillRoundRect(ctx, bx, BADGE_Y, bW, bH, 16)
-    // count
-    ctx.fillStyle = fg
-    ctx.font = font(34, 'bold')
-    ctx.textAlign = 'center'
-    ctx.fillText(String(value), bx + bW / 2, BADGE_Y + 42)
-    // label
-    ctx.fillStyle = '#7a6248'
-    ctx.font = font(16)
-    ctx.fillText(label, bx + bW / 2, BADGE_Y + 62)
-  })
-
-  // ── 日付 ─────────────────────────────────────────────────────
   const dateStr = new Date().toLocaleDateString('ja-JP', {
     year: 'numeric', month: 'long', day: 'numeric',
   })
   ctx.fillStyle = '#a08060'
-  ctx.font = font(20)
-  ctx.textAlign = 'center'
-  ctx.fillText(dateStr, W / 2, BADGE_Y + bH + 52)
+  ctx.font = font(18)
+  ctx.fillText(dateStr, LX, CY + 68)
 
-  // ── ハッシュタグ ──────────────────────────────────────────────
   const categoryTag = studyPurpose && PURPOSE_SHARE_LABELS[studyPurpose]
     ? ` #${PURPOSE_SHARE_LABELS[studyPurpose].replace(/\s/g, '')}` : ''
-  const tags = `#英語学習  #フレーズ学習${categoryTag}`
   ctx.fillStyle = 'rgba(139,99,64,0.5)'
-  ctx.font = font(19)
-  ctx.textAlign = 'center'
-  ctx.fillText(tags, W / 2, BADGE_Y + bH + 86)
-
-  // ── URL フッター ──────────────────────────────────────────────
-  const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
-  ctx.fillStyle = '#8b6340'
   ctx.font = font(18)
+  ctx.fillText(`#英語学習  #フレーズ学習${categoryTag}`, LX, CY + 100)
+
+  const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
+  ctx.fillStyle = '#b09070'
+  ctx.font = font(16)
+  ctx.fillText(appUrl, LX, H - 44)
+
+  // ── 右パネル（スコア）x: 460〜1200 ──────────────────────────
+  const RX = 830  // 右パネル テキスト中心
+
+  // スコアカード背景
+  fillRoundRect(ctx, 490, 60, W - 550, H - 120, 28)
+  ctx.fillStyle = 'rgba(255,255,255,0.72)'
+  fillRoundRect(ctx, 490, 60, W - 550, H - 120, 28)
+
+  // モチベーションテキスト
+  ctx.fillStyle = '#7a6248'
+  ctx.font = font(22)
   ctx.textAlign = 'center'
-  ctx.fillText(appUrl, W / 2, H - 36)
+  ctx.fillText(motivationText, RX, 138)
+
+  // スコア %
+  ctx.fillStyle = scoreColor
+  ctx.font = font(160, 'bold')
+  ctx.textAlign = 'center'
+  ctx.fillText(`${pct}%`, RX, 330)
+
+  // 問題数
+  ctx.fillStyle = '#7a6248'
+  ctx.font = font(28)
+  ctx.textAlign = 'center'
+  ctx.fillText(`${correct} / ${total} 問正解`, RX, 380)
+
+  // ── 内訳バッジ（3列）────────────────────────────────────────
+  const bW = 148, bH = 68, bGap = 14
+  const bTotalW = bW * 3 + bGap * 2
+  const bX0 = RX - bTotalW / 2
+
+  const badges = [
+    { label: '正解', value: correct,   bg: 'rgba(16,185,129,0.12)', fg: '#10b981' },
+    { label: '部分', value: partial,   bg: 'rgba(217,119,6,0.12)',  fg: '#d97706' },
+    { label: '誤答', value: incorrect, bg: 'rgba(239,68,68,0.12)',  fg: '#ef4444' },
+  ]
+  badges.forEach(({ label, value, bg, fg }, i) => {
+    const bx = bX0 + i * (bW + bGap)
+    ctx.fillStyle = bg
+    fillRoundRect(ctx, bx, 422, bW, bH, 14)
+    ctx.fillStyle = fg
+    ctx.font = font(32, 'bold')
+    ctx.textAlign = 'center'
+    ctx.fillText(String(value), bx + bW / 2, 458)
+    ctx.fillStyle = '#7a6248'
+    ctx.font = font(15)
+    ctx.fillText(label, bx + bW / 2, 477)
+  })
 
   return new Promise((resolve, reject) => {
     canvas.toBlob(

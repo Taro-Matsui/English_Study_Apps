@@ -43,86 +43,82 @@ export async function GET(req: NextRequest) {
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          background: '#f5f0e8',
-          padding: '48px 40px',
+          flexDirection: 'row',
+          background: 'linear-gradient(135deg, #f5f0e8 0%, #e8ddd0 100%)',
         }}
       >
-        {/* ヘッダー: アプリ名 */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 64, lineHeight: 1, marginBottom: 12 }}>🎣</div>
-          <div style={{ fontSize: 56, fontWeight: 800, color: '#4a3020', letterSpacing: '-2px', lineHeight: 1 }}>
+        {/* 左パネル: ブランディング */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: '60px 48px',
+            width: 420,
+            flexShrink: 0,
+          }}
+        >
+          <div style={{ fontSize: 60, lineHeight: 1, marginBottom: 16 }}>🎣</div>
+          <div style={{ fontSize: 68, fontWeight: 800, color: '#4a3020', lineHeight: 1, marginBottom: 12 }}>
             Reel
           </div>
-          <div style={{ fontSize: 22, color: '#8b6340', marginTop: 6 }}>
+          <div style={{ fontSize: 22, color: '#8b6340', marginBottom: 40 }}>
             実際の会話から学ぶ英語フレーズ
+          </div>
+          <div style={{ fontSize: 18, color: '#a08060', marginBottom: 10 }}>{dateStr}</div>
+          <div style={{ fontSize: 17, color: 'rgba(139,99,64,0.55)' }}>
+            #英語学習　#フレーズ学習{purposeTag ? `　${purposeTag}` : ''}
           </div>
         </div>
 
-        {/* 区切り線 */}
-        <div style={{ width: '100%', height: 1.5, background: 'rgba(139,115,85,0.25)', marginBottom: 36 }} />
+        {/* 縦区切り線 */}
+        <div style={{ width: 1.5, background: 'rgba(139,115,85,0.2)', margin: '60px 0' }} />
 
-        {/* スコアカード */}
+        {/* 右パネル: スコア */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            background: 'rgba(255,255,255,0.75)',
-            borderRadius: 28,
-            padding: '40px 60px',
-            width: '100%',
-            marginBottom: 28,
+            justifyContent: 'center',
+            flex: 1,
+            background: 'rgba(255,255,255,0.65)',
+            borderRadius: '0 0 0 0',
+            padding: '48px 40px',
           }}
         >
-          <div style={{ fontSize: 24, color: '#7a6248', marginBottom: 16 }}>{motivationText}</div>
-          <div style={{ fontSize: 120, fontWeight: 800, color: scoreColor, lineHeight: 1 }}>
+          <div style={{ fontSize: 22, color: '#7a6248', marginBottom: 8 }}>{motivationText}</div>
+          <div style={{ fontSize: 150, fontWeight: 800, color: scoreColor, lineHeight: 1, marginBottom: 12 }}>
             {pct}%
           </div>
-          <div style={{ fontSize: 30, color: '#7a6248', marginTop: 12 }}>
+          <div style={{ fontSize: 28, color: '#7a6248', marginBottom: 32 }}>
             {correct} / {total} 問正解
           </div>
-        </div>
-
-        {/* バッジ行 */}
-        <div style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
-          {[
-            { label: '正解', value: correct, bg: 'rgba(16,185,129,0.12)', fg: '#10b981' },
-            { label: '部分', value: partial,  bg: 'rgba(217,119,6,0.12)',  fg: '#d97706' },
-            { label: '誤答', value: incorrect, bg: 'rgba(239,68,68,0.12)', fg: '#ef4444' },
-          ].map(({ label, value, bg, fg }) => (
-            <div
-              key={label}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                background: bg,
-                borderRadius: 18,
-                padding: '16px 36px',
-                minWidth: 130,
-              }}
-            >
-              <div style={{ fontSize: 40, fontWeight: 800, color: fg }}>{value}</div>
-              <div style={{ fontSize: 18, color: '#7a6248' }}>{label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* 日付 */}
-        <div style={{ fontSize: 20, color: '#a08060', marginBottom: 12 }}>{dateStr}</div>
-
-        {/* ハッシュタグ */}
-        <div style={{ fontSize: 20, color: 'rgba(139,99,64,0.6)' }}>
-          #英語学習　#フレーズ学習{purposeTag ? `　${purposeTag}` : ''}
+          {/* バッジ */}
+          <div style={{ display: 'flex', gap: 14 }}>
+            {[
+              { label: '正解', value: correct,   bg: 'rgba(16,185,129,0.12)', fg: '#10b981' },
+              { label: '部分', value: partial,   bg: 'rgba(217,119,6,0.12)',  fg: '#d97706' },
+              { label: '誤答', value: incorrect, bg: 'rgba(239,68,68,0.12)',  fg: '#ef4444' },
+            ].map(({ label, value, bg, fg }) => (
+              <div
+                key={label}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  background: bg, borderRadius: 14, padding: '14px 32px', minWidth: 120,
+                }}
+              >
+                <div style={{ fontSize: 38, fontWeight: 800, color: fg }}>{value}</div>
+                <div style={{ fontSize: 16, color: '#7a6248' }}>{label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     ),
     {
-      width: 630,
-      height: 900,
+      width: 1200,
+      height: 630,
     },
   )
 }

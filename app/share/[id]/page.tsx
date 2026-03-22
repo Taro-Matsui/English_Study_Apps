@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `Reel クイズ結果 ${pct}%`,
       description: `${session.correct_count}/${session.total_questions}問正解`,
-      images: [{ url: ogUrl, width: 630, height: 900 }],
+      images: [{ url: ogUrl, width: 1200, height: 630 }],
     },
     twitter: {
       card: 'summary_large_image',
