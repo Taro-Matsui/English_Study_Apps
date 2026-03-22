@@ -96,9 +96,7 @@ function BillingContent() {
       const text = await res.text()
       let data: { url?: string; error?: string }
       try { data = JSON.parse(text) } catch { data = { error: `HTTP ${res.status}: ${text.slice(0, 200)}` } }
-      console.log('[billing] checkout response:', res.status, data)
       if (data.url) {
-        console.log('[billing] redirecting to Stripe:', data.url)
         window.location.href = data.url
       } else {
         setErrorMsg(data.error ?? 'エラーが発生しました')
