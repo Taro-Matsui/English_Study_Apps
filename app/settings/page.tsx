@@ -419,6 +419,25 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* プラン・お支払い */}
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            {ja ? 'プラン・お支払い' : 'Plan & Billing'}
+          </h2>
+          <Link
+            href="/settings/billing"
+            className="flex items-center justify-between p-4 rounded-xl border border-amber-200 bg-white hover:bg-amber-50 transition-colors"
+          >
+            <div>
+              <p className="text-sm font-medium">{ja ? 'プランを管理する' : 'Manage Plan'}</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {ja ? 'Starter・Pro にアップグレード' : 'Upgrade to Starter or Pro'}
+              </p>
+            </div>
+            <span className="text-gray-400 text-lg">›</span>
+          </Link>
+        </section>
+
         {/* サービス情報 */}
         <section className="space-y-3">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
