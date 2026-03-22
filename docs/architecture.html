@@ -5,123 +5,113 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pick — システムアーキテクチャ</title>
 <style>
-  :root {
-    --amber-50: #fdf6ec;
-    --amber-100: #fde8c8;
-    --amber-200: #fbd4a0;
-    --amber-700: #b45a09;
-    --amber-800: #92400e;
-    --emerald: #059669;
-    --slate-800: #1e293b;
-    --gray-600: #4b5563;
-    --gray-400: #9ca3af;
-    --white: #ffffff;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; background: #f8f4ee; color: #1a1a1a; line-height: 1.6; }
+:root {
+  --amber-50: #fdf6ec; --amber-100: #fde8c8; --amber-200: #fbd4a0;
+  --amber-700: #b45a09; --amber-800: #92400e;
+  --emerald: #059669; --blue: #1d4ed8; --purple: #5b21b6;
+  --slate: #1e293b; --gray-600: #4b5563; --gray-400: #9ca3af;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI','Helvetica Neue',Arial,sans-serif; background:#f8f4ee; color:#1a1a1a; line-height:1.6; font-size:14px; }
 
-  /* ヘッダー */
-  header { background: var(--amber-800); color: white; padding: 32px 48px; }
-  header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-  header .sub { font-size: 13px; color: #fde8c8; margin-top: 4px; }
-  header .badge { display: inline-block; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 3px 12px; font-size: 11px; margin-top: 10px; }
+header { background:var(--amber-800); color:white; padding:28px 48px; }
+header h1 { font-size:26px; font-weight:800; }
+header .sub { font-size:13px; color:#fde8c8; margin-top:4px; }
+header .badge { display:inline-block; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:3px 12px; font-size:11px; margin-top:8px; }
 
-  /* ナビ */
-  nav { background: var(--slate-800); padding: 0 48px; display: flex; gap: 0; overflow-x: auto; }
-  nav a { color: #94a3b8; text-decoration: none; font-size: 13px; padding: 12px 18px; white-space: nowrap; border-bottom: 2px solid transparent; transition: all .2s; }
-  nav a:hover { color: white; border-color: var(--amber-700); }
+nav { background:var(--slate); padding:0 48px; display:flex; overflow-x:auto; }
+nav a { color:#94a3b8; text-decoration:none; font-size:12px; padding:11px 16px; white-space:nowrap; border-bottom:2px solid transparent; transition:.2s; }
+nav a:hover { color:white; border-color:var(--amber-700); }
 
-  main { max-width: 1100px; margin: 0 auto; padding: 40px 48px 80px; }
+main { max-width:1100px; margin:0 auto; padding:40px 48px 80px; }
+section { margin-bottom:56px; }
+h2 { font-size:19px; font-weight:800; color:var(--amber-800); border-left:4px solid var(--amber-800); padding-left:12px; margin-bottom:20px; }
+h3 { font-size:12px; font-weight:700; color:var(--gray-600); text-transform:uppercase; letter-spacing:.06em; margin:24px 0 12px; }
 
-  /* セクション */
-  section { margin-bottom: 56px; }
-  h2 { font-size: 20px; font-weight: 700; color: var(--amber-800); border-left: 4px solid var(--amber-800); padding-left: 12px; margin-bottom: 20px; }
-  h3 { font-size: 14px; font-weight: 700; color: var(--gray-600); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; margin-top: 24px; }
+/* カード */
+.card { background:white; border:1px solid var(--amber-100); border-radius:12px; padding:20px; }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
 
-  /* カード */
-  .card { background: white; border: 1px solid var(--amber-100); border-radius: 12px; padding: 20px; }
-  .card-grid { display: grid; gap: 16px; }
-  .card-grid.col2 { grid-template-columns: 1fr 1fr; }
-  .card-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
-  .card-grid.col4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+/* スタックレイヤー */
+.layer { display:flex; border-radius:10px; overflow:hidden; border:1px solid rgba(0,0,0,.07); margin-bottom:6px; }
+.l-name { background:var(--amber-800); color:white; padding:13px 18px; font-size:11px; font-weight:700; min-width:116px; display:flex; align-items:center; justify-content:center; text-align:center; }
+.l-body { background:white; padding:13px 18px; flex:1; display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
+.tag { display:inline-block; border-radius:6px; padding:3px 9px; font-size:11px; font-weight:500; }
+.ta { background:var(--amber-50); border:1px solid var(--amber-100); color:var(--amber-800); }
+.tb { background:#eff6ff; border:1px solid #bfdbfe; color:var(--blue); }
+.tg { background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; }
+.tp { background:#f5f3ff; border:1px solid #ddd6fe; color:var(--purple); }
+.tz { background:#f9fafb; border:1px solid #e5e7eb; color:#374151; }
 
-  /* スタックレイヤー */
-  .layer { display: flex; align-items: stretch; gap: 0; margin-bottom: 6px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0,0,0,0.07); }
-  .layer-label { background: var(--amber-800); color: white; padding: 14px 20px; font-size: 12px; font-weight: 700; min-width: 120px; display: flex; align-items: center; justify-content: center; text-align: center; }
-  .layer-body { background: white; padding: 14px 20px; flex: 1; font-size: 13px; color: #374151; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-  .tag { display: inline-block; background: var(--amber-50); border: 1px solid var(--amber-100); border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 500; color: var(--amber-800); }
-  .tag.blue { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
-  .tag.green { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
-  .tag.purple { background: #f5f3ff; border-color: #ddd6fe; color: #5b21b6; }
-  .tag.gray { background: #f9fafb; border-color: #e5e7eb; color: #374151; }
-  .tag.red { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+/* テーブル */
+table { width:100%; border-collapse:collapse; font-size:12.5px; }
+th { background:var(--amber-800); color:white; padding:9px 13px; text-align:left; font-weight:600; font-size:11.5px; }
+td { padding:9px 13px; border-bottom:1px solid #f3f0eb; color:#374151; vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+tr:nth-child(even) td { background:#fdf9f4; }
+code { background:#f1f5f9; border-radius:4px; padding:1px 5px; font-size:11px; font-family:'Courier New',monospace; color:#334155; }
 
-  /* シーケンス図 */
-  .seq { display: flex; align-items: flex-start; gap: 0; }
-  .seq-actors { display: flex; gap: 0; margin-bottom: 0; }
-  .actor { background: var(--slate-800); color: white; font-size: 11px; font-weight: 700; text-align: center; padding: 8px 12px; min-width: 110px; border-right: 1px solid #334155; }
-  .actor:last-child { border-right: none; }
-  .seq-steps { width: 100%; border: 1px solid var(--amber-100); border-radius: 0 0 10px 10px; overflow: hidden; }
-  .seq-row { display: flex; border-bottom: 1px solid #f3f0eb; }
-  .seq-row:last-child { border-bottom: none; }
-  .seq-row:nth-child(even) { background: #fdf9f4; }
-  .seq-cell { min-width: 110px; padding: 10px 12px; font-size: 12px; color: #374151; border-right: 1px solid #f3f0eb; }
-  .seq-cell:last-child { border-right: none; flex: 1; }
-  .seq-cell.active { background: #fef3c7; font-weight: 600; color: var(--amber-800); }
-  .seq-cell.arrow { text-align: center; color: var(--emerald); font-weight: 700; }
-  .seq-label { font-size: 11px; color: var(--gray-400); padding: 6px 12px; background: #fdf6ec; border-bottom: 1px solid var(--amber-100); font-weight: 600; letter-spacing: .03em; }
+/* ========== シーケンス図 ========== */
+.seq-wrap { overflow-x:auto; }
+.seq { display:inline-block; min-width:100%; }
 
-  /* フロー図 */
-  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 12px 0; }
-  .flow-box { background: white; border: 1.5px solid var(--amber-200); border-radius: 10px; padding: 10px 16px; font-size: 12px; font-weight: 600; color: var(--amber-800); text-align: center; min-width: 110px; }
-  .flow-box.green { border-color: #6ee7b7; background: #ecfdf5; color: #065f46; }
-  .flow-box.blue { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
-  .flow-box.purple { border-color: #c4b5fd; background: #f5f3ff; color: #5b21b6; }
-  .flow-arrow { color: var(--gray-400); font-size: 18px; padding: 0 6px; }
+/* アクター行 */
+.seq-actors { display:flex; }
+.actor { flex:1; min-width:110px; background:var(--slate); color:white; text-align:center; padding:10px 8px; font-size:11px; font-weight:700; border-right:1px solid #334155; line-height:1.3; }
+.actor:last-child { border-right:none; }
+.actor.a-user { background:#065f46; }
+.actor.a-app  { background:var(--amber-800); }
+.actor.a-mid  { background:#4338ca; }
+.actor.a-supa { background:#1d4ed8; }
+.actor.a-ai   { background:var(--purple); }
+.actor.a-stripe { background:#0f766e; }
+.actor.a-x    { background:#111827; }
 
-  /* テーブル */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { background: var(--amber-800); color: white; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 12px; }
-  td { padding: 10px 14px; border-bottom: 1px solid #f3f0eb; color: #374151; vertical-align: top; }
-  tr:last-child td { border-bottom: none; }
-  tr:nth-child(even) td { background: #fdf9f4; }
-  code { background: #f1f5f9; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-family: 'Courier New', monospace; color: #334155; }
+/* ステップ行 */
+.seq-body { border:1px solid #e5e7eb; border-top:none; border-radius:0 0 10px 10px; overflow:hidden; }
+.seq-section { background:#fdf6ec; border-bottom:1px solid var(--amber-100); padding:5px 12px; font-size:10.5px; font-weight:700; color:var(--amber-800); letter-spacing:.04em; text-transform:uppercase; }
+.seq-row { display:flex; border-bottom:1px solid #f3f0eb; min-height:34px; }
+.seq-row:last-child { border-bottom:none; }
+.seq-row:nth-child(even) { background:#fdfaf6; }
+.seq-cell { flex:1; min-width:110px; padding:7px 10px; font-size:11.5px; color:#374151; border-right:1px solid #f0ece5; display:flex; align-items:center; }
+.seq-cell:last-child { border-right:none; }
+.seq-cell.hi  { background:#fef3c7; font-weight:600; color:var(--amber-800); }
+.seq-cell.arr { justify-content:center; color:var(--emerald); font-weight:700; font-size:14px; }
+.seq-cell.note { color:var(--gray-400); font-size:10.5px; font-style:italic; }
+.seq-cell.warn { color:#dc2626; font-size:10.5px; }
 
-  /* タイムライン */
-  .timeline { position: relative; padding-left: 28px; }
-  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--amber-200); }
-  .tl-item { position: relative; margin-bottom: 20px; }
-  .tl-dot { position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; background: var(--amber-800); border-radius: 50%; border: 2px solid var(--amber-50); }
-  .tl-title { font-size: 13px; font-weight: 700; color: var(--amber-800); }
-  .tl-body { font-size: 12px; color: var(--gray-600); margin-top: 4px; }
+/* ノート */
+.note { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:11px 15px; font-size:12px; color:#92400e; margin-top:10px; }
+.note strong { font-weight:700; }
 
-  /* 更新履歴 */
-  .changelog { display: flex; flex-direction: column; gap: 12px; }
-  .cl-item { background: white; border: 1px solid var(--amber-100); border-left: 4px solid var(--amber-800); border-radius: 0 10px 10px 0; padding: 14px 18px; }
-  .cl-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
-  .cl-tag.feat { background: #d1fae5; color: #065f46; }
-  .cl-tag.fix { background: #fee2e2; color: #991b1b; }
-  .cl-tag.chore { background: #e0e7ff; color: #3730a3; }
-  .cl-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
-  .cl-detail { font-size: 12px; color: var(--gray-600); margin-top: 6px; }
-  .cl-date { font-size: 11px; color: var(--gray-400); float: right; }
+/* 改修タイムライン */
+.cl { display:flex; flex-direction:column; gap:10px; }
+.cl-item { background:white; border:1px solid var(--amber-100); border-left:4px solid var(--amber-800); border-radius:0 10px 10px 0; padding:13px 16px; }
+.cl-tag { display:inline-block; font-size:10px; font-weight:700; padding:2px 7px; border-radius:4px; margin-bottom:5px; text-transform:uppercase; }
+.feat { background:#d1fae5; color:#065f46; }
+.fix  { background:#fee2e2; color:#991b1b; }
+.chore{ background:#e0e7ff; color:#3730a3; }
+.cl-title { font-size:13px; font-weight:700; }
+.cl-detail { font-size:12px; color:var(--gray-600); margin-top:5px; }
+.cl-date { font-size:11px; color:var(--gray-400); float:right; }
 
-  /* note */
-  .note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #92400e; margin-top: 12px; }
-  .note strong { font-weight: 700; }
+.flow { display:flex; align-items:center; flex-wrap:wrap; gap:0; margin:10px 0; }
+.fb { background:white; border:1.5px solid var(--amber-200); border-radius:10px; padding:9px 15px; font-size:12px; font-weight:600; color:var(--amber-800); text-align:center; min-width:100px; }
+.fb.g { border-color:#6ee7b7; background:#ecfdf5; color:#065f46; }
+.fb.b { border-color:#93c5fd; background:#eff6ff; color:var(--blue); }
+.fa { color:var(--gray-400); font-size:16px; padding:0 5px; }
 
-  @media (max-width: 768px) {
-    header, nav, main { padding-left: 20px; padding-right: 20px; }
-    .card-grid.col2, .card-grid.col3, .card-grid.col4 { grid-template-columns: 1fr; }
-    .seq-cell { min-width: 80px; }
-    .actor { min-width: 80px; }
-  }
+@media(max-width:768px){
+  header,nav,main { padding-left:16px; padding-right:16px; }
+  .g2,.g3 { grid-template-columns:1fr; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🎸 Pick — システムアーキテクチャ & 改修まとめ</h1>
+  <h1>🎸 Pick — システムアーキテクチャ</h1>
   <div class="sub">Architecture Overview / External Integrations / Sequence Diagrams</div>
   <div class="badge">2026-03-22 更新</div>
 </header>
@@ -129,11 +119,14 @@
 <nav>
   <a href="#changelog">改修まとめ</a>
   <a href="#stack">技術スタック</a>
-  <a href="#architecture">アーキテクチャ</a>
+  <a href="#components">構成</a>
   <a href="#integrations">外部連携</a>
-  <a href="#sequences">シーケンス</a>
+  <a href="#seq-auth">認証シーケンス</a>
+  <a href="#seq-pick">ピックシーケンス</a>
+  <a href="#seq-quiz">チャレンジシーケンス</a>
+  <a href="#seq-share">Xシェアシーケンス</a>
+  <a href="#seq-stripe">Stripeシーケンス</a>
   <a href="#security">セキュリティ</a>
-  <a href="#infra">インフラ</a>
 </nav>
 
 <main>
@@ -141,19 +134,19 @@
 <!-- ===== 改修まとめ ===== -->
 <section id="changelog">
   <h2>直近の改修まとめ</h2>
-  <div class="changelog">
+  <div class="cl">
 
     <div class="cl-item">
       <span class="cl-date">2026-03-22</span>
       <span class="cl-tag feat">feat</span>
       <div class="cl-title">Stripe サブスクリプション連携</div>
       <div class="cl-detail">
-        Free / Starter(¥500/月) / Pro(¥1,200/月) の3プラン実装。<br>
-        <code>lib/stripe.ts</code> Stripe クライアント初期化 ／
-        <code>app/api/stripe/checkout</code> Checkout Session 生成 ／
-        <code>app/api/stripe/webhook</code> Webhook 受信・Supabase DB 同期 ／
-        <code>app/api/stripe/portal</code> Customer Portal（解約・支払い変更）／
-        <code>app/settings/billing</code> プラン比較 UI ／
+        Free / Starter(¥500/月) / Pro(¥1,200/月) の3プランを実装。<br>
+        <code>lib/stripe.ts</code> クライアント初期化 /
+        <code>api/stripe/checkout</code> Checkout Session /
+        <code>api/stripe/webhook</code> DB 同期（署名検証付き）/
+        <code>api/stripe/portal</code> Customer Portal /
+        <code>app/settings/billing</code> プラン比較 UI /
         <code>supabase/migrations/015</code> subscriptions テーブル
       </div>
     </div>
@@ -161,11 +154,11 @@
     <div class="cl-item">
       <span class="cl-date">2026-03-21</span>
       <span class="cl-tag feat">feat</span>
-      <div class="cl-title">X（Twitter）シェア機能の完成</div>
+      <div class="cl-title">X（Twitter）シェア Safari 完全対応</div>
       <div class="cl-detail">
-        Canvas API で 1200×630px PNG 生成 → Supabase Storage アップロード → Twitter Cards 表示。<br>
-        Safari 対策: タブがフォアグラウンドのうちに先行アップロード完了（<code>window.open()</code> 後は suspend される）。<br>
-        絵文字 🎣→🎸 変更、キャプション「会話からフレーズをピックして学ぼう」に更新。
+        Canvas 1200×630px PNG 生成 → Supabase Storage アップロード → Twitter Cards 表示。
+        絵文字 🎣→🎸 変更。キャプション・OG 画像 API（/api/og）に pick_logo.png 追加。
+        <strong>Safari 対策:</strong> チャレンジ完了時にフォアグラウンドで先行アップロード完了済み。
       </div>
     </div>
 
@@ -174,10 +167,10 @@
       <span class="cl-tag feat">feat</span>
       <div class="cl-title">ブランド統一（Pick Brand Language v1.0）</div>
       <div class="cl-detail">
-        「英語をPickする」→「ピックする」（カタカナ統一）／ 「マイ ピック」→「マイピックリスト」／
-        「英語をピックする」→「出会いから英語をピックする」／ Pick Streak→連続日数 ／
-        チャレンジ完了メッセージ・AI 解説ラベル・BottomNav・i18n キー全面更新。<br>
-        <code>docs/brand-terminology.md</code> ブランド用語集を新規作成。
+        「英語をPickする」→「ピックする」（カタカナ統一）。「マイ ピック」→「マイピックリスト」。
+        「英語をピックする」→「出会いから英語をピックする」。
+        フィードバック: Good Pick! 🎸 / Almost! 🎸 / Let's Repick this one.
+        i18n・BottomNav・全ページテキストを更新。<code>docs/brand-terminology.md</code> 新規作成。
       </div>
     </div>
 
@@ -186,9 +179,8 @@
       <span class="cl-tag feat">feat</span>
       <div class="cl-title">PWA アイコン・ログイン画面リニューアル</div>
       <div class="cl-detail">
-        <code>app/icon.tsx</code>（edge runtime）を削除 → <code>app/icon.png</code> 静的ファイルに移行。<br>
-        ログイン画面: 👩‍💻💬👨‍💻 絵文字→ <code>pick_logo.png</code> 画像表示。<br>
-        OG 画像 API (<code>/api/og</code>) に pick_logo.png を追加・横長 1200×630 統一。
+        <code>app/icon.tsx</code>（edge runtime）→ <code>app/icon.png</code> 静的ファイルに移行。
+        ログイン画面: 絵文字 → pick_logo.png 表示に変更。
       </div>
     </div>
 
@@ -197,17 +189,8 @@
       <span class="cl-tag feat">feat</span>
       <div class="cl-title">トップページ サマリーカード追加</div>
       <div class="cl-detail">
-        マイピックリスト件数 / 連続日数 / あなたの出会い数 を3カラムで表示。<br>
-        スプラッシュ・メインヘッダーの絵文字アイコンを削除してクリーンなデザインに。
-      </div>
-    </div>
-
-    <div class="cl-item">
-      <span class="cl-date">2026-03-20</span>
-      <span class="cl-tag chore">chore</span>
-      <div class="cl-title">CLAUDE.md・Memory ファイルの全面整理</div>
-      <div class="cl-detail">
-        タイトル Reel→Pick に変更、ブランド用語セクション追加、X シェア・PWA・CSP の知見を memory に蓄積。
+        マイピックリスト件数 / 連続日数 / あなたの出会い数 を3カラムで表示。
+        スプラッシュ・メインヘッダーの絵文字を削除してクリーンなデザインに。
       </div>
     </div>
 
@@ -216,9 +199,9 @@
       <span class="cl-tag fix">fix</span>
       <div class="cl-title">Twitter Cards / OG 画像 公開パス修正</div>
       <div class="cl-detail">
-        <code>/share</code>・<code>/api/og</code> を <code>PUBLIC_PATHS</code> に追加（Twitter クローラーは未認証）。<br>
-        Railway リバースプロキシ対応: <code>x-forwarded-host</code> から正しい origin を構築。<br>
-        summary_large_image 用に 2:1 横長（1200×630）に統一。
+        <code>/share</code>・<code>/api/og</code>・<code>/api/stripe/webhook</code> を PUBLIC_PATHS に追加。
+        Railway リバースプロキシ対応: <code>x-forwarded-host</code> から正しい origin を構築。
+        summary_large_image 用に 1200×630 横長統一。
       </div>
     </div>
 
@@ -228,155 +211,89 @@
 <!-- ===== 技術スタック ===== -->
 <section id="stack">
   <h2>技術スタック</h2>
-
-  <div class="layer">
-    <div class="layer-label">フロントエンド</div>
-    <div class="layer-body">
-      <span class="tag">Next.js 14 App Router</span>
-      <span class="tag">TypeScript</span>
-      <span class="tag">Tailwind CSS</span>
-      <span class="tag">shadcn/ui</span>
-      <span class="tag">React 18</span>
-    </div>
-  </div>
-  <div class="layer">
-    <div class="layer-label">バックエンド</div>
-    <div class="layer-body">
-      <span class="tag">Next.js Route Handler</span>
-      <span class="tag">Edge Runtime (OG画像)</span>
-      <span class="tag">Canvas API (PNG生成)</span>
-    </div>
-  </div>
-  <div class="layer">
-    <div class="layer-label">AI / LLM</div>
-    <div class="layer-body">
-      <span class="tag purple">Claude Sonnet 4.6 (抽出 8192tok)</span>
-      <span class="tag purple">Claude Haiku 4.5 (採点 300tok)</span>
-      <span class="tag purple">Claude Haiku 4.5 (解説 600tok)</span>
-      <span class="tag gray">fetch 直接（SDK 不使用）</span>
-    </div>
-  </div>
-  <div class="layer">
-    <div class="layer-label">データストア</div>
-    <div class="layer-body">
-      <span class="tag blue">Supabase PostgreSQL</span>
-      <span class="tag blue">RLS (マルチユーザー)</span>
-      <span class="tag blue">Supabase Storage (share-images)</span>
-    </div>
-  </div>
-  <div class="layer">
-    <div class="layer-label">認証</div>
-    <div class="layer-body">
-      <span class="tag green">Supabase Auth</span>
-      <span class="tag green">メール+パスワード</span>
-      <span class="tag green">Google OAuth</span>
-      <span class="tag green">@supabase/ssr</span>
-    </div>
-  </div>
-  <div class="layer">
-    <div class="layer-label">決済</div>
-    <div class="layer-body">
-      <span class="tag">Stripe Checkout</span>
-      <span class="tag">Stripe Customer Portal</span>
-      <span class="tag">Stripe Webhook</span>
-    </div>
-  </div>
-  <div class="layer">
-    <div class="layer-label">インフラ</div>
-    <div class="layer-body">
-      <span class="tag gray">Railway (CI/CD)</span>
-      <span class="tag gray">master push → 自動デプロイ</span>
-    </div>
-  </div>
-  <div class="layer">
-    <div class="layer-label">計測・広告</div>
-    <div class="layer-body">
-      <span class="tag">GTM-PWNWXD23</span>
-      <span class="tag">Google AdSense ca-pub-3375981541016037</span>
-    </div>
-  </div>
+  <div class="layer"><div class="l-name">フロントエンド</div><div class="l-body"><span class="tag ta">Next.js 14 App Router</span><span class="tag ta">TypeScript</span><span class="tag ta">Tailwind CSS</span><span class="tag ta">shadcn/ui</span><span class="tag ta">React 18</span></div></div>
+  <div class="layer"><div class="l-name">バックエンド</div><div class="l-body"><span class="tag ta">Next.js Route Handler</span><span class="tag ta">Edge Runtime (OG画像)</span><span class="tag ta">Canvas API (PNG生成)</span></div></div>
+  <div class="layer"><div class="l-name">AI / LLM</div><div class="l-body"><span class="tag tp">Claude Sonnet 4.6（抽出 8192tok）</span><span class="tag tp">Claude Haiku 4.5（採点 300tok）</span><span class="tag tp">Claude Haiku 4.5（解説 600tok）</span><span class="tag tz">fetch 直接（SDK 不使用）</span></div></div>
+  <div class="layer"><div class="l-name">データストア</div><div class="l-body"><span class="tag tb">Supabase PostgreSQL</span><span class="tag tb">RLS（マルチユーザー）</span><span class="tag tb">Supabase Storage（share-images）</span></div></div>
+  <div class="layer"><div class="l-name">認証</div><div class="l-body"><span class="tag tg">Supabase Auth</span><span class="tag tg">メール＋パスワード</span><span class="tag tg">Google OAuth</span><span class="tag tg">@supabase/ssr</span></div></div>
+  <div class="layer"><div class="l-name">決済</div><div class="l-body"><span class="tag ta">Stripe Checkout</span><span class="tag ta">Stripe Customer Portal</span><span class="tag ta">Stripe Webhook</span></div></div>
+  <div class="layer"><div class="l-name">インフラ</div><div class="l-body"><span class="tag tz">Railway（master push → 自動 CI/CD）</span></div></div>
+  <div class="layer"><div class="l-name">計測・広告</div><div class="l-body"><span class="tag tz">GTM-PWNWXD23</span><span class="tag tz">Google AdSense ca-pub-3375981541016037</span></div></div>
 </section>
 
-<!-- ===== アーキテクチャ ===== -->
-<section id="architecture">
-  <h2>システム全体構成</h2>
-
-  <div class="card">
-    <h3>コンポーネント構成</h3>
+<!-- ===== 構成 ===== -->
+<section id="components">
+  <h2>コンポーネント構成</h2>
+  <div class="card" style="margin-bottom:16px">
     <table>
-      <tr><th>レイヤー</th><th>ファイル / ディレクトリ</th><th>役割</th></tr>
-      <tr><td><strong>Pages</strong></td><td><code>app/(tabs)/</code></td><td>ホーム・チャレンジ・My Picks・Progress・Sources</td></tr>
-      <tr><td><strong>Auth</strong></td><td><code>app/login/</code> <code>app/onboarding/</code> <code>app/auth/callback/</code></td><td>ログイン・オンボーディング・OAuth コールバック</td></tr>
-      <tr><td><strong>Share</strong></td><td><code>app/share/[id]/</code></td><td>公開シェアページ（Twitter Card 用、認証不要）</td></tr>
-      <tr><td><strong>API - クイズ</strong></td><td><code>app/api/quiz/</code></td><td>出題・AI採点・完了保存・AI解説</td></tr>
-      <tr><td><strong>API - ライブラリ</strong></td><td><code>app/api/admin/</code></td><td>フレーズ抽出ジョブ管理</td></tr>
+      <tr><th>レイヤー</th><th>パス</th><th>役割</th></tr>
+      <tr><td><strong>ホーム</strong></td><td><code>app/page.tsx</code></td><td>サマリーカード（マイピック件数・連続日数・出会い数）</td></tr>
+      <tr><td><strong>チャレンジ</strong></td><td><code>app/quiz/page.tsx</code></td><td>AI採点クイズ・ピックアップ チャレンジ(focus)・結果表示</td></tr>
+      <tr><td><strong>マイピックリスト</strong></td><td><code>app/phrases/page.tsx</code></td><td>ピック済みフレーズ一覧・検索・論理削除</td></tr>
+      <tr><td><strong>チャレンジ記録</strong></td><td><code>app/history/page.tsx</code></td><td>14日チャート・Accuracy・セッション履歴</td></tr>
+      <tr><td><strong>連続日数</strong></td><td><code>app/streak/page.tsx</code></td><td>カレンダー（6ヶ月）・連続日数・最長記録</td></tr>
+      <tr><td><strong>英語ピック</strong></td><td><code>app/library/import/</code></td><td>テキスト追加・AI フレーズ抽出・完了後 AdBanner</td></tr>
+      <tr><td><strong>取り込み履歴</strong></td><td><code>app/library/jobs/</code></td><td>ジョブ一覧・フレーズ確認・保存</td></tr>
+      <tr><td><strong>シェアページ</strong></td><td><code>app/share/[id]/</code></td><td>公開シェアページ（Twitter Card用・認証不要）</td></tr>
+      <tr><td><strong>認証</strong></td><td><code>app/login/ app/onboarding/ app/auth/callback/</code></td><td>Google OAuth + メール認証・初回設定</td></tr>
+      <tr><td><strong>設定</strong></td><td><code>app/settings/</code></td><td>音声・チャレンジ設定・プラン管理（/billing）</td></tr>
+      <tr><td><strong>API - チャレンジ</strong></td><td><code>app/api/quiz/</code></td><td>出題・AI採点・完了保存・AI解説</td></tr>
       <tr><td><strong>API - Stripe</strong></td><td><code>app/api/stripe/</code></td><td>checkout / webhook / portal / subscription</td></tr>
-      <tr><td><strong>API - OG</strong></td><td><code>app/api/og/</code></td><td>Edge Runtime OG 画像生成 (1200×630)</td></tr>
-      <tr><td><strong>Lib</strong></td><td><code>lib/</code></td><td>Supabase クライアント・認証・AI・i18n・Stripe・サブスク</td></tr>
-      <tr><td><strong>Components</strong></td><td><code>components/</code></td><td>BottomNav・HomeContent・WelcomeGuide・AdBanner・AnnouncementBell</td></tr>
+      <tr><td><strong>API - OG画像</strong></td><td><code>app/api/og/</code></td><td>Edge Runtime ImageResponse 1200×630</td></tr>
       <tr><td><strong>Middleware</strong></td><td><code>middleware.ts</code></td><td>セッション更新・ルート保護・オンボーディング誘導</td></tr>
     </table>
   </div>
 
   <h3>DB スキーマ（主要テーブル）</h3>
-  <table>
-    <tr><th>テーブル</th><th>主要カラム</th><th>備考</th></tr>
-    <tr><td><code>phrases</code></td><td>user_id, phrase, translation, explanation, deleted_at, added_date</td><td>論理削除。<code>.is('deleted_at', null)</code> 必須</td></tr>
-    <tr><td><code>quiz_sessions</code></td><td>user_id, started_at</td><td>チャレンジセッション単位</td></tr>
-    <tr><td><code>quiz_answers</code></td><td>session_id, phrase_id, status, response_time_ms</td><td>status: correct / partial / incorrect</td></tr>
-    <tr><td><code>import_jobs</code></td><td>user_id, status, source_type, text</td><td>フレーズ抽出ジョブ</td></tr>
-    <tr><td><code>subscriptions</code></td><td>user_id, stripe_subscription_id, stripe_customer_id, plan, status, current_period_end</td><td>migration 015。Webhook 経由で更新</td></tr>
-  </table>
-
-  <div class="note">
-    <strong>Supabase クライアント使い分け:</strong>
-    Route Handler DB 操作 → <code>getSupabaseAdmin()</code>（SERVICE_ROLE） + <code>.eq('user_id', user.id)</code> 必須。
-    Client Component → <code>createBrowserSupabaseClient()</code>（シングルトン）。
-    ANON key での Route Handler DB 操作は <code>auth.uid()</code> が null になりデータ 0 件になるため禁止。
+  <div class="card">
+    <table>
+      <tr><th>テーブル</th><th>主要カラム</th><th>備考</th></tr>
+      <tr><td><code>phrases</code></td><td>user_id, phrase, translation, explanation, deleted_at, added_date</td><td>論理削除。<code>.is('deleted_at', null)</code> 必須</td></tr>
+      <tr><td><code>quiz_sessions</code></td><td>user_id, started_at</td><td>チャレンジセッション単位</td></tr>
+      <tr><td><code>quiz_answers</code></td><td>session_id, phrase_id, status, response_time_ms</td><td>correct / partial / incorrect</td></tr>
+      <tr><td><code>import_jobs</code></td><td>user_id, status, source_type, text</td><td>フレーズ抽出ジョブ</td></tr>
+      <tr><td><code>subscriptions</code></td><td>user_id, stripe_subscription_id, stripe_customer_id, plan, status, current_period_end</td><td>migration 015。Webhook 経由で更新</td></tr>
+    </table>
   </div>
 </section>
 
 <!-- ===== 外部連携 ===== -->
 <section id="integrations">
   <h2>外部連携</h2>
-
-  <div class="card-grid col2">
-
+  <div class="g2">
     <div class="card">
       <h3>🤖 Claude API（Anthropic）</h3>
       <table>
         <tr><th>用途</th><th>モデル</th><th>max_tokens</th></tr>
         <tr><td>フレーズ抽出</td><td>claude-sonnet-4-6</td><td>8192</td></tr>
         <tr><td>AI 採点</td><td>claude-haiku-4-5</td><td>300</td></tr>
-        <tr><td>AI 解説</td><td>claude-haiku-4-5</td><td>600</td></tr>
+        <tr><td>AI 解説（Coach）</td><td>claude-haiku-4-5</td><td>600</td></tr>
       </table>
-      <div class="note" style="margin-top:10px"><strong>注:</strong> SDK 不使用・fetch 直接呼び出し（Railway での接続問題回避）</div>
+      <div class="note" style="margin-top:10px">SDK 不使用・fetch 直接呼び出し（Railway 接続問題回避）</div>
     </div>
-
     <div class="card">
       <h3>💳 Stripe</h3>
       <table>
         <tr><th>機能</th><th>エンドポイント</th></tr>
         <tr><td>Checkout Session 生成</td><td>POST /api/stripe/checkout</td></tr>
         <tr><td>Customer Portal</td><td>POST /api/stripe/portal</td></tr>
-        <tr><td>Webhook 受信</td><td>POST /api/stripe/webhook</td></tr>
-        <tr><td>サブスク取得</td><td>GET /api/stripe/subscription</td></tr>
+        <tr><td>Webhook 受信・DB 同期</td><td>POST /api/stripe/webhook</td></tr>
+        <tr><td>サブスク情報取得</td><td>GET /api/stripe/subscription</td></tr>
       </table>
-      <div class="note" style="margin-top:10px">
-        <strong>Webhook イベント:</strong> checkout.session.completed / customer.subscription.updated / customer.subscription.deleted / invoice.payment_failed
-      </div>
     </div>
-
     <div class="card">
       <h3>🗄️ Supabase</h3>
       <table>
         <tr><th>機能</th><th>詳細</th></tr>
         <tr><td>PostgreSQL</td><td>RLS によるマルチユーザー分離</td></tr>
-        <tr><td>Auth</td><td>メール / Google OAuth / セッション管理</td></tr>
+        <tr><td>Auth</td><td>メール / Google OAuth</td></tr>
         <tr><td>Storage</td><td>share-images バケット（Public）Twitter Card 用 PNG</td></tr>
       </table>
+      <div class="note" style="margin-top:10px">
+        Route Handler: <code>getSupabaseAdmin()</code>（SERVICE_ROLE）+ <code>.eq('user_id', user.id)</code> 必須<br>
+        Client: <code>createBrowserSupabaseClient()</code>（シングルトン）
+      </div>
     </div>
-
     <div class="card">
       <h3>𝕏 Twitter / X</h3>
       <table>
@@ -384,165 +301,590 @@
         <tr><td>OG 画像</td><td>1200×630px、summary_large_image</td></tr>
         <tr><td>Storage URL</td><td>セッション1日以内: Storage PNG</td></tr>
         <tr><td>Fallback</td><td>1日超: /api/og（Edge ImageResponse）</td></tr>
-        <tr><td>Public paths</td><td>/share, /api/og をミドルウェア認証除外</td></tr>
+        <tr><td>Public paths</td><td>/share, /api/og を認証除外</td></tr>
       </table>
     </div>
-
-    <div class="card">
-      <h3>📊 Google（GTM / AdSense）</h3>
-      <table>
-        <tr><th>サービス</th><th>ID / 設定</th></tr>
-        <tr><td>GTM</td><td>GTM-PWNWXD23</td></tr>
-        <tr><td>AdSense</td><td>ca-pub-3375981541016037</td></tr>
-        <tr><td>広告スロット（クイズ）</td><td>7170940471</td></tr>
-        <tr><td>広告スロット（インポート）</td><td>6300711931</td></tr>
-      </table>
-      <div class="note" style="margin-top:10px">自動広告 OFF。手動配置のみ（AdBanner コンポーネント）</div>
-    </div>
-
-    <div class="card">
-      <h3>🚂 Railway</h3>
-      <table>
-        <tr><th>項目</th><th>詳細</th></tr>
-        <tr><td>デプロイ</td><td>master push → 自動 CI/CD</td></tr>
-        <tr><td>URL</td><td>englishstudyapps-production.up.railway.app</td></tr>
-        <tr><td>プロキシ</td><td>x-forwarded-host / x-forwarded-proto で origin 構築</td></tr>
-        <tr><td>Cron</td><td>/api/share/cleanup（1日超 Storage 削除）推奨</td></tr>
-      </table>
-    </div>
-
   </div>
 
   <h3>環境変数一覧</h3>
-  <table>
-    <tr><th>変数名</th><th>用途</th><th>公開範囲</th></tr>
-    <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code></td><td>Supabase プロジェクト URL</td><td>公開</td></tr>
-    <tr><td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td><td>Supabase Anon キー</td><td>公開</td></tr>
-    <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Route Handler DB 操作（全権限）</td><td>サーバーのみ</td></tr>
-    <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Claude API 呼び出し</td><td>サーバーのみ</td></tr>
-    <tr><td><code>STRIPE_SECRET_KEY</code></td><td>Stripe API（sk_test_ or sk_live_）</td><td>サーバーのみ</td></tr>
-    <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td>Webhook 署名検証</td><td>サーバーのみ</td></tr>
-    <tr><td><code>STRIPE_PRICE_STARTER</code></td><td>Starter プランの Price ID</td><td>サーバーのみ</td></tr>
-    <tr><td><code>STRIPE_PRICE_PRO</code></td><td>Pro プランの Price ID</td><td>サーバーのみ</td></tr>
-    <tr><td><code>NEXT_PUBLIC_ADSENSE_SLOT_QUIZ</code></td><td>AdSense スロット（クイズ）</td><td>公開</td></tr>
-    <tr><td><code>NEXT_PUBLIC_ADSENSE_SLOT_IMPORT</code></td><td>AdSense スロット（インポート）</td><td>公開</td></tr>
-  </table>
+  <div class="card">
+    <table>
+      <tr><th>変数名</th><th>用途</th><th>公開</th></tr>
+      <tr><td><code>NEXT_PUBLIC_SUPABASE_URL</code></td><td>Supabase プロジェクト URL</td><td>✓</td></tr>
+      <tr><td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td><td>Supabase Anon キー</td><td>✓</td></tr>
+      <tr><td><code>SUPABASE_SERVICE_ROLE_KEY</code></td><td>Route Handler DB 操作（全権限）</td><td>—</td></tr>
+      <tr><td><code>ANTHROPIC_API_KEY</code></td><td>Claude API 呼び出し</td><td>—</td></tr>
+      <tr><td><code>STRIPE_SECRET_KEY</code></td><td>Stripe API（sk_test_ or sk_live_）</td><td>—</td></tr>
+      <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td>Webhook 署名検証</td><td>—</td></tr>
+      <tr><td><code>STRIPE_PRICE_STARTER</code></td><td>Starter プランの Price ID（price_xxx）</td><td>—</td></tr>
+      <tr><td><code>STRIPE_PRICE_PRO</code></td><td>Pro プランの Price ID（price_xxx）</td><td>—</td></tr>
+    </table>
+  </div>
 </section>
 
-<!-- ===== シーケンス図 ===== -->
-<section id="sequences">
-  <h2>シーケンス図</h2>
+<!-- ===== シーケンス: 認証 ===== -->
+<section id="seq-auth">
+  <h2>シーケンス図 ① — 認証フロー</h2>
 
-  <!-- 認証フロー -->
-  <h3>① 認証フロー</h3>
-  <div class="seq-actors">
-    <div class="actor">User</div>
-    <div class="actor">Browser</div>
-    <div class="actor">Middleware</div>
-    <div class="actor">Supabase Auth</div>
-    <div class="actor">DB</div>
-  </div>
-  <div class="seq-steps">
-    <div class="seq-label">新規登録 / ログイン</div>
-    <div class="seq-row"><div class="seq-cell active">メール入力</div><div class="seq-cell arrow">→</div><div class="seq-cell">/login</div><div class="seq-cell"></div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell">signUp()</div><div class="seq-cell"></div><div class="seq-cell active">確認メール送信</div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell active">メールクリック</div><div class="seq-cell arrow">→</div><div class="seq-cell">/auth/callback</div><div class="seq-cell">exchangeCodeForSession()</div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell active">onboarding_complete チェック</div><div class="seq-cell"></div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell arrow">→ /onboarding</div><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell">updateUserById(metadata)</div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell">refreshSession()</div><div class="seq-cell"></div><div class="seq-cell active">JWT 更新</div><div class="seq-cell">シードフレーズ INSERT</div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell arrow">→ /</div><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell"></div></div>
+  <h3>メール＋パスワード 新規登録</h3>
+  <div class="seq-wrap"><div class="seq">
+    <div class="seq-actors">
+      <div class="actor a-user">User<br>（ブラウザ）</div>
+      <div class="actor a-app">/login<br>ページ</div>
+      <div class="actor a-mid">Middleware</div>
+      <div class="actor a-supa">Supabase<br>Auth</div>
+      <div class="actor a-supa">Supabase<br>DB</div>
+    </div>
+    <div class="seq-body">
+      <div class="seq-section">メール認証フロー</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">メールアドレス<br>パスワードを入力</div>
+        <div class="seq-cell arr">→</div>
+        <div class="seq-cell">signUp() を呼び出す</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">確認メール送信</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">メール内リンクをクリック</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell arr">→ /auth/callback?code=xxx</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">exchangeCodeForSession()</div>
+        <div class="seq-cell hi">セッション発行・Cookie 設定</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">onboarding_complete チェック</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell arr">→ /onboarding</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">目的・レベル・英語力<br>チェックに回答</div>
+        <div class="seq-cell">POST /api/user/onboarding</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">updateUserById()<br>（user_metadata 更新）</div>
+        <div class="seq-cell">シードフレーズ INSERT</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">refreshSession() を await</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">JWT 更新（metadata 反映）</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">ホーム画面へ</div>
+        <div class="seq-cell arr">→ /</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">WelcomeGuide 表示<br>（初回のみ）</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell note">localStorage:<br>welcome_seen_{user.id}</div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="note" style="margin-top:14px">
+    <strong>⚠️ JWT 更新の注意点:</strong>
+    <code>admin.updateUserById</code> で user_metadata を更新しても、クライアントの JWT は即座に更新されない。
+    オンボーディング保存後は <code>await createBrowserSupabaseClient().auth.refreshSession()</code> が必須。
+    これを省くと古い metadata が返り、オンボーディング完了フラグが反映されない。
   </div>
 
-  <br>
-
-  <!-- フレーズ抽出フロー -->
-  <h3>② フレーズ抽出（ピック）フロー</h3>
-  <div class="seq-actors">
-    <div class="actor">User</div>
-    <div class="actor">App</div>
-    <div class="actor">Route Handler</div>
-    <div class="actor">Claude Sonnet</div>
-    <div class="actor">Supabase DB</div>
-  </div>
-  <div class="seq-steps">
-    <div class="seq-label">Add a Source → フレーズ抽出</div>
-    <div class="seq-row"><div class="seq-cell active">テキスト貼付け</div><div class="seq-cell arrow">→</div><div class="seq-cell">POST /api/admin/import</div><div class="seq-cell"></div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell active">ジョブ作成</div><div class="seq-cell"></div><div class="seq-cell">import_jobs INSERT</div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell">extract-phrases.ts</div><div class="seq-cell active">JSON フレーズ抽出 (8192tok)</div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell active">3段階 JSON 部分回復</div><div class="seq-cell"></div><div class="seq-cell">phrases INSERT</div></div>
-    <div class="seq-row"><div class="seq-cell active">完了確認</div><div class="seq-cell">GET /api/admin/jobs/[id]</div><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell">ジョブ STATUS 確認</div></div>
-  </div>
-
-  <br>
-
-  <!-- チャレンジフロー -->
-  <h3>③ チャレンジ（AI採点）フロー</h3>
-  <div class="seq-actors">
-    <div class="actor">User</div>
-    <div class="actor">App</div>
-    <div class="actor">Quiz API</div>
-    <div class="actor">Claude Haiku</div>
-    <div class="actor">Supabase DB</div>
-  </div>
-  <div class="seq-steps">
-    <div class="seq-label">チャレンジ回答 → 採点 → 解説</div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell">GET /api/quiz</div><div class="seq-cell active">新規優先 3層ソート</div><div class="seq-cell"></div><div class="seq-cell">phrases SELECT</div></div>
-    <div class="seq-row"><div class="seq-cell active">回答入力</div><div class="seq-cell arrow">→</div><div class="seq-cell">POST /api/quiz/judge</div><div class="seq-cell active">correct/partial/incorrect 判定 (300tok)</div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell active">結果表示</div><div class="seq-cell">response_time_ms 保存</div><div class="seq-cell"></div><div class="seq-cell">quiz_answers INSERT</div></div>
-    <div class="seq-row"><div class="seq-cell active">解説ボタン or 自動</div><div class="seq-cell">POST /api/quiz/explain</div><div class="seq-cell"></div><div class="seq-cell active">4セクション解説 (600tok)</div><div class="seq-cell">explanation キャッシュ保存</div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell">POST /api/quiz/complete</div><div class="seq-cell active">session_id 発行</div><div class="seq-cell"></div><div class="seq-cell">quiz_sessions INSERT</div></div>
-  </div>
-
-  <br>
-
-  <!-- X シェアフロー -->
-  <h3>④ X（Twitter）シェアフロー（Safari 対応）</h3>
-  <div class="seq-actors">
-    <div class="actor">User</div>
-    <div class="actor">App (FG)</div>
-    <div class="actor">Canvas API</div>
-    <div class="actor">Supabase Storage</div>
-    <div class="actor">Twitter</div>
-  </div>
-  <div class="seq-steps">
-    <div class="seq-label">チャレンジ完了 → X シェア</div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell active">完了直後に即時起動</div><div class="seq-cell">generateQuizResultImage()</div><div class="seq-cell"></div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell active">1200×630px PNG 生成</div><div class="seq-cell">uploadShareImage(blob)</div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell active">シェアボタン押下</div><div class="seq-cell">window.open() 同期呼び出し</div><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell active">ツイート画面</div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell">⚠️ Safari: タブ suspend</div><div class="seq-cell"></div><div class="seq-cell">✅ アップロード済み</div><div class="seq-cell">og:image クロール → Card 表示</div></div>
-  </div>
+  <h3 style="margin-top:28px">Google OAuth ログイン</h3>
+  <div class="seq-wrap"><div class="seq">
+    <div class="seq-actors">
+      <div class="actor a-user">User<br>（ブラウザ）</div>
+      <div class="actor a-app">/login<br>ページ</div>
+      <div class="actor a-supa">Supabase<br>Auth</div>
+      <div class="actor a-mid">Google<br>OAuth 2.0</div>
+      <div class="actor a-mid">Middleware</div>
+    </div>
+    <div class="seq-body">
+      <div class="seq-section">Google OAuth フロー</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">「Google でログイン」<br>ボタンをクリック</div>
+        <div class="seq-cell arr">→</div>
+        <div class="seq-cell">signInWithOAuth({<br>provider: 'google',<br>redirectTo: /auth/callback })</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">Google 認証 URL を生成</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">Google アカウント選択<br>アクセス許可</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">認証コード発行<br>→ /auth/callback へリダイレクト</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">exchangeCodeForSession()<br>Cookie 発行</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">onboarding_complete チェック<br>→ 未完了: /onboarding<br>→ 完了: /</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell note" colspan="5">初回ログイン時はオンボーディングへ。2回目以降はホームへ直接遷移。</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+    </div>
+  </div></div>
   <div class="note">
-    <strong>Safari 制約対応:</strong>
-    ① <code>await</code> を挟むと <code>window.open()</code> がポップアップブロックされる → 同期呼び出し必須。
-    ② <code>window.open()</code> 後は Safari がタブを suspend → アップロードは完了ボタン前（フォアグラウンド中）に実行。
+    <strong>PUBLIC_PATHS:</strong>
+    /login / /auth/callback / /share / /api/og / /api/stripe/webhook / /privacy / /terms / /about / /contact
+    — これ以外は未認証でアクセスすると /login にリダイレクト。
+    Stripe webhook は Stripe サーバーから呼ばれるため PUBLIC_PATHS に含める必須。
+  </div>
+</section>
+
+<!-- ===== シーケンス: ピック ===== -->
+<section id="seq-pick">
+  <h2>シーケンス図 ② — フレーズ抽出（ピック）フロー</h2>
+
+  <div class="seq-wrap"><div class="seq">
+    <div class="seq-actors">
+      <div class="actor a-user">User</div>
+      <div class="actor a-app">英語ピック<br>(/library/import)</div>
+      <div class="actor a-mid">Route Handler<br>/api/admin/import</div>
+      <div class="actor a-ai">Claude<br>Sonnet 4.6</div>
+      <div class="actor a-supa">Supabase<br>DB</div>
+    </div>
+    <div class="seq-body">
+      <div class="seq-section">テキスト追加 → フレーズ自動抽出</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">議事録・字幕・記事など<br>テキストを貼り付け</div>
+        <div class="seq-cell">「出会いから英語をピックする →」ボタン</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell arr">→</div>
+        <div class="seq-cell hi">POST /api/admin/import<br>入力長・allowlist バリデーション<br>（2MB / 20万文字）</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">ジョブ作成・返却</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">import_jobs INSERT<br>(status: processing)</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">extract-phrases.ts<br>ユーザー目的別プロンプト構築<br>（study_purpose / subcategory）</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell arr">→</div>
+        <div class="seq-cell hi">フレーズ抽出<br>（JSON 形式）<br>max_tokens: 8192</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">3段階 JSON 部分回復<br>① JSON.parse()<br>② 改行サニタイズ<br>③ ブレース数えフォールバック</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">phrases INSERT<br>import_jobs UPDATE<br>(status: done)</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">「取り込み完了を確認する →」</div>
+        <div class="seq-cell">GET /api/admin/jobs/[id]</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">ジョブ STATUS 確認</div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ===== シーケンス: チャレンジ ===== -->
+<section id="seq-quiz">
+  <h2>シーケンス図 ③ — チャレンジ（AI採点）フロー</h2>
+
+  <div class="seq-wrap"><div class="seq">
+    <div class="seq-actors">
+      <div class="actor a-user">User</div>
+      <div class="actor a-app">チャレンジ<br>(/quiz)</div>
+      <div class="actor a-mid">Quiz API<br>/api/quiz</div>
+      <div class="actor a-ai">Claude<br>Haiku 4.5</div>
+      <div class="actor a-supa">Supabase<br>DB</div>
+    </div>
+    <div class="seq-body">
+      <div class="seq-section">① フレーズ出題</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">チャレンジ開始</div>
+        <div class="seq-cell">GET /api/quiz?mode=normal</div>
+        <div class="seq-cell hi">3層ソート:<br>① 直近7日の新規フレーズ優先<br>② 通常フレーズ<br>③ quickMastered を末尾へ</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">phrases SELECT<br>(.is('deleted_at', null))</div>
+      </div>
+
+      <div class="seq-section">② AI 採点</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">日本語で意味を入力<br>「判定する」ボタン</div>
+        <div class="seq-cell">POST /api/quiz/judge<br>回答時間計測開始</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell arr">→</div>
+        <div class="seq-cell hi">correct / partial / incorrect<br>3段階判定 (300tok)</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">Good Pick! 🎸<br>Almost! 🎸<br>Let's Repick this one.</div>
+        <div class="seq-cell">response_time_ms 記録</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">quiz_answers INSERT<br>(status, response_time_ms)</div>
+      </div>
+
+      <div class="seq-section">③ AI Coach 解説（不正解・惜しい時は自動、正解時は任意）</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">（自動 or ボタン）</div>
+        <div class="seq-cell">POST /api/quiz/explain</div>
+        <div class="seq-cell hi">DB キャッシュ確認<br>（explanation カラム）</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">キャッシュ未存在時のみ</div>
+        <div class="seq-cell hi">4セクション解説<br>話す/聴く/使い分け<br>NG パターン (600tok)</div>
+        <div class="seq-cell">explanation UPDATE<br>（次回から再利用）</div>
+      </div>
+
+      <div class="seq-section">④ スキップ機能（AI 採点不要時）</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">「スキップして<br>次のフレーズへ」</div>
+        <div class="seq-cell">incorrect として即記録</div>
+        <div class="seq-cell">AI 採点スキップ</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">quiz_answers INSERT<br>(status: incorrect)</div>
+      </div>
+
+      <div class="seq-section">⑤ チャレンジ完了</div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell">POST /api/quiz/complete</div>
+        <div class="seq-cell hi">session_id 発行</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">quiz_sessions INSERT</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">即時: Canvas PNG 生成<br>→ Storage アップロード<br>（FG のうちに完了）</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">Supabase Storage<br>share-images/{session_id}.png</div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="note">
+    <strong>quickMastered とは:</strong>
+    直近10セッションで3回以上・回答時間 3500ms 未満で正解したフレーズ。
+    出題リストの末尾に降格（新鮮なフレーズを優先）。response_time_ms で判定。
   </div>
 
-  <br>
+  <h3 style="margin-top:24px">ピックアップ チャレンジ（苦手復習モード）</h3>
+  <div class="seq-wrap"><div class="seq">
+    <div class="seq-actors">
+      <div class="actor a-user">User</div>
+      <div class="actor a-app">チャレンジ<br>(/quiz)</div>
+      <div class="actor a-mid">Quiz API<br>mode=focus</div>
+      <div class="actor a-supa">Supabase<br>DB</div>
+      <div class="actor a-ai">フォールバック</div>
+    </div>
+    <div class="seq-body">
+      <div class="seq-section">苦手フレーズ優先出題</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">「ピックアップ<br>チャレンジ」を選択</div>
+        <div class="seq-cell">GET /api/quiz?mode=focus</div>
+        <div class="seq-cell hi">直近5セッションで<br>2回以上不正解を<br>優先抽出</div>
+        <div class="seq-cell">quiz_answers 集計</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell warn">対象フレーズ不足時</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">通常チャレンジに<br>自動フォールバック</div>
+      </div>
+    </div>
+  </div></div>
+</section>
 
-  <!-- Stripe フロー -->
-  <h3>⑤ Stripe サブスクリプションフロー</h3>
-  <div class="seq-actors">
-    <div class="actor">User</div>
-    <div class="actor">App</div>
-    <div class="actor">Stripe API</div>
-    <div class="actor">Webhook</div>
-    <div class="actor">Supabase DB</div>
+<!-- ===== シーケンス: X シェア ===== -->
+<section id="seq-share">
+  <h2>シーケンス図 ④ — X（Twitter）シェアフロー</h2>
+
+  <div class="seq-wrap"><div class="seq">
+    <div class="seq-actors">
+      <div class="actor a-user">User</div>
+      <div class="actor a-app">チャレンジ完了画面<br>（FG タブ）</div>
+      <div class="actor a-mid">Canvas API<br>lib/share-image.ts</div>
+      <div class="actor a-supa">Supabase<br>Storage</div>
+      <div class="actor a-x">X / Twitter</div>
+    </div>
+    <div class="seq-body">
+      <div class="seq-section">① 完了直後（シェアボタン押下前・FG 中）</div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">完了 API レスポンス受信<br>session_id 取得</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell">generateQuizResultImage()<br>を非同期で即起動</div>
+        <div class="seq-cell hi">スコア・ブランディング<br>2カラム 1200×630px<br>PNG Blob 生成<br>（絵文字🎸 含む）</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">uploadShareImage(blob, session_id)</div>
+        <div class="seq-cell hi">{session_id}.png を<br>share-images バケットに保存<br>（Public 読み取り）</div>
+        <div class="seq-cell"></div>
+      </div>
+
+      <div class="seq-section">② シェアボタン押下（同期で window.open）</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">「𝕏 シェア」ボタン<br>クリック</div>
+        <div class="seq-cell hi">window.open(twitter_url)<br>← await なし・同期呼び出し必須</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell warn">⚠️ Safari: タブ suspend<br>バックグラウンド処理 kill</div>
+        <div class="seq-cell note">✅ 既にアップロード完了済み<br>→ 問題なし</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">ツイート画面表示</div>
+      </div>
+
+      <div class="seq-section">③ Twitter クローラーが og:image を取得</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">ツイート投稿</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">GET /share/{session_id}<br>クロール</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">generateMetadata()<br>og:image を返す</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">セッション1日以内:<br>Storage PNG URL</div>
+        <div class="seq-cell hi">Twitter Card に<br>スコア画像表示</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell note">1日超の場合</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell note">/api/og?pct=...&amp;correct=...&amp;total=...<br>（Edge ImageResponse フォールバック）</div>
+        <div class="seq-cell"></div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="note">
+    <strong>Safari ポップアップブロック対策:</strong>
+    <code>await</code> を挟むと Safari がポップアップをブロックする。
+    <code>window.open()</code> は必ず click ハンドラ内で同期的に呼ぶこと。<br>
+    <strong>Twitter Cards 要件:</strong> summary_large_image は 2:1 横長（1200×630）必須。縦長は表示されない。
   </div>
-  <div class="seq-steps">
-    <div class="seq-label">プランアップグレード</div>
-    <div class="seq-row"><div class="seq-cell active">アップグレードボタン</div><div class="seq-cell">POST /api/stripe/checkout</div><div class="seq-cell active">Checkout Session 生成</div><div class="seq-cell"></div><div class="seq-cell">stripe_customer_id 確認</div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell">window.location.href = url</div><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell active">テストカードで決済</div><div class="seq-cell"></div><div class="seq-cell active">決済処理</div><div class="seq-cell"></div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell">→ /settings/billing?success=true</div><div class="seq-cell">checkout.session.completed イベント発火</div><div class="seq-cell active">POST /api/stripe/webhook</div><div class="seq-cell"></div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell active">署名検証 + プラン更新</div><div class="seq-cell">subscriptions UPSERT</div></div>
-    <div class="seq-row"><div class="seq-cell"></div><div class="seq-cell active">プラン反映確認</div><div class="seq-cell"></div><div class="seq-cell"></div><div class="seq-cell">GET /api/stripe/subscription</div></div>
+</section>
+
+<!-- ===== シーケンス: Stripe ===== -->
+<section id="seq-stripe">
+  <h2>シーケンス図 ⑤ — Stripe サブスクリプションフロー</h2>
+
+  <div class="seq-wrap"><div class="seq">
+    <div class="seq-actors">
+      <div class="actor a-user">User</div>
+      <div class="actor a-app">/settings/billing</div>
+      <div class="actor a-mid">Checkout API<br>/api/stripe/checkout</div>
+      <div class="actor a-stripe">Stripe</div>
+      <div class="actor a-mid">Webhook API<br>/api/stripe/webhook</div>
+      <div class="actor a-supa">Supabase<br>DB</div>
+    </div>
+    <div class="seq-body">
+      <div class="seq-section">① プランアップグレード</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">「Starter に<br>アップグレード」<br>ボタンをクリック</div>
+        <div class="seq-cell">POST /api/stripe/checkout<br>{ priceKey: 'starter' }</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">allowlist 検証<br>priceKey → price_xxx に変換<br>既存 customer_id 確認</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">subscriptions SELECT<br>(stripe_customer_id)</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">customers.create()</div>
+        <div class="seq-cell hi">Stripe Customer 作成<br>（初回のみ）</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">checkout.sessions.create()</div>
+        <div class="seq-cell hi">Checkout URL 生成<br>locale: 'ja'</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">Stripe 決済画面へ<br>window.location.href</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">カード情報入力<br>テスト: 4242 4242 4242 4242</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+
+      <div class="seq-section">② Webhook → DB 同期（決済完了後）</div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">checkout.session.completed<br>イベント発火</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">POST /api/stripe/webhook</div>
+        <div class="seq-cell hi">署名検証<br>（constructEvent）</div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">subscriptions.retrieve()</div>
+        <div class="seq-cell hi">subscriptions UPSERT<br>(plan, status,<br>current_period_end)</div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">→ /settings/billing<br>?success=true</div>
+        <div class="seq-cell hi">GET /api/stripe/subscription<br>プラン表示更新</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell">subscriptions SELECT</div>
+      </div>
+
+      <div class="seq-section">③ 解約・プラン変更（Customer Portal）</div>
+      <div class="seq-row">
+        <div class="seq-cell hi">「支払い方法・<br>解約の管理」</div>
+        <div class="seq-cell">POST /api/stripe/portal</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">Portal URL 生成</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+      </div>
+      <div class="seq-row">
+        <div class="seq-cell hi">ポータルで操作</div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell"></div>
+        <div class="seq-cell hi">subscription.updated<br>or .deleted イベント発火</div>
+        <div class="seq-cell">subscriptions UPDATE<br>(plan, status)</div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="note">
+    <strong>Webhook イベント一覧:</strong>
+    checkout.session.completed（決済完了・プラン有効化）/
+    customer.subscription.updated（プラン変更）/
+    customer.subscription.deleted（解約）/
+    invoice.payment_failed（支払い失敗 → status: past_due）
   </div>
 </section>
 
 <!-- ===== セキュリティ ===== -->
 <section id="security">
   <h2>セキュリティ設計</h2>
-  <div class="card-grid col2">
+  <div class="g2">
     <div class="card">
       <h3>入力バリデーション</h3>
       <table>
@@ -559,53 +901,12 @@
       <h3>その他対策</h3>
       <table>
         <tr><th>対策</th><th>内容</th></tr>
-        <tr><td>allowlist</td><td>source_type / study_purpose / study_level</td></tr>
+        <tr><td>allowlist</td><td>source_type / study_purpose / study_level / Stripe priceKey</td></tr>
         <tr><td>PostgREST インジェクション</td><td>.or() 文字列から特殊文字除去</td></tr>
-        <tr><td>SSRF</td><td>import URL のプライベート IP 拒否</td></tr>
+        <tr><td>SSRF</td><td>import URL のプライベート IP 拒否（isAllowedHost）</td></tr>
         <tr><td>Stripe Webhook</td><td>署名検証（constructEvent）必須</td></tr>
-        <tr><td>RLS</td><td>全テーブル user_id = auth.uid() 強制</td></tr>
-        <tr><td>CSP / HSTS</td><td>next.config.mjs に明示的に設定</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <h3>PUBLIC_PATHS（認証不要）</h3>
-  <div class="flow">
-    <div class="flow-box">/login</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/auth/callback</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/share</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/api/og</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/api/stripe/webhook</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/privacy</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/terms</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/about</div><div class="flow-arrow">·</div>
-    <div class="flow-box">/contact</div>
-  </div>
-</section>
-
-<!-- ===== インフラ ===== -->
-<section id="infra">
-  <h2>インフラ・デプロイ</h2>
-  <div class="card-grid col2">
-    <div class="card">
-      <h3>デプロイフロー</h3>
-      <div class="flow" style="flex-direction:column; align-items:flex-start; gap:8px;">
-        <div class="flow-box blue" style="width:100%">① コード変更・実装</div>
-        <div class="flow-arrow" style="padding: 0 0 0 20px">↓</div>
-        <div class="flow-box" style="width:100%">② npm run build（型エラー確認）</div>
-        <div class="flow-arrow" style="padding: 0 0 0 20px">↓</div>
-        <div class="flow-box" style="width:100%">③ git push origin master</div>
-        <div class="flow-arrow" style="padding: 0 0 0 20px">↓</div>
-        <div class="flow-box green" style="width:100%">④ Railway 自動ビルド・デプロイ</div>
-      </div>
-    </div>
-    <div class="card">
-      <h3>マイグレーション状況</h3>
-      <table>
-        <tr><th>番号</th><th>内容</th><th>状態</th></tr>
-        <tr><td>001〜013</td><td>基本テーブル・インデックス・RLS</td><td>✅ 適用済み</td></tr>
-        <tr><td>014</td><td>share-images Storage バケット</td><td>✅ 適用済み</td></tr>
-        <tr><td>015</td><td>subscriptions テーブル（Stripe）</td><td>✅ 適用済み</td></tr>
+        <tr><td>Supabase RLS</td><td>全テーブル user_id = auth.uid() 強制</td></tr>
+        <tr><td>CSP / HSTS</td><td>next.config.mjs に明示的に設定。img-src に *.supabase.co 必須</td></tr>
       </table>
     </div>
   </div>
@@ -613,9 +914,8 @@
 
 </main>
 
-<footer style="background: var(--slate-800); color: #64748b; text-align:center; padding: 20px; font-size: 12px;">
+<footer style="background:var(--slate);color:#64748b;text-align:center;padding:20px;font-size:12px;">
   Pick — System Architecture Document · 2026-03-22
 </footer>
-
 </body>
 </html>
