@@ -68,8 +68,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/onboarding', request.url))
   }
 
-  // /library/* と /api/admin/* は ADMIN_EMAILS に含まれるユーザーのみ許可（未設定時は全員許可）
-  if (path.startsWith('/library') || path.startsWith('/admin') || path.startsWith('/api/admin')) {
+  // /api/admin/* と /admin/* は ADMIN_EMAILS に含まれるユーザーのみ許可（未設定時は全員許可）
+  // ※ /library/* はユーザー向け機能のため admin 制限から外している
+  if (path.startsWith('/admin') || path.startsWith('/api/admin')) {
     const adminEmails = (process.env.ADMIN_EMAILS ?? '')
       .split(',')
       .map((e) => e.trim().toLowerCase())
@@ -84,6 +85,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest).*)',
+    /*
+     * 以下を除くすべてのパスにミドルウェアを適用:
+     * - _next/static (静的ファイル)
+     * - _next/image (画像最適化)
+     * - 静的アセット (png, jpg, svg, ico, webp, woff2, etc.)
+     * - ads.txt, robots.txt, sitemap.xml
+     */
+    '/((?!_next/static|_next/image|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|otf|css|js|map)|ads\\.txt|robots\\.txt|sitemap\\.xml).*)',
   ],
 }
