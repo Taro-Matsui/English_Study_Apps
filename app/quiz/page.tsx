@@ -10,7 +10,7 @@ import type { ExplainResponse } from '../api/quiz/explain/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
-import { openXShare } from '@/lib/share-image'
+import { openXShare, generateQuizResultImage, uploadShareImage } from '@/lib/share-image'
 
 interface QuizPhrase {
   id: string
@@ -266,6 +266,9 @@ function QuizContent() {
     if (next >= total) {
       setStep('done')
       setSaveState('saving')
+      // score は handleSubmit で既に更新済み（handleNext 呼び出し時点では最終スコア）
+      const finalScore = score
+      const finalPct = Math.round((finalScore.correct / total) * 100)
       fetch('/api/quiz/complete', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
@@ -273,7 +276,21 @@ function QuizContent() {
         .then((r) => r.json())
         .then((d) => {
           setSaveState(d.success ? 'saved' : 'failed')
-          if (d.session_id) setSessionId(d.session_id)
+          if (d.session_id) {
+            setSessionId(d.session_id)
+            // 【Safari対策】タブがフォアグラウンドにある今のうちにアップロード開始
+            // window.open() 後は Safari がタブを suspend するためここで先行実行する
+            generateQuizResultImage({
+              pct: finalPct,
+              correct: finalScore.correct,
+              total,
+              partial: finalScore.partial,
+              incorrect: finalScore.incorrect,
+              studyPurpose: user?.user_metadata?.study_purpose as string | undefined,
+            })
+              .then((blob) => uploadShareImage(blob, d.session_id))
+              .catch(() => null)
+          }
         })
         .catch(() => setSaveState('failed'))
       return

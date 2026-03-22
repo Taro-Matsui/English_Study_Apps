@@ -220,7 +220,7 @@ export async function uploadShareImage(blob: Blob, sessionId: string): Promise<s
 
 /**
  * 結果をシェア。
- * sessionId あり → Canvas 画像を Storage にアップロード後、Twitter Cards URL ツイート
+ * sessionId あり → Twitter Cards URL をツイート（画像は quiz/page.tsx で先行アップロード済み）
  * sessionId なし（モバイル）→ Web Share API でファイルシェア
  * sessionId なし（デスクトップ）→ クリップボードコピー + X 投稿画面を開く
  *
@@ -238,17 +238,14 @@ export async function openXShare(params: ShareParams): Promise<'shared' | 'copie
   if (sessionId && typeof window !== 'undefined') {
     const shareUrl = `${window.location.origin}/share/${sessionId}`
 
-    // ① 先に Twitter ウィンドウを開く（click イベント内の同期処理）
+    // 【重要】画像アップロードはクイズ完了時（quiz/page.tsx の handleNext）に
+    // タブがフォアグラウンドの状態で先行実行済み。
+    // ここでは Twitter ウィンドウを開くのみ（Safari suspend 問題を回避）。
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
       '_blank',
       'noopener,noreferrer',
     )
-
-    // ② バックグラウンドで画像生成 → Storage アップロード
-    generateQuizResultImage(params)
-      .then((blob) => uploadShareImage(blob, sessionId))
-      .catch(() => null)
 
     return 'opened'
   }

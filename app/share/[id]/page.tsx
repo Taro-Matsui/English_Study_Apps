@@ -22,6 +22,11 @@ async function fetchSession(id: string) {
 
 function getBaseUrl() {
   const headersList = headers()
+  // Railway はリバースプロキシのため host が localhost:8080 になる。
+  // x-forwarded-host / x-forwarded-proto から公開 origin を取得する。
+  const forwardedHost = headersList.get('x-forwarded-host')
+  const forwardedProto = headersList.get('x-forwarded-proto') ?? 'https'
+  if (forwardedHost) return `${forwardedProto}://${forwardedHost}`
   const host = headersList.get('host') ?? 'localhost:3000'
   const proto = host.includes('localhost') ? 'http' : 'https'
   return `${proto}://${host}`
