@@ -627,7 +627,7 @@ add_text(s, "📍 現状（2026-03）", 0.5, 1.65, 5.5, 0.4,
          font_size=14, bold=True, color=AMBER_DARK)
 status_items = [
     "テストユーザーのみで運用中",
-    "Railway 本番環境: englishstudyapps-production.up.railway.app",
+    "本番 URL: usepick.win",
     "AdSense 審査保留中（privacy/terms/about/contact 整備済み）",
     "マイグレーション 001〜013 適用済み",
     "課金プラン設計済み・未実装",

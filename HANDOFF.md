@@ -10,7 +10,7 @@
 
 **フロー:** 会話録・技術ドキュメントをアップロード → Claude がフレーズ自動抽出 → クイズで学習
 
-**本番 URL:** `https://englishstudyapps-production.up.railway.app`
+**本番 URL:** `https://usepick.win`
 **リポジトリ:** `https://github.com/Taro-Matsui/English_Study_Apps`
 **デプロイ:** Railway (master push → 自動)
 
@@ -73,8 +73,8 @@
 
 2. **Supabase ダッシュボード URL 設定**
    - Authentication → URL Configuration
-   - **Site URL** を `https://englishstudyapps-production.up.railway.app` に設定
-   - **Redirect URLs** に `https://englishstudyapps-production.up.railway.app/auth/callback` を追加
+   - **Site URL** を `https://usepick.win` に設定
+   - **Redirect URLs** に `https://usepick.win/auth/callback` を追加
    - 未設定の場合: メール確認リンクが誤った URL を向く可能性あり
 
 ### 中優先度

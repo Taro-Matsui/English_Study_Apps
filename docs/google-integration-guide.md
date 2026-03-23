@@ -67,7 +67,7 @@ Google OAuth（ログイン）             ← Supabase Auth 経由で実装
 ### 1-5. AdSense アカウント作成・審査
 
 1. [adsense.google.com](https://adsense.google.com) にアクセス
-2. **サイトの追加** → ドメイン（例: `englishstudyapps-production.up.railway.app`）を入力
+2. **サイトの追加** → ドメイン（例: `usepick.win`）を入力
 3. 確認コード（`ca-pub-XXXXXXXXXXXXXXXX`）を取得
 4. コードをサイトの `<head>` に **直接埋め込み**（GTM 経由は不可 → [Part 3](#part-3--adsense-の実装head-直接埋め込み) 参照）
 5. Railway にデプロイ → AdSense ダッシュボードで「確認」をクリック
@@ -279,5 +279,5 @@ Google 系サービスはサブドメインが動的（`ep1`, `ep2` ... など�
 | AdSense Publisher ID | `ca-pub-3375981541016037` |
 | Google OAuth Client ID | `380306037102-7rvk50jkrhg30i0k5nop41e6ll6bm104.apps.googleusercontent.com` |
 | Supabase プロジェクト URL | `https://tgqfnsmrwvpycmhmfpyv.supabase.co` |
-| 本番ドメイン | `https://englishstudyapps-production.up.railway.app` |
+| 本番ドメイン | `https://usepick.win` |
 | CSP 設定ファイル | `next.config.mjs` |

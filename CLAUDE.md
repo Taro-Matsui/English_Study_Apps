@@ -4,6 +4,7 @@
 実際の会話・文書から英語フレーズをピックして学ぶアプリ。
 テキストをアップロード → Claude がフレーズ抽出 → チャレンジで定着。**マルチユーザー対応**（Supabase Auth + RLS）。
 
+URL: https://usepick.win
 タグライン（JA）: 会話からフレーズをピックして学ぼう
 タグライン（EN）: Pick the words from your real conversations.
 

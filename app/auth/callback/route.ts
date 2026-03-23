@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   // Railway はリバースプロキシ経由のため request.url が localhost:8080 になる。
   // x-forwarded-host から実際の公開 origin を取得する。
   // セキュリティ: allowlist 外のホストは信頼しない（オープンリダイレクト対策）
-  const ALLOWED_HOSTS = ['englishstudyapps-production.up.railway.app', 'localhost:3000']
+  const ALLOWED_HOSTS = ['usepick.win', 'localhost:3000']
   const forwardedHost = request.headers.get('x-forwarded-host')
   const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https'
   const resolvedHost = forwardedHost && ALLOWED_HOSTS.includes(forwardedHost)

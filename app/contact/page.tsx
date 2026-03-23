@@ -23,10 +23,10 @@ export default function ContactPage() {
           <div className="bg-amber-50 rounded-xl p-4 space-y-1">
             <p className="text-xs text-amber-700 font-medium uppercase tracking-wider">連絡先</p>
             <a
-              href="mailto:tarotaro0129@gmail.com"
+              href="mailto:support@usepick.win"
               className="text-amber-800 font-semibold hover:underline break-all"
             >
-              tarotaro0129@gmail.com
+              support@usepick.win
             </a>
           </div>
 
