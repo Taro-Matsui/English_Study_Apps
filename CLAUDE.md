@@ -13,7 +13,7 @@
 - **Auth**: Supabase Auth (メール+パスワード / Google OAuth) + `@supabase/ssr`
 - **LLM**: Claude API via `fetch` (SDK 不使用 — Railway 接続問題を回避)
   - 抽出: `claude-sonnet-4-6`, max_tokens: 8192
-  - 判定: `claude-haiku-4-5-20251001`, max_tokens: 300
+  - 判定: **プラン依存** — Pro: `claude-sonnet-4-6`, Free/Starter: `claude-haiku-4-5-20251001`（`lib/plan-quota.ts` の `getJudgeModel()` で決定）
   - 解説: `claude-haiku-4-5-20251001`, max_tokens: 600
 - **UI**: Tailwind CSS + shadcn/ui。`darkMode: ["class"]` で `.dark` を `<html>` に付与
 - **Analytics**: GTM-PWNWXD23 (`@next/third-parties/google`)
@@ -38,7 +38,11 @@ app/
   privacy|terms|about|contact/page.tsx  # 法的ページ（認証不要 PUBLIC_PATHS）
   api/user/onboarding/   # 学習設定保存 + シードフレーズ挿入
   api/quiz/              # 出題 / AI判定 / 完了保存 / フレーズ解説
+  api/quiz/daily-count/  # 本日のチャレンジ数取得（HomeContent のクォータ表示用）
+  api/phrases/count/     # フレーズ数 + クォータ情報取得（import ページ表示用）
   api/admin/             # インポートジョブ管理（/library の前身）
+  api/stripe/            # checkout / webhook / portal / subscription
+  settings/billing/      # プラン選択・年払い/月払いトグル・管理ポータル
 
 lib/
   supabase.ts            # getSupabase() / getSupabaseAdmin()
@@ -47,6 +51,10 @@ lib/
   auth.ts                # getUser() — Route Handler 認証チェック
   auth-context.tsx       # UserProvider / useAuth() — getSession() ベース
   extract-phrases.ts     # Claude API + JSON 部分回復
+  subscription.ts        # getUserSubscription() / Plan 型 / PLAN_PRICES
+  plan-quota.ts          # checkPhraseQuota / checkDailyPracticeQuota / checkMonthlyFeedbackQuota / getJudgeModel
+  stripe.ts              # getStripe() シングルトン
+  ai-models.ts           # AI_MODELS 定数（env 変数で上書き可）
   announcements.ts       # お知らせデータ（先頭に追記で全ユーザーへ通知）
   share-image.ts         # Canvas 1200×630px PNG 生成・X シェア
   settings.tsx           # localStorage 設定（音声/クイズ/テーマ）
@@ -148,13 +156,20 @@ type StudySubcategory = 'meeting' | 'review' | 'conference'  // business_enginee
 
 ## DB スキーマ（非自明なカラムのみ）
 ```sql
-phrases:       deleted_at TIMESTAMPTZ  -- 論理削除（必ず .is('deleted_at', null) でフィルタ）
-               explanation TEXT         -- AI 解説キャッシュ（migration 012）
-               added_date DATE          -- 新規フレーズ優先出題のキー
-quiz_answers:  response_time_ms INT     -- 回答速度（migration 013）
-               status TEXT              -- 'correct'|'partial'|'incorrect'
+phrases:        deleted_at TIMESTAMPTZ  -- 論理削除（必ず .is('deleted_at', null) でフィルタ）
+                explanation TEXT         -- AI 解説キャッシュ（migration 012）
+                added_date DATE          -- 新規フレーズ優先出題のキー
+quiz_answers:   response_time_ms INT     -- 回答速度（migration 013）
+                status TEXT              -- 'correct'|'partial'|'incorrect'
+subscriptions:  plan TEXT                -- 'free'|'starter'|'pro'（migration 015）
+                status TEXT              -- 'active'|'canceled'|'past_due'|'trialing'
+                stripe_customer_id TEXT
+                stripe_subscription_id TEXT
+                current_period_end TIMESTAMPTZ
+plan_quotas:    rollover_phrases INT     -- Starter: 前月繰越フレーズ数（上限100）（migration 016）
+                period_start DATE        -- 今月の課金期間開始日
 ```
-マイグレーションは `supabase/migrations/001〜013.sql`（全て Supabase ダッシュボードで手動実行済み）。
+マイグレーションは `supabase/migrations/001〜016.sql`（全て Supabase ダッシュボードで手動実行済み）。
 
 ## 重要パターン
 
@@ -174,10 +189,35 @@ Claude の max_tokens 超過で JSON 切断時の3段階フォールバック:
 ### AdBanner
 `slot` が空文字なら `null` を返す（env 未設定時の安全対策）。`useRef` で二重 push 防止。
 
+### プランゲート（lib/plan-quota.ts）
+新機能でプラン制限が必要な場合は `lib/plan-quota.ts` に関数を追加し、Route Handler で呼ぶ。
+
+```typescript
+// パターン: import-async と同様
+const sub = await getUserSubscription(user.id)
+const quota = await checkXxxQuota(user.id, sub.plan)
+if (!quota.allowed) {
+  return NextResponse.json({ error: '...上限...', upgrade: true }, { status: 403 })
+}
+```
+
+**制限値まとめ:**
+| 機能 | Free | Starter | Pro |
+|------|------|---------|-----|
+| フレーズ | 累計 60件 | 月 300+繰越(max100)件 | 無制限 |
+| チャレンジ/日 | 5回 | 10回 | 10回 |
+| AI判定/月 | 無制限（60件以内） | 30回 | 無制限 |
+| 判定モデル | Haiku | Haiku | Sonnet |
+
+### Stripe priceKey allowlist
+`checkout/route.ts` の `priceMap` に登録された4キーのみ受け付ける。
+`'starter_monthly' | 'starter_yearly' | 'pro_monthly' | 'pro_yearly'`
+
 ### ミドルウェア PUBLIC_PATHS
 ```typescript
 const PUBLIC_PATHS = ['/login', '/auth/callback', '/share', '/api/og',
-                      '/privacy', '/terms', '/about', '/contact']
+                      '/privacy', '/terms', '/about', '/contact',
+                      '/api/stripe/webhook']
 ```
 新しい公開ページを追加したら必ずここにも追加する。
 
@@ -197,6 +237,14 @@ SUPABASE_SERVICE_ROLE_KEY           # Route Handler DB 操作に必須（Railway
 ANTHROPIC_API_KEY
 NEXT_PUBLIC_ADSENSE_SLOT_QUIZ       # 7170940471
 NEXT_PUBLIC_ADSENSE_SLOT_IMPORT     # 6300711931
+
+# Stripe
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_PRICE_STARTER_MONTHLY        # ¥180/月 の price ID
+STRIPE_PRICE_STARTER_YEARLY         # ¥1,800/年 の price ID（任意）
+STRIPE_PRICE_PRO_MONTHLY            # ¥480/月 の price ID
+STRIPE_PRICE_PRO_YEARLY             # ¥4,800/年 の price ID（任意）
 ```
 
 ## モバイル対応
