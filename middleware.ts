@@ -11,6 +11,18 @@ const GUEST_PATHS = ['/demo', '/api/demo']
 // オンボーディング完了前でも許可するパス（認証は必要）
 const ONBOARDING_EXEMPT = ['/onboarding', '/api/', '/auth/']
 
+// Railway はリバースプロキシ経由のため request.url が localhost:8080 になる。
+// x-forwarded-host から実際の公開 origin を構築してリダイレクト先を正しくする。
+function getPublicOrigin(request: NextRequest): string {
+  const ALLOWED_HOSTS = ['usepick.win', 'localhost:3000']
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https'
+  const host = forwardedHost && ALLOWED_HOSTS.includes(forwardedHost)
+    ? forwardedHost
+    : new URL(request.url).host
+  return `${forwardedProto}://${host}`
+}
+
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
     request: { headers: request.headers },
@@ -39,6 +51,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const path = request.nextUrl.pathname
+  const origin = getPublicOrigin(request)
 
   // ゲストパス（デモモード）は認証状態に関わらず通過
   if (GUEST_PATHS.some((p) => path.startsWith(p))) {
@@ -49,15 +62,14 @@ export async function middleware(request: NextRequest) {
   if (PUBLIC_PATHS.some((p) => path.startsWith(p))) {
     // 認証済みで /login にアクセス → ホームへ
     if (user) {
-      return NextResponse.redirect(new URL('/', request.url))
+      return NextResponse.redirect(`${origin}/`)
     }
     return response
   }
 
   // 未認証 → ログインページへ
   if (!user) {
-    const loginUrl = new URL('/login', request.url)
-    return NextResponse.redirect(loginUrl)
+    return NextResponse.redirect(`${origin}/login`)
   }
 
   // オンボーディング未完了 → /onboarding へ
@@ -65,7 +77,7 @@ export async function middleware(request: NextRequest) {
     !user.user_metadata?.onboarding_complete &&
     !ONBOARDING_EXEMPT.some((p) => path.startsWith(p))
   ) {
-    return NextResponse.redirect(new URL('/onboarding', request.url))
+    return NextResponse.redirect(`${origin}/onboarding`)
   }
 
   // /admin/* のみ ADMIN_EMAILS に含まれるユーザーのみ許可（未設定時は全員許可）
@@ -76,7 +88,7 @@ export async function middleware(request: NextRequest) {
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean)
     if (adminEmails.length > 0 && !adminEmails.includes((user.email ?? '').toLowerCase())) {
-      return NextResponse.redirect(new URL('/', request.url))
+      return NextResponse.redirect(`${origin}/`)
     }
   }
 
