@@ -50,6 +50,6 @@ export const PLAN_LABELS: Record<Plan, string> = {
 
 export const PLAN_PRICES: Record<Plan, string> = {
   free:    '¥0',
-  starter: '¥500 / 月',
-  pro:     '¥1,200 / 月',
+  starter: '¥180 / 月',
+  pro:     '¥480 / 月',
 }

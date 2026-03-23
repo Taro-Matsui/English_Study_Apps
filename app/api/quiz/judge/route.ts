@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth'
 import { isRateLimited } from '@/lib/rate-limit'
-import { AI_MODELS } from '@/lib/ai-models'
+import { getUserSubscription } from '@/lib/subscription'
+import { checkMonthlyFeedbackQuota, getJudgeModel } from '@/lib/plan-quota'
+import { getSupabaseAdmin } from '@/lib/supabase'
 import type { JudgeStatus } from '@/types'
 
 export interface JudgeRequest {
@@ -35,6 +37,39 @@ export async function POST(req: NextRequest) {
       { status: 429 }
     )
   }
+
+  // プラン取得 → Starter の月次フィードバック上限チェック + モデル選択
+  const sub = await getUserSubscription(user.id)
+  const plan = sub.plan
+
+  if (plan === 'starter') {
+    // period_start を plan_quotas から取得（なければ月初）
+    const supabase = getSupabaseAdmin()
+    const { data: quota } = await supabase
+      .from('plan_quotas')
+      .select('period_start')
+      .eq('user_id', user.id)
+      .single()
+
+    const periodStart = quota?.period_start
+      ? new Date(quota.period_start)
+      : new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+
+    const feedbackQuota = await checkMonthlyFeedbackQuota(user.id, periodStart)
+    if (!feedbackQuota.allowed) {
+      return NextResponse.json<JudgeResponse>(
+        {
+          correct: false,
+          status: 'incorrect',
+          feedback: '',
+          error: `今月のフィードバック上限に達しました（${feedbackQuota.limit}回/月）。プランをアップグレードしてください。`,
+        },
+        { status: 429 }
+      )
+    }
+  }
+
+  const judgeModel = getJudgeModel(plan)
 
   const body: JudgeRequest = await req.json()
 
@@ -107,7 +142,7 @@ export async function POST(req: NextRequest) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: AI_MODELS.JUDGE,
+        model: judgeModel,
         max_tokens: 400,
         messages: [{ role: 'user', content: prompt }],
       }),

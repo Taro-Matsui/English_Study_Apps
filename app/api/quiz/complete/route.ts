@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { getUser } from '@/lib/auth'
+import { getUserSubscription } from '@/lib/subscription'
+import { checkDailyPracticeQuota } from '@/lib/plan-quota'
 import { log } from '@/lib/logger'
 import { CompleteRequest } from '@/types'
 
@@ -14,6 +16,20 @@ export async function POST(req: NextRequest) {
   if (!answers?.length) return NextResponse.json({ success: false }, { status: 400 })
   // 1セッションあたりの回答数上限（DoS対策）
   if (answers.length > 100) return NextResponse.json({ success: false, error: '回答数が上限を超えています' }, { status: 400 })
+
+  // 1日チャレンジ上限チェック
+  const sub = await getUserSubscription(user.id)
+  const practiceQuota = await checkDailyPracticeQuota(user.id, sub.plan)
+  if (!practiceQuota.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `本日のチャレンジ上限（${practiceQuota.limit}回/日）に達しました。明日また挑戦してください！`,
+        quota: practiceQuota,
+      },
+      { status: 429 }
+    )
+  }
 
   // phrase_id の UUID v4 形式バリデーション
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i

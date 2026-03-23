@@ -17,10 +17,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { priceKey } = body as { priceKey?: string }
 
-  // allowlist バリデーション — priceKey は 'starter' | 'pro' のみ許可
+  // allowlist バリデーション — priceKey は 4 種のみ許可
   const priceMap: Record<string, string | undefined> = {
-    starter: process.env.STRIPE_PRICE_STARTER,
-    pro:     process.env.STRIPE_PRICE_PRO,
+    starter_monthly: process.env.STRIPE_PRICE_STARTER_MONTHLY,
+    starter_yearly:  process.env.STRIPE_PRICE_STARTER_YEARLY,
+    pro_monthly:     process.env.STRIPE_PRICE_PRO_MONTHLY,
+    pro_yearly:      process.env.STRIPE_PRICE_PRO_YEARLY,
   }
   const priceId = priceKey ? priceMap[priceKey] : undefined
 

@@ -3,7 +3,10 @@
 import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+
 type Plan = 'free' | 'starter' | 'pro'
+type Interval = 'monthly' | 'yearly'
+
 interface Subscription {
   plan: Plan
   status: string
@@ -11,53 +14,57 @@ interface Subscription {
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
 }
-const PLAN_LABELS: Record<Plan, string> = { free: 'Free', starter: 'Starter', pro: 'Pro' }
-const PLAN_PRICES: Record<Plan, string> = { free: '¥0', starter: '¥500 / 月', pro: '¥1,200 / 月' }
 
-// プラン定義（priceKey はサーバー側 env 変数名。checkout API に渡す）
+const PLAN_LABELS: Record<Plan, string> = { free: 'Free', starter: 'Starter', pro: 'Pro' }
+
+const PLAN_PRICES: Record<Plan, Record<Interval, string>> = {
+  free:    { monthly: '¥0', yearly: '¥0' },
+  starter: { monthly: '¥180 / 月', yearly: '¥1,800 / 年' },
+  pro:     { monthly: '¥480 / 月', yearly: '¥4,800 / 年' },
+}
+
 const PLANS: {
   key: Plan
   label: string
-  price: string
-  priceKey: 'starter' | 'pro' | ''
+  priceKey: (interval: Interval) => string
   features: string[]
   highlight?: boolean
 }[] = [
   {
     key: 'free',
     label: 'Free',
-    price: '¥0',
-    priceKey: '',
+    priceKey: () => '',
     features: [
-      'ピック最大 100 件',
-      'ソース 5 件まで',
-      'AI チャレンジ（基本）',
+      'フレーズ累計 60 件まで',
+      '1日 5 チャレンジ',
+      'AI 判定（Haiku）',
       'Pick Streak カレンダー',
+      'PWA 対応',
     ],
   },
   {
     key: 'starter',
     label: 'Starter',
-    price: '¥500 / 月',
-    priceKey: 'starter',
+    priceKey: (interval) => `starter_${interval}`,
     features: [
-      'ピック無制限',
-      'ソース無制限',
-      'AI チャレンジ（フル機能）',
+      'フレーズ月 300件 ＋ 繰越最大 100件',
+      '1日 10 チャレンジ',
+      'AI 判定 月 30回（Haiku）',
       'ピックアップ チャレンジ',
-      'Progress 詳細統計',
+      'チャレンジ記録 詳細統計',
     ],
     highlight: true,
   },
   {
     key: 'pro',
     label: 'Pro',
-    price: '¥1,200 / 月',
-    priceKey: 'pro',
+    priceKey: (interval) => `pro_${interval}`,
     features: [
-      'Starter のすべて',
-      'CSV エクスポート（近日公開）',
-      'チーム共有（近日公開）',
+      'フレーズ無制限',
+      '1日 10 チャレンジ',
+      'AI 判定 無制限（Sonnet）',
+      'SRS 優先出題（近日公開）',
+      'Pick of the Week（近日公開）',
       '優先サポート',
     ],
   },
@@ -67,7 +74,8 @@ function BillingContent() {
   const searchParams = useSearchParams()
   const [sub, setSub] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
-  const [checkoutLoading, setCheckoutLoading] = useState<Plan | null>(null)
+  const [interval, setInterval] = useState<Interval>('monthly')
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
   const [portalLoading, setPortalLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -84,8 +92,8 @@ function BillingContent() {
       .catch(() => setLoading(false))
   }, [])
 
-  async function handleUpgrade(priceKey: 'starter' | 'pro', plan: Plan) {
-    setCheckoutLoading(plan)
+  async function handleUpgrade(priceKey: string) {
+    setCheckoutLoading(priceKey)
     setErrorMsg(null)
     try {
       const res = await fetch('/api/stripe/checkout', {
@@ -179,7 +187,7 @@ function BillingContent() {
                   )}
                 </div>
                 <span className="text-sm font-medium text-gray-500">
-                  {PLAN_PRICES[currentPlan]}
+                  {PLAN_PRICES[currentPlan].monthly}
                 </span>
               </>
             )}
@@ -197,6 +205,37 @@ function BillingContent() {
           )}
         </section>
 
+        {/* 月払い / 年払いトグル */}
+        <section>
+          <div className="flex items-center bg-white border border-gray-200 rounded-xl p-1 gap-1">
+            <button
+              onClick={() => setInterval('monthly')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                interval === 'monthly'
+                  ? 'bg-amber-800 text-white'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              月払い
+            </button>
+            <button
+              onClick={() => setInterval('yearly')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors relative ${
+                interval === 'yearly'
+                  ? 'bg-amber-800 text-white'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              年払い
+              <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                interval === 'yearly' ? 'bg-white/20' : 'bg-emerald-100 text-emerald-700'
+              }`}>
+                2ヶ月分お得
+              </span>
+            </button>
+          </div>
+        </section>
+
         {/* プラン比較 */}
         <section className="space-y-3">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">プランを選ぶ</h2>
@@ -206,7 +245,8 @@ function BillingContent() {
             const isHigher =
               (plan.key === 'starter' && currentPlan === 'free') ||
               (plan.key === 'pro' && (currentPlan === 'free' || currentPlan === 'starter'))
-            const isLoading = checkoutLoading === plan.key
+            const priceKey = plan.priceKey(interval)
+            const isLoading = checkoutLoading === priceKey
 
             return (
               <div
@@ -232,7 +272,14 @@ function BillingContent() {
                         </span>
                       )}
                     </div>
-                    <p className="text-lg font-bold text-gray-900 mt-1">{plan.price}</p>
+                    <p className="text-lg font-bold text-gray-900 mt-1">
+                      {PLAN_PRICES[plan.key][interval]}
+                    </p>
+                    {plan.key !== 'free' && interval === 'yearly' && (
+                      <p className="text-xs text-emerald-600 font-medium">
+                        月払いより2ヶ月分お得
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -258,8 +305,8 @@ function BillingContent() {
                   </button>
                 ) : isHigher ? (
                   <button
-                    onClick={() => plan.priceKey && handleUpgrade(plan.priceKey, plan.key)}
-                    disabled={isLoading || !plan.priceKey}
+                    onClick={() => priceKey && handleUpgrade(priceKey)}
+                    disabled={isLoading || !priceKey}
                     className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
                       plan.highlight
                         ? 'bg-amber-800 text-white hover:bg-amber-700'

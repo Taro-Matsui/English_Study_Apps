@@ -52,6 +52,20 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
   const displayTodayDone   = phraseCount !== null ? todayDone : (cachedStats?.todayDone ?? false)
   const displayWeakCount   = phraseCount !== null ? weakCount : (cachedStats?.weakCount ?? 0)
 
+  // 本日のチャレンジ数とプランの上限を取得
+  const [dailyPractice, setDailyPractice] = useState<{ used: number; limit: number; plan: string } | null>(null)
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/stripe/subscription').then((r) => r.json()),
+      fetch('/api/quiz/daily-count').then((r) => r.json()).catch(() => null),
+    ]).then(([sub, countData]) => {
+      const plan: string = sub?.plan ?? 'free'
+      const used: number = countData?.count ?? 0
+      const limit = plan === 'free' ? 5 : 10
+      setDailyPractice({ used, limit, plan })
+    }).catch(() => {})
+  }, [user?.id])
+
   // クイズページ表示を高速化するためフレーズをバックグラウンドでプリフェッチ
   useEffect(() => {
     try {
@@ -178,6 +192,24 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
           <div className="flex justify-center">
             <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
               ✓ {lang === 'ja' ? '今日のチャレンジ完了' : "Today's Challenge done"}
+            </span>
+          </div>
+        )}
+
+        {/* 本日チャレンジ残数（Free プランは上限ありのため表示） */}
+        {dailyPractice && dailyPractice.used > 0 && (
+          <div className="flex justify-center">
+            <span className={`text-xs px-3 py-1 rounded-full border ${
+              dailyPractice.used >= dailyPractice.limit
+                ? 'text-gray-500 bg-gray-50 border-gray-200'
+                : 'text-amber-700 bg-amber-50 border-amber-200'
+            }`}>
+              {lang === 'ja'
+                ? `本日 ${dailyPractice.used}/${dailyPractice.limit} チャレンジ`
+                : `Today ${dailyPractice.used}/${dailyPractice.limit} sessions`}
+              {dailyPractice.used >= dailyPractice.limit && dailyPractice.plan === 'free' && (
+                <span className="ml-1">— <a href="/settings/billing" className="underline">Starterで上限アップ</a></span>
+              )}
             </span>
           </div>
         )}

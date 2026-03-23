@@ -75,6 +75,27 @@ export default function LibraryImportPage() {
   const [dupConfirm, setDupConfirm] = useState(false)
   const pendingHashRef = useRef<string | null>(null)
 
+  // プラン別クォータ表示
+  const [quotaInfo, setQuotaInfo] = useState<{ plan: string; used: number; limit: number } | null>(null)
+
+  useEffect(() => {
+    // サブスクリプション情報 + フレーズ数を取得してクォータ表示
+    Promise.all([
+      fetch('/api/stripe/subscription').then((r) => r.json()),
+      fetch('/api/phrases/count').then((r) => r.json()).catch(() => null),
+    ]).then(([sub, countData]) => {
+      const plan: string = sub?.plan ?? 'free'
+      const used: number = countData?.count ?? 0
+      if (plan === 'free') {
+        setQuotaInfo({ plan, used, limit: 60 })
+      } else if (plan === 'starter') {
+        const rollover: number = countData?.rollover ?? 0
+        setQuotaInfo({ plan, used, limit: 300 + rollover })
+      }
+      // Pro はクォータ表示なし
+    }).catch(() => {})
+  }, [])
+
   useEffect(() => {
     const opt = MODE_OPTIONS.find((o) => o.mode === mode)!
     setSourceType(opt.defaultSource)
@@ -138,6 +159,12 @@ export default function LibraryImportPage() {
       }
 
       const data = await res.json()
+      if (res.status === 403 && data.upgrade) {
+        // フレーズ上限エラー → アップセル
+        setError(data.error ?? 'フレーズ上限に達しました')
+        setStep('error')
+        return
+      }
       if (!res.ok || !data.success) throw new Error(data.error ?? `HTTP ${res.status}`)
       if (hash) saveHash(hash)
       setJobId(data.job_id)
@@ -173,6 +200,44 @@ export default function LibraryImportPage() {
       </div>
 
       <div className="max-w-lg mx-auto p-4 space-y-4">
+
+        {/* フレーズクォータ表示 */}
+        {quotaInfo && (
+          <div className={`rounded-xl border p-3 ${
+            quotaInfo.used >= quotaInfo.limit
+              ? 'bg-red-50 border-red-200'
+              : quotaInfo.used >= quotaInfo.limit * 0.8
+              ? 'bg-amber-50 border-amber-200'
+              : 'bg-white border-amber-100'
+          }`}>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-semibold text-gray-600">
+                フレーズ残数
+              </span>
+              <span className={`text-xs font-bold ${
+                quotaInfo.used >= quotaInfo.limit ? 'text-red-600' : 'text-gray-700'
+              }`}>
+                {quotaInfo.used} / {quotaInfo.limit === Infinity ? '∞' : quotaInfo.limit} 件
+              </span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-1.5">
+              <div
+                className={`h-1.5 rounded-full transition-all ${
+                  quotaInfo.used >= quotaInfo.limit ? 'bg-red-500' : 'bg-amber-600'
+                }`}
+                style={{ width: `${Math.min((quotaInfo.used / quotaInfo.limit) * 100, 100)}%` }}
+              />
+            </div>
+            {quotaInfo.used >= quotaInfo.limit && (
+              <div className="mt-2 text-xs text-red-700">
+                上限に達しました。
+                <a href="/settings/billing" className="font-semibold underline ml-1">
+                  Starter にアップグレード →
+                </a>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 重複確認モーダル */}
         {dupConfirm && (

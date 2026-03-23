@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { getUser } from '@/lib/auth'
+import { getUserSubscription } from '@/lib/subscription'
+import { checkPhraseQuota } from '@/lib/plan-quota'
 import { parseTranscript } from '@/lib/parse-transcript'
 import { extractPhrasesWithClaude } from '@/lib/extract-phrases'
 import { log } from '@/lib/logger'
@@ -124,6 +126,21 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ success: false, error: 'ログインが必要です' }, { status: 401 })
 
   const db = getSupabaseAdmin()
+
+  // フレーズ上限チェック（プラン別）
+  const sub = await getUserSubscription(user.id)
+  const phraseQuota = await checkPhraseQuota(user.id, sub.plan)
+  if (!phraseQuota.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: `フレーズ上限に達しています（${phraseQuota.used}/${phraseQuota.limit}件）。プランをアップグレードしてください。`,
+        upgrade: true,
+        quota: phraseQuota,
+      },
+      { status: 403 }
+    )
+  }
 
   // 並行実行制御: 同一ユーザーの processing ジョブが存在する場合は拒否
   const { data: running } = await db
