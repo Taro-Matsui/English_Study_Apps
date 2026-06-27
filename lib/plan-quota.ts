@@ -42,6 +42,7 @@ export async function checkPhraseQuota(userId: string, plan: Plan): Promise<Quot
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .is('deleted_at', null)
+      .neq('source_type', 'System') // 初期配布シードはユーザー枠を消費しない（T1-2(B) 供給保証）
 
     const used = count ?? 0
     const limit = FREE_PHRASE_LIMIT
@@ -73,6 +74,7 @@ export async function checkPhraseQuota(userId: string, plan: Plan): Promise<Quot
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
     .is('deleted_at', null)
+    .neq('source_type', 'System') // 初期配布シードはユーザー枠を消費しない（T1-2(B) 供給保証）
     .gte('added_date', periodStart)
 
   const used = count ?? 0

@@ -210,6 +210,9 @@ if (!quota.allowed) {
 | AI判定/月 | 無制限（60件以内） | 30回 | 無制限 |
 | 判定モデル | Haiku | Haiku | Sonnet |
 
+**⚠️ T1-2(B): フレーズ枠は `source_type='System'` の初期配布シードを除外してカウント**（`plan-quota.ts` の `checkPhraseQuota` で Free/Starter とも `.neq('source_type','System')`）。
+→ Free は「シード15件 + 自分でピックした60件」が実質枠。「累計60件」はユーザー自身がピックした分の上限を指す。
+
 ### Stripe priceKey allowlist
 `checkout/route.ts` の `priceMap` に登録された4キーのみ受け付ける。
 `'starter_monthly' | 'starter_yearly' | 'pro_monthly' | 'pro_yearly'`
