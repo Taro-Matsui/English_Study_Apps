@@ -12,6 +12,7 @@ import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
 import { openXShare, generateQuizResultImage, uploadShareImage } from '@/lib/share-image'
 import { AdBanner } from '@/components/AdBanner'
+import { SourceBadge } from '@/components/SourceBadge'
 
 interface QuizPhrase {
   id: string
@@ -21,12 +22,16 @@ interface QuizPhrase {
   original_context: string | null
   difficulty: number
   source_title: string | null
+  source_type: string | null
   usage_scene: UsageScene | null
   engineer_level: EngineerLevel | null
 }
 
-type Step = 'loading' | 'question' | 'judging' | 'result' | 'done' | 'empty'
+type Step = 'loading' | 'question' | 'judging' | 'result' | 'set_break' | 'done' | 'empty'
 type Speed = 'fast' | 'normal' | 'slow'
+
+// 5問1セットの区切り（T1-6 案A）。セット境界でインタースティシャルを挟む。
+const SET_SIZE = 5
 
 const SPEED_RATE: Record<Speed, number> = { fast: 1.3, normal: 0.88, slow: 0.6 }
 
@@ -169,6 +174,13 @@ function QuizContent() {
   const current = phrases[index]
   const total = phrases.length
   const answered = score.correct + score.partial + score.incorrect
+
+  // 5問区切り（T1-6）: セット番号とセット内の位置を算出
+  const totalSets = Math.max(1, Math.ceil(total / SET_SIZE))
+  const setNo = Math.min(Math.floor(index / SET_SIZE) + 1, totalSets)
+  const setStart = (setNo - 1) * SET_SIZE
+  const setSize = Math.min(SET_SIZE, total - setStart)
+  const posInSet = Math.min(index - setStart + 1, setSize)
 
   function speak(text: string, key: string) {
     if (!window.speechSynthesis) return
@@ -321,7 +333,9 @@ function QuizContent() {
         .catch(() => setSaveState('failed'))
       return
     }
-    setIndex(next); setAnswer(''); setJudgment(null); setStep('question')
+    setIndex(next); setAnswer(''); setJudgment(null)
+    // 5問区切り（T1-6 案A）: セット境界（次が5の倍数）ではインタースティシャルを挟む
+    setStep(next % SET_SIZE === 0 ? 'set_break' : 'question')
   }
 
   async function handleShare(pct: number) {
@@ -373,6 +387,41 @@ function QuizContent() {
       }
     </div>
   )
+
+  if (step === 'set_break') {
+    const doneCount = index                       // 回答済み問題数（index は次セット先頭を指す）
+    const completedSets = Math.floor(index / SET_SIZE)
+    const remaining = total - index
+    return (
+      <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-sm w-full space-y-5">
+          <p className="text-5xl">🎉</p>
+          <div className="space-y-1">
+            <p className="text-lg font-bold text-gray-900">セット {completedSets}/{totalSets} 完了！</p>
+            <p className="text-sm text-gray-500">ここまで {doneCount} 問クリア・残り {remaining} 問</p>
+          </div>
+          <div className="flex justify-center gap-6">
+            <div><p className="text-2xl font-bold text-emerald-500">{score.correct}</p><p className="text-xs text-gray-400 mt-0.5">{t('done_correct')}</p></div>
+            <div><p className="text-2xl font-bold text-amber-500">{score.partial}</p><p className="text-xs text-gray-400 mt-0.5">{t('done_partial')}</p></div>
+            <div><p className="text-2xl font-bold text-red-500">{score.incorrect}</p><p className="text-xs text-gray-400 mt-0.5">{t('done_incorrect')}</p></div>
+          </div>
+          <Progress value={(doneCount / total) * 100} className="h-1.5" />
+          <button
+            onClick={() => setStep('question')}
+            className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 transition-colors active:bg-blue-700"
+          >
+            続ける（残り {remaining} 問）
+          </button>
+          <button
+            onClick={() => router.push('/')}
+            className="w-full py-2.5 rounded-2xl bg-gray-100 text-gray-500 text-sm hover:bg-gray-200 transition-colors"
+          >
+            中断してホームへ
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (step === 'done') {
     const pct = Math.round((score.correct / total) * 100)
@@ -506,7 +555,7 @@ function QuizContent() {
             <span className="text-xs text-emerald-500 font-semibold">✓ {score.correct}</span>
             <span className="text-xs text-amber-500 font-semibold">△ {score.partial}</span>
             <span className="text-xs text-red-500 font-semibold">✗ {score.incorrect}</span>
-            <span className="text-xs text-gray-400">{answered + 1}/{total}</span>
+            <span className="text-xs text-gray-400">セット{setNo}/{totalSets}・{posInSet}/{setSize}</span>
             <LangToggle />
           </div>
         </div>
@@ -603,6 +652,7 @@ function QuizContent() {
                     <div>
                       <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">{t('quiz_correct_meaning')}</p>
                       <p className="text-gray-900 font-semibold text-sm">{current.meaning_ja}</p>
+                      <SourceBadge sourceType={current.source_type} sourceTitle={current.source_title} className="mt-1.5" />
                     </div>
                     {current.original_context && (
                       <div className="border-t border-gray-100 pt-2 space-y-1.5">

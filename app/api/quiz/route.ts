@@ -10,7 +10,7 @@ async function fetchPhrases(user: { id: string }, limit: number, excludeIds: str
   // ランダム取得（Supabase は ORDER BY random() を直接サポートしないため件数多めに取得してシャッフル）
   let query = db
     .from('phrases')
-    .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, usage_scene, engineer_level, added_date')
+    .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, source_type, usage_scene, engineer_level, added_date')
     .is('deleted_at', null)
     .eq('user_id', user.id)
 
