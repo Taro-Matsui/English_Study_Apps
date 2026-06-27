@@ -4,6 +4,7 @@ import { isRateLimited } from '@/lib/rate-limit'
 import { getUserSubscription } from '@/lib/subscription'
 import { checkMonthlyFeedbackQuota, getJudgeModel } from '@/lib/plan-quota'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { isLocalCorrect } from '@/lib/answer-match'
 import type { JudgeStatus } from '@/types'
 
 export interface JudgeRequest {
@@ -87,14 +88,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json<JudgeResponse>({ correct: false, status: 'incorrect', feedback: '回答を入力してください' })
   }
 
-  // ローカル完全一致チェック — Claude API 呼び出しなしで即時返却
-  const normalize = (s: string) =>
-    s.trim()
-      .toLowerCase()
-      .replace(/[、。　！？!?,. ・]/g, '')
-      .replace(/[\u3000-\u303f\uff01-\uff60]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
-  if (normalize(user_answer) === normalize(meaning_ja)) {
-    return NextResponse.json<JudgeResponse>({ correct: true, status: 'correct', feedback: '完全一致' })
+  // ローカル一致チェック — Claude を呼ばずに即時 correct 返却（受容方向のみ）。
+  // 完全一致 / 区切り要素一致 / 実質的な部分包含で LLM スキップ率を上げ採点原価を抑える（T1-1(A)）。
+  if (isLocalCorrect(user_answer, meaning_ja)) {
+    return NextResponse.json<JudgeResponse>({ correct: true, status: 'correct', feedback: '正解' })
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
