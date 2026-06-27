@@ -15,7 +15,7 @@ export async function GET() {
       quiz_answers (
         is_correct, user_answer, ai_feedback, answered_at,
         phrase_id,
-        phrases ( phrase, meaning_ja, original_context, usage_scene, engineer_level, difficulty )
+        phrases ( phrase, meaning_ja, original_context, usage_scene, engineer_level, difficulty, source_title, source_type )
       )
     `)
     .eq('user_id', user.id)

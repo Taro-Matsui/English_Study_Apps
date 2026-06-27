@@ -6,6 +6,7 @@ import { useLanguage, LangToggle } from '@/lib/i18n'
 import { useAuth } from '@/lib/auth-context'
 import { openXShare } from '@/lib/share-image'
 import { formatTime } from '@/lib/utils'
+import { SourceBadge } from '@/components/SourceBadge'
 
 
 
@@ -22,6 +23,8 @@ interface AnswerRow {
     usage_scene: string | null
     engineer_level: string | null
     difficulty?: number
+    source_title?: string | null
+    source_type?: string | null
   } | null
 }
 
@@ -330,6 +333,11 @@ export default function HistoryPage() {
                             {a.ai_feedback && (
                               <p className="text-xs text-gray-400 mt-0.5 italic">{a.ai_feedback}</p>
                             )}
+                            <SourceBadge
+                              sourceType={a.phrases?.source_type}
+                              sourceTitle={a.phrases?.source_title}
+                              className="mt-1"
+                            />
                           </div>
                         </div>
                       </div>
