@@ -9,7 +9,21 @@ import type { ProficiencyQuestion } from '@/app/api/proficiency/route'
 type StudyPurpose = 'business_general' | 'business_engineer' | 'hobby_lifestyle' | 'hobby_reading'
 type StudySubcategory = 'meeting' | 'review' | 'conference'
 type StudyLevel = 'beginner' | 'intermediate' | 'advanced'
-type Step = 'survey' | 'loading' | 'proficiency' | 'domain_message' | 'results'
+type Step = 'survey' | 'loading' | 'proficiency' | 'domain_message' | 'results' | 'mini_challenge'
+
+// 初日1問ミニチャレンジ用の最小フレーズ型（T1-4）
+interface MiniPhrase {
+  id: string
+  phrase: string
+  meaning_ja: string | null
+  original_context: string | null
+}
+interface MiniResult {
+  status: 'correct' | 'partial' | 'incorrect'
+  correct: boolean
+  feedback: string
+  context_ja?: string
+}
 
 const DOMAIN_PRESETS = [
   'データエンジニア',
@@ -97,6 +111,13 @@ export default function OnboardingPage() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
   const [showAnswer, setShowAnswer] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // ── 初日1問ミニチャレンジ state（T1-4・quota 非消費）────────────
+  const [miniPhrase, setMiniPhrase] = useState<MiniPhrase | null>(null)
+  const [miniAnswer, setMiniAnswer] = useState('')
+  const [miniJudging, setMiniJudging] = useState(false)
+  const [miniResult, setMiniResult] = useState<MiniResult | null>(null)
+  const [miniLoading, setMiniLoading] = useState(false)
 
   const isEdit = !!user?.user_metadata?.onboarding_complete
 
@@ -218,12 +239,68 @@ export default function OnboardingPage() {
       // JWT を更新してから遷移（admin.updateUserById 後のメタデータを反映するため）
       const supabase = createBrowserSupabaseClient()
       await supabase.auth.refreshSession()
-      router.push(isEdit ? '/settings' : '/')
-      router.refresh()
+      // 編集モードは設定へ。新規ユーザーは初日1問ミニチャレンジへ誘導（T1-4）
+      if (isEdit) {
+        router.push('/settings')
+        router.refresh()
+        return
+      }
+      await startMiniChallenge()
     } catch {
       setError('ネットワークエラーが発生しました')
       setSaving(false)
     }
+  }
+
+  // ── T1-4: 初日1問ミニチャレンジ ──────────────────────────────
+  // シードから1問だけ取得して回答体験を提供する。/api/quiz/judge のみ呼び、
+  // /api/quiz/complete は呼ばないため quiz_sessions は作られず、日次チャレンジ
+  // クォータも「本日のチャレンジ完了」判定（todayDone）も消費・変化しない。
+  async function startMiniChallenge() {
+    setStep('mini_challenge')
+    setSaving(false)
+    setMiniLoading(true)
+    try {
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 1, mode: 'normal' }),
+      })
+      const data = await res.json()
+      setMiniPhrase(Array.isArray(data) && data.length ? data[0] : null)
+    } catch {
+      setMiniPhrase(null)
+    }
+    setMiniLoading(false)
+  }
+
+  async function submitMini() {
+    if (!miniPhrase || !miniAnswer.trim()) return
+    setMiniJudging(true)
+    try {
+      const res = await fetch('/api/quiz/judge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phrase: miniPhrase.phrase,
+          user_answer: miniAnswer,
+          meaning_ja: miniPhrase.meaning_ja,
+          original_context: miniPhrase.original_context ?? undefined,
+        }),
+      })
+      const data = await res.json()
+      const status: MiniResult['status'] =
+        data.status === 'correct' ? 'correct' : data.status === 'partial' ? 'partial' : 'incorrect'
+      setMiniResult({ status, correct: !!data.correct, feedback: data.feedback ?? '', context_ja: data.context_ja })
+    } catch {
+      setMiniResult({ status: 'incorrect', correct: false, feedback: '判定できませんでした' })
+    }
+    setMiniJudging(false)
+  }
+
+  function finishToHome() {
+    router.push('/')
+    router.refresh()
   }
 
   // 正解数
@@ -652,6 +729,97 @@ export default function OnboardingPage() {
             >
               {saving ? '設定を保存中...' : 'さあ始めよう！🎸'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 初日1問ミニチャレンジ（T1-4・quota 非消費）──────────── */}
+      {step === 'mini_challenge' && (
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-lg space-y-5">
+            <div className="text-center space-y-1">
+              <p className="text-4xl">🎁</p>
+              <p className="text-lg font-bold" style={{ color: C.text }}>さっそく1問ピックしてみよう</p>
+              <p className="text-sm" style={{ color: C.sub }}>
+                あなた向けに用意したフレーズです。意味を日本語で答えてみましょう。
+              </p>
+            </div>
+
+            {miniLoading && (
+              <p className="text-center text-sm animate-pulse" style={{ color: C.muted }}>フレーズを準備中...</p>
+            )}
+
+            {!miniLoading && !miniPhrase && (
+              <button
+                onClick={finishToHome}
+                className="w-full py-4 rounded-2xl text-base font-bold shadow-md active:opacity-80"
+                style={{ background: C.accent, color: '#fff' }}
+              >
+                ホームへ進む 🎸
+              </button>
+            )}
+
+            {!miniLoading && miniPhrase && (
+              <div className="space-y-4">
+                <div className="p-5 rounded-2xl text-center" style={{ background: C.cardBg, border: `1px solid ${C.border}` }}>
+                  <p className="text-2xl font-bold tracking-wide break-words" style={{ color: C.text }}>{miniPhrase.phrase}</p>
+                </div>
+
+                {!miniResult ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      autoComplete="off"
+                      value={miniAnswer}
+                      onChange={(e) => setMiniAnswer(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && submitMini()}
+                      placeholder="意味を日本語で入力"
+                      style={{ fontSize: '16px', background: C.cardBg, border: `1px solid ${C.border}`, color: C.text }}
+                      className="w-full rounded-2xl px-4 py-3 focus:outline-none"
+                    />
+                    <button
+                      onClick={submitMini}
+                      disabled={!miniAnswer.trim() || miniJudging}
+                      className="w-full py-3 rounded-2xl font-bold text-sm disabled:opacity-50 active:opacity-80"
+                      style={{ background: C.accent, color: '#fff' }}
+                    >
+                      {miniJudging ? '判定中...' : '回答する'}
+                    </button>
+                    <button onClick={finishToHome} className="w-full py-2.5 rounded-2xl text-sm" style={{ color: C.muted }}>
+                      スキップしてホームへ
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-2xl text-center" style={{ background: C.cardBg, border: `1px solid ${C.border}` }}>
+                      <p
+                        className="text-base font-bold"
+                        style={{ color: miniResult.status === 'correct' ? '#15803d' : miniResult.status === 'partial' ? '#b45309' : '#b91c1c' }}
+                      >
+                        {miniResult.status === 'correct' ? '正解！🎉' : miniResult.status === 'partial' ? 'おしい！あと少し' : '惜しい！意味を確認しよう'}
+                      </p>
+                      {miniResult.feedback && <p className="text-xs mt-1" style={{ color: C.sub }}>{miniResult.feedback}</p>}
+                    </div>
+                    <div className="p-4 rounded-2xl" style={{ background: C.cardBg, border: `1px solid ${C.border}` }}>
+                      <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: C.muted }}>意味</p>
+                      <p className="text-sm font-semibold" style={{ color: C.text }}>{miniPhrase.meaning_ja}</p>
+                      {miniPhrase.original_context && (
+                        <p className="text-xs italic mt-2 leading-relaxed" style={{ color: C.sub }}>
+                          &ldquo;{miniPhrase.original_context}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={finishToHome}
+                      className="w-full py-3.5 rounded-2xl font-bold text-base shadow-md active:opacity-80"
+                      style={{ background: C.accent, color: '#fff' }}
+                    >
+                      ホームへ進む 🎸
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
