@@ -44,6 +44,8 @@ describe('resolveIsDark', () => {
         matches: false, // デフォルト: ライトモード
         media: query,
         onchange: null,
+        addListener: vi.fn(),    // 非推奨だが MediaQueryList 型に必要
+        removeListener: vi.fn(), // 非推奨だが MediaQueryList 型に必要
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
         dispatchEvent: vi.fn(),
@@ -69,6 +71,8 @@ describe('resolveIsDark', () => {
       matches: true,
       media: '',
       onchange: null,
+      addListener: vi.fn(),    // 非推奨だが MediaQueryList 型に必要
+      removeListener: vi.fn(), // 非推奨だが MediaQueryList 型に必要
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
