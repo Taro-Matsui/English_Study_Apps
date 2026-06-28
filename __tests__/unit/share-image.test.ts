@@ -6,8 +6,8 @@ const base = { pct: 70, correct: 7, total: 10, partial: 1, incorrect: 2 }
 // ─── getShareText ─────────────────────────────────────────────────────────────
 
 describe('getShareText', () => {
-  it('ヘッダー行 "【Reel】クイズ完了 📊" が含まれる', () => {
-    expect(getShareText(base)).toContain('【Reel】クイズ完了 📊')
+  it('ヘッダー行 "【Pick】チャレンジ完了 📊" が含まれる', () => {
+    expect(getShareText(base)).toContain('【Pick】チャレンジ完了 📊')
   })
 
   it('スコアと問題数が正しく埋め込まれる', () => {
@@ -61,7 +61,9 @@ describe('getShareText', () => {
     expect(tagLine).toBe('#英語学習 #フレーズ学習 #ミーティング英語')
   })
 
-  it('"Reel — 実際の会話から学ぶ英語フレーズ" が含まれる', () => {
-    expect(getShareText(base)).toContain('Reel — 実際の会話から学ぶ英語フレーズ')
+  it('1行目がヘッダー、2行目がスコア行になる', () => {
+    const lines = getShareText(base).split('\n')
+    expect(lines[0]).toBe('【Pick】チャレンジ完了 📊')
+    expect(lines[1]).toBe('70% 正解（7/10問）')
   })
 })
