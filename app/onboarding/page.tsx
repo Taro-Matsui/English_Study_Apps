@@ -275,7 +275,7 @@ export default function OnboardingPage() {
   }
 
   async function submitMini() {
-    if (!miniPhrase || !miniAnswer.trim()) return
+    if (!miniPhrase || !miniAnswer.trim() || miniJudging) return
     setMiniJudging(true)
     try {
       const res = await fetch('/api/quiz/judge', {

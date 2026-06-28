@@ -42,7 +42,7 @@ export async function checkPhraseQuota(userId: string, plan: Plan): Promise<Quot
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .is('deleted_at', null)
-      .neq('source_type', 'System') // 初期配布シードはユーザー枠を消費しない（T1-2(B) 供給保証）
+      .or('source_type.is.null,source_type.neq.System') // System シードのみ除外（NULL/他ソースは計上）。T1-2(B)。SQL三値論理で .neq だと NULL も落ちる罠を回避
 
     const used = count ?? 0
     const limit = FREE_PHRASE_LIMIT

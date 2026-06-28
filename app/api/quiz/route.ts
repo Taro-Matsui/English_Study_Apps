@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
         if (weakIds.length > 0) {
           const { data: weakPhrases, error } = await db
             .from('phrases')
-            .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, usage_scene, engineer_level')
+            .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, source_type, usage_scene, engineer_level, added_date')
             .in('id', weakIds)
             .is('deleted_at', null)
             .eq('user_id', user.id)

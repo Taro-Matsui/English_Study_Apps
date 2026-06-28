@@ -19,7 +19,7 @@ WITH user_sources AS (
     u.id AS user_id,
     u.created_at,
     COUNT(DISTINCT p.source_title) FILTER (
-      WHERE p.source_type <> 'System'
+      WHERE p.source_type IS DISTINCT FROM 'System'
         AND p.source_title IS NOT NULL
         AND p.deleted_at IS NULL
         AND p.added_date <= (u.created_at + INTERVAL '7 days')::date
@@ -47,12 +47,12 @@ WITH active AS (
   UNION
   SELECT DISTINCT user_id FROM phrases
     WHERE added_date >= (NOW() - INTERVAL '14 days')::date
-      AND source_type <> 'System' AND deleted_at IS NULL
+      AND source_type IS DISTINCT FROM 'System' AND deleted_at IS NULL
 ),
 supplied AS (
   SELECT DISTINCT user_id FROM phrases
     WHERE added_date >= (NOW() - INTERVAL '14 days')::date
-      AND source_type <> 'System' AND deleted_at IS NULL
+      AND source_type IS DISTINCT FROM 'System' AND deleted_at IS NULL
 )
 SELECT
   (SELECT COUNT(*) FROM active)                                   AS active_users_14d,
@@ -74,7 +74,7 @@ FROM auth.users u
 LEFT JOIN LATERAL (
   SELECT COUNT(*) AS non_system_phrases
   FROM phrases p
-  WHERE p.user_id = u.id AND p.source_type <> 'System' AND p.deleted_at IS NULL
+  WHERE p.user_id = u.id AND p.source_type IS DISTINCT FROM 'System' AND p.deleted_at IS NULL
 ) cnt ON true
 GROUP BY 1
 ORDER BY 1 DESC;

@@ -55,18 +55,28 @@ async function main() {
 
   console.log(apply ? '=== APPLY モード（実書き込み）===' : '=== DRY-RUN（変更なし・--apply で実行）===')
 
-  // 全ユーザーをページングで取得
+  // 全ユーザーをページングで取得。
+  // 注意: GoTrue は per_page にサーバ側上限(GOTRUE_API_MAX_ROWS, 概ね100)を課し、
+  //   それを超える perPage 要求は黙って切り詰められる。終了判定を「受信件数 < perPage」に
+  //   すると1ページ目で誤って break し大半が漏れるため、必ず data.nextPage を基準にする。
   const users: AuthUser[] = []
+  const perPage = 100
   let page = 1
-  const perPage = 1000
   for (;;) {
     const { data, error } = await db.auth.admin.listUsers({ page, perPage })
     if (error) {
       console.error('listUsers error:', error.message)
       process.exit(1)
     }
-    users.push(...(data.users as AuthUser[]))
-    if (data.users.length < perPage) break
+    const batch = data.users as AuthUser[]
+    users.push(...batch)
+    const nextPage = (data as { nextPage?: number | null }).nextPage
+    if (nextPage) {
+      page = nextPage
+      continue
+    }
+    // nextPage 不在(旧lib)時のフォールバック: 空 or 上限未満で終了
+    if (batch.length === 0 || batch.length < perPage) break
     page++
   }
   console.log(`総ユーザー数: ${users.length}`)
@@ -89,18 +99,24 @@ async function main() {
     const seedKey = resolveSeedKey(meta.study_purpose as string, meta.study_subcategory as string)
     const expected = buildSeedRows(seedKey, u.id, today)
 
-    // 既存の System シード(論理削除含む)の phrase 集合 → 既存は再追加しない
+    // 重複回避のため既存フレーズを全ソース・論理削除込みで取得。
+    //   ① 生存(deleted_at=null)フレーズは全ソースで突合 → import 等で既に持つ語の二重化を防ぐ
+    //   ② 削除済みでも System シードは突合 → ユーザーが消したシードを勝手に復活させない
     const { data: existing, error: exErr } = await db
       .from('phrases')
-      .select('phrase')
+      .select('phrase, source_type, deleted_at')
       .eq('user_id', u.id)
-      .eq('source_type', 'System')
     if (exErr) {
       console.error(`[${u.id}] 既存取得失敗: ${exErr.message}`)
       errors++
       continue
     }
-    const have = new Set((existing ?? []).map((r: { phrase: string }) => r.phrase))
+    const have = new Set(
+      (existing ?? [])
+        .filter((r: { source_type: string | null; deleted_at: string | null }) =>
+          r.deleted_at === null || r.source_type === 'System')
+        .map((r: { phrase: string }) => r.phrase)
+    )
     const missing = expected.filter((r) => !have.has(r.phrase))
     if (missing.length === 0) continue
 
