@@ -110,20 +110,33 @@ export async function POST(req: NextRequest) {
       const periodEnd = sub.current_period_end as number | undefined
       const periodStart = sub.current_period_start as number | undefined
 
-      await supabase.from('subscriptions').upsert(
-        {
-          user_id: userId,
-          stripe_subscription_id: subscription.id,
-          stripe_customer_id: session.customer as string,
-          plan,
-          status: subscription.status,
-          current_period_end: periodEnd
-            ? new Date(periodEnd * 1000).toISOString()
-            : null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'stripe_subscription_id' }
-      )
+      const subRow = {
+        user_id: userId,
+        stripe_subscription_id: subscription.id,
+        stripe_customer_id: session.customer as string,
+        plan,
+        status: subscription.status,
+        current_period_end: periodEnd
+          ? new Date(periodEnd * 1000).toISOString()
+          : null,
+        updated_at: new Date().toISOString(),
+      }
+      // 1ユーザー1行を維持する。onConflict に依存しない update-then-insert にすることで
+      // migration 018(user_id UNIQUE) の適用前後どちらでも安全に動く。
+      // - 018前: user_id に UNIQUE が無いので onConflict:'user_id' は使えない
+      // - 018後: 旧 onConflict:'stripe_subscription_id' だと再契約時 insert が user_id 重複で失敗
+      // 既存行があれば更新、無ければ挿入（再契約は既存行を上書き）。
+      const { data: existingRow } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle()
+      if (existingRow) {
+        await supabase.from('subscriptions').update(subRow).eq('user_id', userId)
+      } else {
+        await supabase.from('subscriptions').insert(subRow)
+      }
 
       // Starter: plan_quotas を初期化
       if (plan === 'starter' && periodStart) {
