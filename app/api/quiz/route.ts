@@ -81,6 +81,11 @@ export async function POST(req: NextRequest) {
     : dueQuery.order('next_review_date', { ascending: true })
   const { data: dueRows } = await dueQuery.limit(limit * 3)
 
+  // phrase_id → repetitions（産出方向の判定 isProductionDirection に使う）
+  const repMap = new Map(
+    (dueRows ?? []).map((r: { phrase_id: string; repetitions: number | null }) =>
+      [r.phrase_id, r.repetitions ?? 0] as [string, number])
+  )
   const dueIds = (dueRows ?? [])
     .map((r: { phrase_id: string }) => r.phrase_id)
     .filter((id: string) => !excludeIds.includes(id))
@@ -94,7 +99,9 @@ export async function POST(req: NextRequest) {
       .is('deleted_at', null)
       .eq('user_id', user.id)
     const ord = new Map(dueIds.map((id, i) => [id, i] as [string, number]))
-    result = ((data ?? []) as PhraseRow[]).sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9))
+    result = ((data ?? []) as PhraseRow[])
+      .sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9))
+      .map((p) => ({ ...p, repetitions: repMap.get(p.id) ?? 0 }))
   }
 
   // 2. due が limit に満たない分は未学習フレーズ（user_progress 行なし）を新着順で補充。
@@ -128,7 +135,9 @@ export async function POST(req: NextRequest) {
         .is('deleted_at', null)
         .eq('user_id', user.id)
       const ord = new Map(freshIds.map((id, i) => [id, i] as [string, number]))
-      const fresh = ((data ?? []) as PhraseRow[]).sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9))
+      const fresh = ((data ?? []) as PhraseRow[])
+        .sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9))
+        .map((p) => ({ ...p, repetitions: 0 })) // 未学習は受容方向
       result = [...result, ...fresh]
     }
   }

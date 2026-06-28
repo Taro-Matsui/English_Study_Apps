@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { priceKey } = body as { priceKey?: string }
+  const { priceKey, trial } = body as { priceKey?: string; trial?: boolean }
 
   // allowlist バリデーション — priceKey は 4 種のみ許可
   const priceMap: Record<string, string | undefined> = {
@@ -34,15 +34,31 @@ export async function POST(req: NextRequest) {
     const stripe = getStripe()
     const supabase = getSupabaseAdmin()
 
-    // 既存の stripe_customer_id を取得（table 未作成でも error は無視）
-    const { data: existingSub } = await supabase
+    // ユーザーの全 subscription 行を取得。
+    // subscriptions は user_id に UNIQUE が無く複数行ありうるため .single() は使わない
+    // （複数行だと .single() がエラー→existingSub=null で再トライアルが通る穴になる）。
+    const { data: subRows } = await supabase
       .from('subscriptions')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, stripe_subscription_id')
       .eq('user_id', user.id)
-      .limit(1)
-      .single()
 
-    let customerId = existingSub?.stripe_customer_id as string | undefined
+    let customerId = (subRows ?? []).find((r) => r.stripe_customer_id)?.stripe_customer_id as string | undefined
+    const hasDbSubscription = (subRows ?? []).some((r) => !!r.stripe_subscription_id)
+
+    // 14日 Pro トライアルは「過去に一度も契約/トライアルしていない」ユーザーのみ（再トライアル濫用防止）。
+    const isProPrice = priceKey === 'pro_monthly' || priceKey === 'pro_yearly'
+    let trialEligible = trial === true && isProPrice && !hasDbSubscription
+
+    // customer が既にあれば Stripe を真実源として既存サブスク有無も確認（DB取りこぼし対策）。
+    // 照会失敗時は安全側に倒してトライアルを付与しない。
+    if (trialEligible && customerId) {
+      try {
+        const existing = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 1 })
+        if (existing.data.length > 0) trialEligible = false
+      } catch {
+        trialEligible = false
+      }
+    }
 
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -59,6 +75,8 @@ export async function POST(req: NextRequest) {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
+      // トライアル: カードは取得し、14日後に自動課金（解約しなければ）
+      ...(trialEligible ? { subscription_data: { trial_period_days: 14 } } : {}),
       success_url: `${origin}/settings/billing?success=true`,
       cancel_url: `${origin}/settings/billing?canceled=true`,
       metadata: { user_id: user.id },

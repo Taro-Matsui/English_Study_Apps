@@ -12,6 +12,8 @@ export interface JudgeRequest {
   user_answer: string
   meaning_ja: string
   original_context?: string
+  /** 'reception'=英→日意味当て（既定） / 'production'=日→英の産出 */
+  direction?: 'reception' | 'production'
 }
 
 export type { JudgeStatus }
@@ -88,9 +90,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json<JudgeResponse>({ correct: false, status: 'incorrect', feedback: '回答を入力してください' })
   }
 
-  // ローカル一致チェック — Claude を呼ばずに即時 correct 返却（受容方向のみ）。
-  // 完全一致 / 区切り要素一致 / 実質的な部分包含で LLM スキップ率を上げ採点原価を抑える（T1-1(A)）。
-  if (isLocalCorrect(user_answer, meaning_ja)) {
+  const direction = body.direction === 'production' ? 'production' : 'reception'
+
+  // ローカル一致チェック — Claude を呼ばずに即時 correct 返却。
+  if (direction === 'production') {
+    // 産出（意味→英語）は綴り厳密性が要るため、目標フレーズとの完全一致のみスキップ。
+    // 英語向け正規化（小文字化・記号/ハイフン/連続空白の吸収）で自明な正答を LLM なしで返す。
+    // 受容用の緩い一致（区切り/部分包含）は使わない。
+    const normEng = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+    if (normEng(user_answer) === normEng(phrase)) {
+      return NextResponse.json<JudgeResponse>({ correct: true, status: 'correct', feedback: '正解' })
+    }
+  } else if (isLocalCorrect(user_answer, meaning_ja)) {
+    // 受容（英→日）: 完全一致 / 区切り要素一致 / 実質的な部分包含で LLM スキップ（T1-1(A)）。
     return NextResponse.json<JudgeResponse>({ correct: true, status: 'correct', feedback: '正解' })
   }
 
@@ -107,7 +119,24 @@ export async function POST(req: NextRequest) {
     ? 'context_ja: 上記使用例文の自然な日本語全訳'
     : 'context_ja: このフレーズの典型的な使用場面を日本語で一文（例文形式で）'
 
-  const prompt = `フレーズ: "${phrase}"
+  const prompt = direction === 'production'
+    ? `目標の英語フレーズ: "${phrase}"
+その意味（日本語）: "${meaning_ja}"
+ユーザーが入力した英語: "${user_answer}"${contextLine}
+
+【評価ルール】ユーザーは上記の意味を英語で表現しようとしています。
+- "correct": 目標フレーズと一致、または意味的に同等で自然な英語表現（語形・時制の軽微な違い、大文字小文字・スペルの軽微な揺れは許容）
+- "partial": 意味は近いが語彙・コロケーション・語法がずれる／不自然
+- "incorrect": 意味が異なる、または英語として成立しない
+
+フィードバック（feedback・30字以内）：
+- correct: 簡潔な肯定（別の自然な言い方があれば一言）
+- partial: 何が惜しいか・より自然な表現のヒント
+- incorrect: 正しい英語表現のヒント
+
+以下のJSONのみを返してください（説明不要）：
+{"status": "correct|partial|incorrect", "feedback": "フィードバック（30字以内）", "context_ja": "${contextJaInstruction}"}`
+    : `フレーズ: "${phrase}"
 このフレーズの意味: "${meaning_ja}"
 ユーザーの回答: "${user_answer}"${contextLine}
 

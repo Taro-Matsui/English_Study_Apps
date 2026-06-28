@@ -62,9 +62,7 @@ const PLANS: {
     features: [
       'フレーズ無制限',
       '1日 10 チャレンジ',
-      'AI 判定 無制限（Sonnet）',
-      'SRS 優先出題（近日公開）',
-      'Pick of the Week（近日公開）',
+      'AI 判定 無制限（高精度 Sonnet）',
       '優先サポート',
     ],
   },
@@ -83,23 +81,36 @@ function BillingContent() {
   const canceled = searchParams.get('canceled') === 'true'
 
   useEffect(() => {
-    fetch('/api/stripe/subscription')
-      .then((r) => r.json())
-      .then((data) => {
-        setSub(data as Subscription)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
+    let cancelled = false
+    let tries = 0
+    const load = () => {
+      fetch('/api/stripe/subscription')
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return
+          setSub(data as Subscription)
+          setLoading(false)
+          // 決済直後は webhook 反映にラグがある。free のままなら数回ポーリングし、
+          // 反映後にトライアルボタンを消す（二重トライアル発火の窓を縮める）。
+          if (success && (data?.plan ?? 'free') === 'free' && tries < 4) {
+            tries++
+            setTimeout(load, 1500)
+          }
+        })
+        .catch(() => { if (!cancelled) setLoading(false) })
+    }
+    load()
+    return () => { cancelled = true }
+  }, [success])
 
-  async function handleUpgrade(priceKey: string) {
+  async function handleUpgrade(priceKey: string, trial = false) {
     setCheckoutLoading(priceKey)
     setErrorMsg(null)
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceKey }),
+        body: JSON.stringify({ priceKey, trial }),
       })
       const text = await res.text()
       let data: { url?: string; error?: string }
@@ -135,6 +146,8 @@ function BillingContent() {
   }
 
   const currentPlan: Plan = sub?.plan ?? 'free'
+  // 14日トライアル適格: Free かつ過去に一度も契約/トライアルしていない（再トライアル防止）
+  const trialEligible = !loading && currentPlan === 'free' && !sub?.stripe_subscription_id
 
   return (
     <div className="min-h-screen bg-ground text-gray-900">
@@ -176,13 +189,16 @@ function BillingContent() {
                 <div>
                   <p className="font-semibold text-gray-900">
                     {PLAN_LABELS[currentPlan]}
+                    {sub?.status === 'trialing' && (
+                      <span className="ml-2 text-xs text-brand font-normal">（トライアル中）</span>
+                    )}
                     {sub?.status === 'past_due' && (
                       <span className="ml-2 text-xs text-red-500 font-normal">（支払い失敗）</span>
                     )}
                   </p>
                   {sub?.current_period_end && currentPlan !== 'free' && (
                     <p className="text-xs text-gray-400 mt-0.5">
-                      次回更新: {new Date(sub.current_period_end).toLocaleDateString('ja-JP')}
+                      {sub?.status === 'trialing' ? 'トライアル終了' : '次回更新'}: {new Date(sub.current_period_end).toLocaleDateString('ja-JP')}
                     </p>
                   )}
                 </div>
@@ -304,17 +320,32 @@ function BillingContent() {
                     {portalLoading ? '移動中...' : '管理・解約'}
                   </button>
                 ) : isHigher ? (
-                  <button
-                    onClick={() => priceKey && handleUpgrade(priceKey)}
-                    disabled={isLoading || !priceKey}
-                    className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
-                      plan.highlight
-                        ? 'bg-brand text-white hover:bg-brand-deep'
-                        : 'bg-gray-900 text-white hover:bg-gray-800'
-                    }`}
-                  >
-                    {isLoading ? '移動中...' : `${plan.label} にアップグレード`}
-                  </button>
+                  plan.key === 'pro' && trialEligible ? (
+                    <div className="space-y-1.5">
+                      <button
+                        onClick={() => priceKey && handleUpgrade(priceKey, true)}
+                        disabled={isLoading || !priceKey}
+                        className="w-full py-2.5 rounded-lg text-sm font-bold bg-brand text-white hover:bg-brand-deep transition-colors disabled:opacity-50"
+                      >
+                        {isLoading ? '移動中...' : '14日間 無料で Pro を試す'}
+                      </button>
+                      <p className="text-[11px] text-gray-400 text-center">
+                        14日後に {PLAN_PRICES.pro[interval]}。いつでも解約可・トライアル中も解約できます。
+                      </p>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => priceKey && handleUpgrade(priceKey)}
+                      disabled={isLoading || !priceKey}
+                      className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
+                        plan.highlight
+                          ? 'bg-brand text-white hover:bg-brand-deep'
+                          : 'bg-gray-900 text-white hover:bg-gray-800'
+                      }`}
+                    >
+                      {isLoading ? '移動中...' : `${plan.label} にアップグレード`}
+                    </button>
+                  )
                 ) : (
                   // 現在より下のプランはダウングレード（ポータルから）
                   <button

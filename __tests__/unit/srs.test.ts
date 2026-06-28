@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { STEPS, nextReview, deriveGrade, isMastered } from '@/lib/srs'
+import { STEPS, nextReview, deriveGrade, isMastered, isProductionDirection, PRODUCTION_THRESHOLD } from '@/lib/srs'
 
 // 基準日（UTC固定）でテストの決定性を確保
 const TODAY = new Date('2026-06-28T00:00:00Z')
@@ -98,6 +98,26 @@ describe('isMastered', () => {
 describe('STEPS', () => {
   it('拡張間隔 [1,3,7,16,35,70]', () => {
     expect(STEPS).toEqual([1, 3, 7, 16, 35, 70])
+  })
+})
+
+// ─── isProductionDirection（rep>=2 で産出方向）────────────────
+
+describe('isProductionDirection', () => {
+  it('しきい値は 2', () => {
+    expect(PRODUCTION_THRESHOLD).toBe(2)
+  })
+  it('rep=0,1 は受容（false）', () => {
+    expect(isProductionDirection(0)).toBe(false)
+    expect(isProductionDirection(1)).toBe(false)
+  })
+  it('rep=2 以上は産出（true）', () => {
+    expect(isProductionDirection(2)).toBe(true)
+    expect(isProductionDirection(5)).toBe(true)
+  })
+  it('null/undefined は受容（false）', () => {
+    expect(isProductionDirection(null)).toBe(false)
+    expect(isProductionDirection(undefined)).toBe(false)
   })
 })
 

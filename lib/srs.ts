@@ -23,6 +23,17 @@ export interface SrsUpdate extends SrsState {
 /** 拡張間隔（日）。index = repetitions に対応。末尾で頭打ち。 */
 export const STEPS = [1, 3, 7, 16, 35, 70]
 
+/**
+ * 受容（英→日）から産出（日→英）へ昇格する習熟度のしきい値。
+ * repetitions がこの値以上のフレーズは「意味→英語を入力」の産出方向で出題する。
+ */
+export const PRODUCTION_THRESHOLD = 2
+
+/** そのフレーズを産出方向（日→英）で出題すべきか。 */
+export function isProductionDirection(repetitions: number | null | undefined): boolean {
+  return (repetitions ?? 0) >= PRODUCTION_THRESHOLD
+}
+
 const MAX_REP = STEPS.length - 1
 
 /** today の暦日（UTC）に days を加えて 'YYYY-MM-DD' を返す。時刻成分は無視（日単位）。 */

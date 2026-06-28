@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/auth-context'
 import { openXShare, generateQuizResultImage, uploadShareImage } from '@/lib/share-image'
 import { AdBanner } from '@/components/AdBanner'
 import { SourceBadge } from '@/components/SourceBadge'
+import { isProductionDirection } from '@/lib/srs'
 
 interface QuizPhrase {
   id: string
@@ -25,6 +26,7 @@ interface QuizPhrase {
   source_type: string | null
   usage_scene: UsageScene | null
   engineer_level: EngineerLevel | null
+  repetitions: number   // SRS 習熟度。>=2 で産出方向（意味→英語）に昇格
 }
 
 type Step = 'loading' | 'question' | 'judging' | 'result' | 'set_break' | 'done' | 'empty'
@@ -167,6 +169,9 @@ function QuizContent() {
   const total = phrases.length
   const answered = score.correct + score.partial + score.incorrect
 
+  // 産出方向（意味→英語）か。SRS 習熟度 repetitions>=2 のフレーズで true。
+  const isProduction = !!current && isProductionDirection(current.repetitions)
+
   // 5問区切り（T1-6）: セット番号とセット内の位置を算出
   const totalSets = Math.max(1, Math.ceil(total / SET_SIZE))
   const setNo = Math.min(Math.floor(index / SET_SIZE) + 1, totalSets)
@@ -223,6 +228,7 @@ function QuizContent() {
           user_answer: answer,
           meaning_ja: current.meaning_ja,
           original_context: current.original_context ?? undefined,
+          direction: isProduction ? 'production' : 'reception',
         }),
       })
       const data: JudgeResponse = await res.json()
@@ -572,22 +578,36 @@ function QuizContent() {
                   </span>
                 )}
               </div>
-              <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-wide break-words">{current.phrase}</p>
-              {/* コンテキストヒント（設定 ON かつ original_context がある場合） */}
-              {settings.contextHint && current.original_context && step === 'question' && (
-                <p className="text-xs text-gray-500 italic bg-gray-50 rounded-xl px-3 py-2 leading-relaxed text-left">
-                  &ldquo;{maskPhrase(current.original_context, current.phrase)}&rdquo;
-                </p>
+              {isProduction && step !== 'result' ? (
+                <>
+                  {/* 産出方向（意味→英語）: 意味だけを提示して英語を入力させる。
+                      original_context は屈折形でマスクが外れ答えが漏れるため出題中は出さない（結果で reveal）。 */}
+                  <p className="text-xs text-brand font-semibold tracking-wide">🎯 英語で言うと?</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{current.meaning_ja}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-wide break-words">{current.phrase}</p>
+                  {/* コンテキストヒント（受容: 設定 ON かつ original_context がある場合） */}
+                  {!isProduction && settings.contextHint && current.original_context && step === 'question' && (
+                    <p className="text-xs text-gray-500 italic bg-gray-50 rounded-xl px-3 py-2 leading-relaxed text-left">
+                      &ldquo;{maskPhrase(current.original_context, current.phrase)}&rdquo;
+                    </p>
+                  )}
+                </>
               )}
 
-              <div className="flex items-center justify-center gap-2 flex-wrap">
-                <button onClick={() => speak(current.phrase, 'phrase')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-brand/20 text-brand' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                  {t('quiz_speak_phrase')}
-                </button>
-                <SpeedSelector />
-                <VoiceSelector />
-              </div>
+              {/* 音声操作: 産出の出題中は答えを音声で漏らさないため隠す（結果で表示） */}
+              {(!isProduction || step === 'result') && (
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <button onClick={() => speak(current.phrase, 'phrase')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-brand/20 text-brand' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                    {t('quiz_speak_phrase')}
+                  </button>
+                  <SpeedSelector />
+                  <VoiceSelector />
+                </div>
+              )}
             </div>
 
             {step === 'question' && (
@@ -601,7 +621,7 @@ function QuizContent() {
                   value={answer}
                   onChange={(e) => setAnswer(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                  placeholder={t('quiz_placeholder')}
+                  placeholder={isProduction ? '英語で入力…' : t('quiz_placeholder')}
                   style={{ fontSize: '16px' }}
                   className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-brand transition-colors"
                 />
