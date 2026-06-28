@@ -69,9 +69,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
   // クイズページ表示を高速化するためフレーズをバックグラウンドでプリフェッチ
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('app_settings') ?? '{}')
-      if (saved.skipMastered) return // 除外リストが変わるためプリフェッチ不可
-
+      // SRS では出題順をサーバ(due 順)が決めるため、全ユーザーでプリフェッチ可能
       const cache = sessionStorage.getItem('quiz_prefetch')
       if (cache) {
         const { ts } = JSON.parse(cache) as { ts: number }

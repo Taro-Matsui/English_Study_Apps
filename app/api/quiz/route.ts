@@ -97,8 +97,10 @@ export async function POST(req: NextRequest) {
     result = ((data ?? []) as PhraseRow[]).sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9))
   }
 
-  // 2. due が limit に満たない分は未学習フレーズ（user_progress 行なし）を新着順で補充
-  if (result.length < limit) {
+  // 2. due が limit に満たない分は未学習フレーズ（user_progress 行なし）を新着順で補充。
+  //    focus（ピックアップ チャレンジ＝復習）では新規フレーズを混ぜないため補充しない
+  //    （due が無ければ空で返し、クライアントは復習対象なしとして扱う）。
+  if (mode !== 'focus' && result.length < limit) {
     const need = limit - result.length
     const { data: progressRows } = await db
       .from('user_progress')
@@ -106,13 +108,14 @@ export async function POST(req: NextRequest) {
       .eq('user_id', user.id)
     const studied = new Set((progressRows ?? []).map((r: { phrase_id: string }) => r.phrase_id))
     const taken = new Set<string>([...excludeIds, ...result.map((p) => p.id)])
+    // ids のみの軽量スキャン。学習済みを除外して未学習を拾うため広めに取得する
     const { data: idRows } = await db
       .from('phrases')
       .select('id')
       .is('deleted_at', null)
       .eq('user_id', user.id)
       .order('added_date', { ascending: false })
-      .limit(500)
+      .limit(2000)
     const freshIds = ((idRows ?? []) as { id: string }[])
       .map((r) => r.id)
       .filter((id) => !studied.has(id) && !taken.has(id))

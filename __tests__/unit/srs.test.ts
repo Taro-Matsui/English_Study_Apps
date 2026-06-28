@@ -100,3 +100,53 @@ describe('STEPS', () => {
     expect(STEPS).toEqual([1, 3, 7, 16, 35, 70])
   })
 })
+
+// ─── 境界網羅（回帰防止）──────────────────────────────────────
+
+describe('nextReview / hard 各段の丸め', () => {
+  it.each([
+    [1, 2],  // round(3*0.6=1.8)=2
+    [2, 4],  // round(7*0.6=4.2)=4
+    [3, 10], // round(16*0.6=9.6)=10
+    [4, 21], // round(35*0.6=21)=21
+    [5, 42], // round(70*0.6=42)=42
+  ])('rep=%i→hard で interval=%i（据え置き）', (rep, expectedInterval) => {
+    const r = nextReview({ ...base, repetitions: rep }, 'hard', TODAY)
+    expect(r.repetitions).toBe(rep)
+    expect(r.interval_days).toBe(expectedInterval)
+  })
+})
+
+describe('deriveGrade / 境界', () => {
+  it('responseTimeMs ちょうど 3500ms は hard（<3500 のみ good）', () => {
+    expect(deriveGrade('correct', 3500, true)).toBe('hard')
+  })
+  it('correct だが時間不明(null) は hard（速度未確認のため昇格しない）', () => {
+    expect(deriveGrade('correct', null, true)).toBe('hard')
+  })
+  it('partial は is_correct=true でも status 優先で hard', () => {
+    expect(deriveGrade('partial', 1000, true)).toBe('hard')
+  })
+})
+
+describe('isMastered / 境界', () => {
+  it('rep=5・interval=34 は未習熟（間隔不足）', () => {
+    expect(isMastered({ repetitions: 5, interval_days: 34 })).toBe(false)
+  })
+  it('rep=5・interval=35 ちょうどは習熟', () => {
+    expect(isMastered({ repetitions: 5, interval_days: 35 })).toBe(true)
+  })
+  it('rep=4・interval=70 は未習熟（末尾段未達）', () => {
+    expect(isMastered({ repetitions: 4, interval_days: 70 })).toBe(false)
+  })
+})
+
+describe('nextReview / again 後の復帰', () => {
+  it('again でリセット後 good で rep=1・interval=3 に戻る', () => {
+    const afterAgain = nextReview({ ...base, repetitions: 4 }, 'again', TODAY)
+    expect(afterAgain.repetitions).toBe(0)
+    const afterGood = nextReview(afterAgain, 'good', TODAY)
+    expect(afterGood.repetitions).toBe(1)
+    expect(afterGood.interval_days).toBe(3)
+  })
+})

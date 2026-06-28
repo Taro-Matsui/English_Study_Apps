@@ -51,7 +51,10 @@ export async function POST(request: Request) {
   return NextResponse.json({ success: true })
 }
 
-// DELETE /api/user/progress — 習得済みを全クリア
+// DELETE /api/user/progress — 習得済みフラグをクリア
+// ⚠️ user_progress は SRS のスケジュール格納先（repetitions/interval_days/
+//    next_review_date）でもある。行を削除すると全フレーズの学習進捗が消えるため、
+//    is_mastered フラグのクリアに限定し SRS 列は温存する。
 export async function DELETE() {
   const user = await getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -59,8 +62,9 @@ export async function DELETE() {
   const db = getSupabaseAdmin()
   const { error } = await db
     .from('user_progress')
-    .delete()
+    .update({ is_mastered: false })
     .eq('user_id', user.id)
+    .eq('is_mastered', true)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

@@ -53,7 +53,7 @@ function guessGender(voice: SpeechSynthesisVoice): '♀' | '♂' | '' {
 export default function SettingsPage() {
   const router = useRouter()
   const { lang } = useLanguage()
-  const { settings, setVoicePreset, setVoice, setSkipMastered, setContextHint, setShowPronunciation, clearMastered } = useSettings()
+  const { settings, setVoicePreset, setVoice, setContextHint, setShowPronunciation } = useSettings()
   const { user } = useAuth()
 
   const [deleteInput, setDeleteInput] = useState('')
@@ -325,22 +325,8 @@ export default function SettingsPage() {
             {ja ? 'チャレンジ設定' : 'Challenge Settings'}
           </h2>
 
-          <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-colors">
-            <input
-              type="checkbox"
-              checked={settings.skipMastered}
-              onChange={(e) => setSkipMastered(e.target.checked)}
-              className="w-4 h-4 accent-blue-500 flex-shrink-0"
-            />
-            <div>
-              <p className="text-sm font-medium">
-                {ja ? '正解済みフレーズをスキップ' : 'Skip already-correct phrases'}
-              </p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {ja ? '一度正解したフレーズはクイズに出なくなります' : 'Phrases answered correctly will not appear again'}
-              </p>
-            </div>
-          </label>
+          {/* SRS（間隔反復）導入により「正解済みをスキップ」設定は廃止。
+              習得したフレーズは復習間隔が伸びることで自然に出題頻度が下がる。 */}
 
           <label className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 bg-white cursor-pointer hover:bg-gray-50 transition-colors">
             <input
@@ -376,21 +362,6 @@ export default function SettingsPage() {
             </div>
           </label>
 
-          <div className="flex items-center justify-between p-4 rounded-xl border border-gray-200 bg-white">
-            <div>
-              <p className="text-sm font-medium">{ja ? 'Pickedフレーズ' : 'Picked phrases'}</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {settings.masteredIds.length}{ja ? ' 件' : ' phrases'}
-              </p>
-            </div>
-            <button
-              onClick={clearMastered}
-              disabled={settings.masteredIds.length === 0}
-              className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              {ja ? 'リセット' : 'Reset'}
-            </button>
-          </div>
         </section>
 
         {/* チュートリアル・ヒント */}
