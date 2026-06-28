@@ -9,7 +9,7 @@ export default function AboutPage() {
     <div className="min-h-screen bg-ground py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
-          <Link href="/login" className="text-sm text-amber-700 hover:text-amber-900">← トップへ戻る</Link>
+          <Link href="/login" className="text-sm text-gray-500 hover:text-gray-700">← トップへ戻る</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">運営者情報</h1>
         </div>
 
@@ -18,7 +18,7 @@ export default function AboutPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-4">
               <dt className="font-medium text-gray-500">サービス名</dt>
-              <dd className="col-span-2 font-semibold text-gray-900">Pick（リール）</dd>
+              <dd className="col-span-2 font-semibold text-gray-900">Pick（ピック）</dd>
             </div>
             <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-4">
               <dt className="font-medium text-gray-500">運営者</dt>
@@ -35,7 +35,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-3 gap-4">
               <dt className="font-medium text-gray-500">お問い合わせ</dt>
               <dd className="col-span-2">
-                <Link href="/contact" className="text-amber-700 hover:underline">
+                <Link href="/contact" className="text-brand hover:underline">
                   お問い合わせフォームへ →
                 </Link>
               </dd>

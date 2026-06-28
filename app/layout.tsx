@@ -22,11 +22,11 @@ export const metadata: Metadata = {
   title: "Pick",
   description: "実際の会話・文書から英語フレーズをPickして学ぶアプリ",
   icons: {
-    // iOS Safari ホーム画面アイコン → logo.png を使用（apple-icon.tsx より優先）
-    apple: [{ url: '/logo.png', sizes: '1024x1024', type: 'image/png' }],
+    // iOS Safari ホーム画面アイコン → pick_logo.png を使用（apple-icon.tsx より優先）
+    apple: [{ url: '/pick_logo.png', sizes: '1024x1024', type: 'image/png' }],
     icon: [
-      { url: '/icon.png', sizes: '512x512', type: 'image/png' },
-      { url: '/logo.png', sizes: '1024x1024', type: 'image/png' },
+      { url: '/pick_logo.png', sizes: '512x512', type: 'image/png' },
+      { url: '/pick_logo.png', sizes: '1024x1024', type: 'image/png' },
     ],
   },
   appleWebApp: {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f5f0e8",
+  themeColor: "#f7f6f2",
 };
 
 export default function RootLayout({

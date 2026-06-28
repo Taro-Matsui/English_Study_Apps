@@ -289,7 +289,7 @@ export default function LoginPage() {
         {/* ── デモ・リンク ── */}
         <div className="text-center space-y-2">
           <p className="text-xs text-gray-400">登録なしで試してみたい方は</p>
-          <a href="/demo" className="text-sm text-amber-700 hover:text-amber-900 underline font-medium">
+          <a href="/demo" className="text-sm text-brand hover:text-brand-deep underline font-medium">
             → デモモードで体験する
           </a>
         </div>

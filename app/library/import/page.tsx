@@ -296,7 +296,7 @@ export default function LibraryImportPage() {
                     }`}>
                       {file ? (
                         <div className="space-y-1">
-                          <p className="text-sm font-semibold text-amber-800">{file.name}</p>
+                          <p className="text-sm font-semibold text-gray-800">{file.name}</p>
                           <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
                           <p className="text-xs text-brand">別のファイルを選ぶ場合はタップ</p>
                         </div>
@@ -416,7 +416,7 @@ export default function LibraryImportPage() {
                   }
                   const hint = hints[sourceType]
                   return hint ? (
-                    <p className="text-xs text-amber-600 bg-ground rounded-lg px-3 py-2 leading-relaxed">
+                    <p className="text-xs text-gray-600 bg-ground rounded-lg px-3 py-2 leading-relaxed">
                       💡 {hint}
                     </p>
                   ) : null

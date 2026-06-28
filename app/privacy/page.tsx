@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-ground py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
-          <Link href="/login" className="text-sm text-amber-700 hover:text-amber-900">← トップへ戻る</Link>
+          <Link href="/login" className="text-sm text-gray-500 hover:text-gray-700">← トップへ戻る</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">プライバシーポリシー</h1>
           <p className="text-sm text-gray-500 mt-1">最終更新日：2025年6月1日</p>
         </div>
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
             <h2 className="font-bold text-gray-900 text-base">9. お問い合わせ</h2>
             <p>
               プライバシーに関するお問い合わせは
-              <Link href="/contact" className="text-amber-700 hover:underline ml-1">こちら</Link>
+              <Link href="/contact" className="text-brand hover:underline ml-1">こちら</Link>
               からご連絡ください。
             </p>
           </section>

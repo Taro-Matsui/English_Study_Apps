@@ -82,15 +82,15 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
 
   // ── 背景 ──────────────────────────────────────────────────────
   const bg = ctx.createLinearGradient(0, 0, W, H)
-  bg.addColorStop(0, '#f5f0e8')
-  bg.addColorStop(1, '#e8ddd0')
+  bg.addColorStop(0, '#f7f6f2')
+  bg.addColorStop(1, '#eef1f0')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
   // デコレーション円（右上・左下）
   ctx.fillStyle = `${scoreColor}15`
   ctx.beginPath(); ctx.arc(W - 80, -80, 360, 0, Math.PI * 2); ctx.fill()
-  ctx.fillStyle = 'rgba(139,99,64,0.07)'
+  ctx.fillStyle = 'rgba(14,110,114,0.06)'
   ctx.beginPath(); ctx.arc(80, H + 80, 320, 0, Math.PI * 2); ctx.fill()
 
   const font = (size: number, weight = 'normal') =>
@@ -104,35 +104,35 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   ctx.textAlign = 'left'
   ctx.fillText('🎸', LX, CY - 110)
 
-  ctx.fillStyle = '#4a3020'
+  ctx.fillStyle = '#16211f'
   ctx.font = font(64, 'bold')
   ctx.fillText('Pick', LX, CY - 30)
 
-  ctx.fillStyle = '#8b6340'
+  ctx.fillStyle = '#0e6e72'
   ctx.font = font(22)
   ctx.fillText('会話からフレーズをピックして学ぼう', LX, CY + 16)
 
   // 区切り線（縦）
-  ctx.strokeStyle = 'rgba(139,115,85,0.2)'
+  ctx.strokeStyle = 'rgba(14,110,114,0.15)'
   ctx.lineWidth = 1.5
   ctx.beginPath(); ctx.moveTo(460, 60); ctx.lineTo(460, H - 60); ctx.stroke()
 
   const dateStr = new Date().toLocaleDateString('ja-JP', {
     year: 'numeric', month: 'long', day: 'numeric',
   })
-  ctx.fillStyle = '#a08060'
+  ctx.fillStyle = '#8a948f'
   ctx.font = font(18)
   ctx.fillText(dateStr, LX, CY + 68)
 
   const effectivePurposeImg = studySubcategory ?? studyPurpose
   const categoryTag = effectivePurposeImg && PURPOSE_SHARE_LABELS[effectivePurposeImg]
     ? ` #${PURPOSE_SHARE_LABELS[effectivePurposeImg].replace(/\s/g, '')}` : ''
-  ctx.fillStyle = 'rgba(139,99,64,0.5)'
+  ctx.fillStyle = 'rgba(14,110,114,0.5)'
   ctx.font = font(18)
   ctx.fillText(`#英語学習  #フレーズ学習${categoryTag}`, LX, CY + 100)
 
   const appUrl = typeof window !== 'undefined' ? window.location.origin : ''
-  ctx.fillStyle = '#b09070'
+  ctx.fillStyle = '#8a948f'
   ctx.font = font(16)
   ctx.fillText(appUrl, LX, H - 44)
 
@@ -145,7 +145,7 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   fillRoundRect(ctx, 490, 60, W - 550, H - 120, 28)
 
   // モチベーションテキスト
-  ctx.fillStyle = '#7a6248'
+  ctx.fillStyle = '#5d6b66'
   ctx.font = font(22)
   ctx.textAlign = 'center'
   ctx.fillText(motivationText, RX, 138)
@@ -157,7 +157,7 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
   ctx.fillText(`${pct}%`, RX, 330)
 
   // 問題数
-  ctx.fillStyle = '#7a6248'
+  ctx.fillStyle = '#5d6b66'
   ctx.font = font(28)
   ctx.textAlign = 'center'
   ctx.fillText(`${correct} / ${total} 問正解`, RX, 380)
@@ -180,7 +180,7 @@ export async function generateQuizResultImage(params: ShareParams): Promise<Blob
     ctx.font = font(32, 'bold')
     ctx.textAlign = 'center'
     ctx.fillText(String(value), bx + bW / 2, 458)
-    ctx.fillStyle = '#7a6248'
+    ctx.fillStyle = '#5d6b66'
     ctx.font = font(15)
     ctx.fillText(label, bx + bW / 2, 477)
   })

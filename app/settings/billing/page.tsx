@@ -168,7 +168,7 @@ function BillingContent() {
           </div>
         )}
         {canceled && (
-          <div className="rounded-xl bg-ground border border-line p-4 text-sm text-amber-800">
+          <div className="rounded-xl bg-ground border border-line p-4 text-sm text-gray-700">
             決済をキャンセルしました。プランは変更されていません。
           </div>
         )}

@@ -80,16 +80,17 @@ function getProficiencyPurpose(purpose: StudyPurpose, subcategory: StudySubcateg
 }
 
 // ── ウォームベージュ パレット ─────────────────────────────────
+// Trusted Teal に整合（旧: 茶系ウォームベージュ）。brand=#0e6e72 / ground=#f7f6f2 / ink / line
 const C = {
-  bg:      'linear-gradient(160deg, #f5f0e8 0%, #e8ddd0 100%)',
-  text:    '#4a3020',
-  sub:     '#7a6248',
-  muted:   '#a08060',
-  accent:  '#8b6340',
-  cardBg:  'rgba(255,255,255,0.75)',
-  border:  'rgba(139,115,85,0.2)',
-  selBg:   'rgba(139,99,64,0.10)',
-  selBdr:  '#8b6340',
+  bg:      '#f7f6f2',                 // ground
+  text:    '#16211f',                 // ink
+  sub:     '#5d6b66',                 // ink-soft
+  muted:   '#8a948f',
+  accent:  '#0e6e72',                 // brand (teal)
+  cardBg:  '#ffffff',                 // surface
+  border:  '#e3ddd0',                 // line
+  selBg:   'rgba(14,110,114,0.08)',   // brand tint（選択時）
+  selBdr:  '#0e6e72',                 // brand
 }
 
 export default function OnboardingPage() {

@@ -58,9 +58,9 @@ export default function DemoPage() {
 
         {/* 区切り */}
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-amber-200" />
+          <div className="flex-1 h-px bg-gray-200" />
           <span className="text-xs text-gray-400">すべての機能を使うには</span>
-          <div className="flex-1 h-px bg-amber-200" />
+          <div className="flex-1 h-px bg-gray-200" />
         </div>
 
         {/* 登録・ログイン */}

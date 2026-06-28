@@ -120,13 +120,13 @@ export default async function SharePage({ params }: Props) {
         {/* ヘッダー */}
         <div>
           <p className="text-4xl mb-2">🎸</p>
-          <p className="text-2xl font-bold text-amber-900">Pick</p>
-          <p className="text-sm text-amber-700 mt-1">会話からフレーズをPickして学ぼう</p>
+          <p className="text-2xl font-bold text-gray-900">Pick</p>
+          <p className="text-sm text-gray-500 mt-1">会話からフレーズをPickして学ぼう</p>
         </div>
 
         {/* スコアカード */}
         <div className="bg-white/80 rounded-3xl border border-line shadow-sm p-8 space-y-3">
-          <p className="text-sm text-amber-700 font-medium">チャレンジ結果</p>
+          <p className="text-sm text-gray-500 font-medium">チャレンジ結果</p>
           <p className={`text-7xl font-bold ${scoreColor}`}>{pct}<span className="text-3xl">%</span></p>
           <div className={`inline-flex items-center gap-1.5 ${bgColor} rounded-full px-4 py-1.5`}>
             <span className={`text-sm font-semibold ${scoreColor}`}>

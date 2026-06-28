@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
           height: '100%',
           display: 'flex',
           flexDirection: 'row',
-          background: 'linear-gradient(135deg, #f5f0e8 0%, #e8ddd0 100%)',
+          background: 'linear-gradient(135deg, #f7f6f2 0%, #eef1f0 100%)',
         }}
       >
         {/* 左パネル: ブランディング */}
@@ -70,20 +70,20 @@ export async function GET(req: NextRequest) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={logoUrl} alt="Pick" width={80} height={80} style={{ borderRadius: 16, marginBottom: 16 }} />
-          <div style={{ fontSize: 68, fontWeight: 800, color: '#4a3020', lineHeight: 1, marginBottom: 12 }}>
+          <div style={{ fontSize: 68, fontWeight: 800, color: '#16211f', lineHeight: 1, marginBottom: 12 }}>
             Pick
           </div>
-          <div style={{ fontSize: 22, color: '#8b6340', marginBottom: 40 }}>
+          <div style={{ fontSize: 22, color: '#0e6e72', marginBottom: 40 }}>
             会話からフレーズをピックして学ぼう
           </div>
-          <div style={{ fontSize: 18, color: '#a08060', marginBottom: 10 }}>{dateStr}</div>
-          <div style={{ fontSize: 17, color: 'rgba(139,99,64,0.55)' }}>
+          <div style={{ fontSize: 18, color: '#8a948f', marginBottom: 10 }}>{dateStr}</div>
+          <div style={{ fontSize: 17, color: 'rgba(14,110,114,0.5)' }}>
             #英語学習　#フレーズ学習{purposeTag ? `　${purposeTag}` : ''}
           </div>
         </div>
 
         {/* 縦区切り線 */}
-        <div style={{ width: 1.5, background: 'rgba(139,115,85,0.2)', margin: '60px 0' }} />
+        <div style={{ width: 1.5, background: 'rgba(14,110,114,0.15)', margin: '60px 0' }} />
 
         {/* 右パネル: スコア */}
         <div
@@ -98,11 +98,11 @@ export async function GET(req: NextRequest) {
             padding: '48px 40px',
           }}
         >
-          <div style={{ fontSize: 22, color: '#7a6248', marginBottom: 8 }}>{motivationText}</div>
+          <div style={{ fontSize: 22, color: '#5d6b66', marginBottom: 8 }}>{motivationText}</div>
           <div style={{ fontSize: 150, fontWeight: 800, color: scoreColor, lineHeight: 1, marginBottom: 12 }}>
             {pct}%
           </div>
-          <div style={{ fontSize: 28, color: '#7a6248', marginBottom: 32 }}>
+          <div style={{ fontSize: 28, color: '#5d6b66', marginBottom: 32 }}>
             {correct} / {total} 問正解
           </div>
           {/* バッジ */}
@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
                 }}
               >
                 <div style={{ fontSize: 38, fontWeight: 800, color: fg }}>{value}</div>
-                <div style={{ fontSize: 16, color: '#7a6248' }}>{label}</div>
+                <div style={{ fontSize: 16, color: '#5d6b66' }}>{label}</div>
               </div>
             ))}
           </div>

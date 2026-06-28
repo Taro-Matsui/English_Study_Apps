@@ -9,7 +9,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-ground py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
-          <Link href="/login" className="text-sm text-amber-700 hover:text-amber-900">← トップへ戻る</Link>
+          <Link href="/login" className="text-sm text-gray-500 hover:text-gray-700">← トップへ戻る</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">利用規約</h1>
           <p className="text-sm text-gray-500 mt-1">最終更新日：2025年6月1日</p>
         </div>

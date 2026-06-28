@@ -37,16 +37,17 @@ const SET_SIZE = 5
 
 const SPEED_RATE: Record<Speed, number> = { fast: 1.3, normal: 0.88, slow: 0.6 }
 
+// ライト地で読めるチップ（旧ダークテーマ用の text-*-400 を light variant に）
 const SCENE_CLS: Record<UsageScene, string> = {
-  daily: 'bg-emerald-500/20 text-emerald-400',
-  technical: 'bg-sky-500/20 text-sky-400',
-  business: 'bg-violet-500/20 text-violet-400',
-  other: 'bg-slate-500/20 text-slate-400',
+  daily: 'bg-emerald-100 text-emerald-700',
+  technical: 'bg-sky-100 text-sky-700',
+  business: 'bg-brand-soft text-brand-deep',
+  other: 'bg-gray-100 text-gray-600',
 }
 const LEVEL_CLS: Record<EngineerLevel, string> = {
-  junior: 'bg-emerald-500/20 text-emerald-400',
-  mid: 'bg-amber-500/20 text-amber-400',
-  senior: 'bg-red-500/20 text-red-400',
+  junior: 'bg-emerald-100 text-emerald-700',
+  mid: 'bg-amber-100 text-amber-700',
+  senior: 'bg-red-100 text-red-700',
 }
 
 const STATUS_CLS: Record<JudgeStatus, { cls: string; textCls: string }> = {
@@ -55,9 +56,9 @@ const STATUS_CLS: Record<JudgeStatus, { cls: string; textCls: string }> = {
   incorrect: { cls: 'bg-red-50 border-red-300',         textCls: 'text-red-700'     },
 }
 const RESULT_CLS: Record<JudgeStatus, string> = {
-  correct: 'text-emerald-400',
-  partial: 'text-amber-400',
-  incorrect: 'text-red-400',
+  correct: 'text-emerald-700',
+  partial: 'text-amber-700',
+  incorrect: 'text-red-700',
 }
 
 
@@ -69,7 +70,7 @@ function highlightPhrase(text: string, phrase: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-amber-400/30 text-amber-300 rounded px-0.5 not-italic font-semibold">
+      <mark className="bg-amber-200 text-amber-800 rounded px-0.5 not-italic font-semibold">
         {text.slice(idx, idx + phrase.length)}
       </mark>
       {text.slice(idx + phrase.length)}

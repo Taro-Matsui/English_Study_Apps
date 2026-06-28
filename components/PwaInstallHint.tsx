@@ -72,20 +72,20 @@ export function PwaInstallHint() {
   return (
     <div
       className="fixed bottom-20 left-4 right-4 z-40 rounded-2xl shadow-lg border border-line p-4 flex items-start gap-3"
-      style={{ background: 'rgba(245,240,232,0.97)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(247,246,242,0.97)', backdropFilter: 'blur(8px)' }}
     >
       {/* アイコン */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/icon.png" alt="" width={40} height={40} className="rounded-xl flex-shrink-0 shadow-sm" />
+      <img src="/pick_logo.png" alt="" width={40} height={40} className="rounded-xl flex-shrink-0 shadow-sm" />
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-amber-900">Pick をホーム画面に追加</p>
+        <p className="text-sm font-bold text-gray-900">Pick をホーム画面に追加</p>
         {isAndroid ? (
-          <p className="text-xs text-amber-700/70 mt-0.5">
+          <p className="text-xs text-gray-500 mt-0.5">
             アプリとしてインストールするとより快適に使えます
           </p>
         ) : (
-          <p className="text-xs text-amber-700/70 mt-0.5 leading-relaxed">
+          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
             Safari の <span className="font-semibold">共有ボタン</span>（↑）→「<span className="font-semibold">ホーム画面に追加</span>」
           </p>
         )}
@@ -102,7 +102,7 @@ export function PwaInstallHint() {
         )}
         <button
           onClick={dismiss}
-          className="text-xs px-2 py-1.5 rounded-xl text-amber-600 hover:bg-amber-100 transition-colors"
+          className="text-xs px-2 py-1.5 rounded-xl text-gray-400 hover:bg-gray-100 transition-colors"
           aria-label="閉じる"
         >
           ✕

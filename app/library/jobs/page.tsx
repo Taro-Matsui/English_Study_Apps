@@ -16,10 +16,10 @@ interface Job {
 }
 
 const STATUS_CONFIG = {
-  pending:    { label: '待機中',  cls: 'bg-amber-100 text-amber-600' },
-  processing: { label: '処理中',  cls: 'bg-amber-500/20 text-amber-400 animate-pulse' },
-  done:       { label: '完了',    cls: 'bg-emerald-500/20 text-emerald-400' },
-  error:      { label: 'エラー',  cls: 'bg-red-500/20 text-red-400' },
+  pending:    { label: '待機中',  cls: 'bg-amber-100 text-amber-700' },
+  processing: { label: '処理中',  cls: 'bg-amber-100 text-amber-700 animate-pulse' },
+  done:       { label: '完了',    cls: 'bg-emerald-100 text-emerald-700' },
+  error:      { label: 'エラー',  cls: 'bg-red-100 text-red-700' },
 }
 
 

@@ -153,7 +153,7 @@ export default function PhrasesPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('phrases_search')}
-            className="h-9 text-sm bg-white border-line text-amber-900 placeholder-amber-400"
+            className="h-9 text-sm bg-white border-line text-gray-900 placeholder-gray-300"
           />
 
           {/* 難易度フィルター */}
@@ -228,13 +228,13 @@ export default function PhrasesPage() {
       <div className="max-w-2xl mx-auto p-4 space-y-2">
         {loading ? (
           [...Array(6)].map((_, i) => (
-            <div key={i} className="h-[88px] rounded-2xl bg-amber-100 animate-pulse" />
+            <div key={i} className="h-[88px] rounded-2xl bg-line animate-pulse" />
           ))
         ) : displayedPhrases.length === 0 ? (
           <div className="flex flex-col items-center py-12 space-y-4 text-center">
             <div className="w-48 h-48 relative opacity-90">
               <Image
-                src="/hero.png"
+                src="/pick_logo.png"
                 alt="フレーズがありません"
                 width={192}
                 height={192}
@@ -243,10 +243,10 @@ export default function PhrasesPage() {
               />
             </div>
             <div className="space-y-1">
-              <p className="text-base font-semibold text-amber-900">
+              <p className="text-base font-semibold text-gray-900">
                 {hasFilters ? 'フレーズが見つかりません' : 'まだPickがありません'}
               </p>
-              <p className="text-sm text-amber-700/60">
+              <p className="text-sm text-gray-500">
                 {hasFilters
                   ? 'フィルターを変えて試してみましょう'
                   : '会話録や記事から\n英語フレーズをPickしよう！'}

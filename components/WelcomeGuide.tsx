@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import Image from 'next/image'
 
+// Trusted Teal パレット（旧: 茶系ウォームベージュ）
+const INK = '#16211f'
+const INK_SOFT = '#5d6b66'
+const MUTED = '#8a948f'
+const BRAND = '#0e6e72'
+
 const SLIDES = [
   {
     step: 1,
@@ -68,14 +74,14 @@ export function WelcomeGuide() {
   const current = SLIDES[slide]
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'linear-gradient(160deg, #f5f0e8 0%, #e8ddd0 100%)' }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'linear-gradient(160deg, #f7f6f2 0%, #eef1f0 100%)' }}>
 
       {/* スキップ */}
       <div className="flex justify-end p-4">
         <button
           onClick={dismiss}
           className="text-sm px-3 py-1.5 rounded-full"
-          style={{ color: '#8b7355', background: 'rgba(139,115,85,0.12)' }}
+          style={{ color: INK_SOFT, background: 'rgba(22,33,31,0.06)' }}
         >
           スキップ
         </button>
@@ -88,20 +94,20 @@ export function WelcomeGuide() {
         {current.step === 1 && (
           <>
             <div className="space-y-1">
-              <h1 className="text-5xl font-bold tracking-tight" style={{ color: '#4a3020', fontFamily: 'Georgia, serif' }}>
+              <h1 className="text-5xl font-bold tracking-tight" style={{ color: INK }}>
                 Pick
               </h1>
-              <p className="text-sm font-medium" style={{ color: '#8b6340' }}>会話からフレーズをPickして学ぼう</p>
+              <p className="text-sm font-semibold" style={{ color: BRAND }}>会話からフレーズをピックして学ぼう</p>
             </div>
 
             <div className="w-56 h-56 flex items-center justify-center">
               {!imgError ? (
                 <Image
-                  src="/logo.png"
+                  src="/pick_logo.png"
                   alt="Pick"
                   width={224}
                   height={224}
-                  className="object-contain drop-shadow-xl"
+                  className="object-contain drop-shadow-xl rounded-3xl"
                   onError={() => setImgError(true)}
                   priority
                 />
@@ -117,20 +123,20 @@ export function WelcomeGuide() {
           <>
             <div
               className="w-24 h-24 rounded-3xl flex items-center justify-center text-5xl shadow-lg"
-              style={{ background: 'rgba(139,115,85,0.15)' }}
+              style={{ background: 'rgba(14,110,114,0.10)' }}
             >
               {current.icon}
             </div>
-            <p className="text-xl font-bold" style={{ color: '#4a3020' }}>{current.heading}</p>
+            <p className="text-xl font-bold" style={{ color: INK }}>{current.heading}</p>
           </>
         )}
 
         {/* テキスト */}
         <div className="space-y-2 max-w-xs">
-          <p className="text-base font-semibold leading-relaxed whitespace-pre-line" style={{ color: '#4a3020' }}>
+          <p className="text-base font-semibold leading-relaxed whitespace-pre-line" style={{ color: INK }}>
             {current.title}
           </p>
-          <p className="text-sm leading-relaxed" style={{ color: '#7a6248' }}>
+          <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: INK_SOFT }}>
             {current.sub}
           </p>
         </div>
@@ -145,14 +151,14 @@ export function WelcomeGuide() {
             style={{
               width: i === slide ? 20 : 7,
               height: 7,
-              background: i === slide ? '#8b6340' : 'rgba(139,99,64,0.25)',
+              background: i === slide ? BRAND : 'rgba(14,110,114,0.25)',
             }}
           />
         ))}
       </div>
 
       {/* ステップ表示 */}
-      <p className="text-center text-xs pb-2" style={{ color: '#a08060' }}>
+      <p className="text-center text-xs pb-2" style={{ color: MUTED }}>
         {slide + 1} / {SLIDES.length}
       </p>
 
@@ -161,7 +167,7 @@ export function WelcomeGuide() {
         <button
           onClick={handleCta}
           className="w-full py-4 rounded-2xl text-base font-bold shadow-md transition-opacity active:opacity-80"
-          style={{ background: '#8b6340', color: '#fff' }}
+          style={{ background: BRAND, color: '#fff' }}
         >
           {current.cta}
         </button>
@@ -169,7 +175,7 @@ export function WelcomeGuide() {
           <button
             onClick={() => setSlide((s) => s - 1)}
             className="w-full py-2 text-sm"
-            style={{ color: '#a08060' }}
+            style={{ color: MUTED }}
           >
             ← 戻る
           </button>

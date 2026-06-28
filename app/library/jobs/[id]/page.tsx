@@ -27,10 +27,10 @@ const SOURCE_TYPES: { value: SourceType; label: string }[] = [
 ]
 
 const STATUS_CONFIG = {
-  pending:    { label: '待機中',  cls: 'text-slate-400',   icon: '⏳' },
-  processing: { label: '処理中',  cls: 'text-amber-400',   icon: '⚙' },
-  done:       { label: '完了',    cls: 'text-emerald-400', icon: '✓' },
-  error:      { label: 'エラー',  cls: 'text-red-400',     icon: '✗' },
+  pending:    { label: '待機中',  cls: 'text-gray-500',    icon: '⏳' },
+  processing: { label: '処理中',  cls: 'text-amber-600',   icon: '⚙' },
+  done:       { label: '完了',    cls: 'text-emerald-600', icon: '✓' },
+  error:      { label: 'エラー',  cls: 'text-red-600',     icon: '✗' },
 }
 
 

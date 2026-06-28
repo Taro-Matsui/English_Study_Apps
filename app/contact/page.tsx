@@ -9,7 +9,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-ground py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
-          <Link href="/login" className="text-sm text-amber-700 hover:text-amber-900">← トップへ戻る</Link>
+          <Link href="/login" className="text-sm text-gray-500 hover:text-gray-700">← トップへ戻る</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">お問い合わせ</h1>
         </div>
 
@@ -21,7 +21,7 @@ export default function ContactPage() {
           </p>
 
           <div className="bg-ground rounded-xl p-4 space-y-1">
-            <p className="text-xs text-amber-700 font-medium uppercase tracking-wider">連絡先</p>
+            <p className="text-xs text-brand font-medium uppercase tracking-wider">連絡先</p>
             <a
               href="mailto:support@usepick.win"
               className="text-brand font-semibold hover:underline break-all"
