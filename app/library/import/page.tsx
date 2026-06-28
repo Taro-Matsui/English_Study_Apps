@@ -20,10 +20,23 @@ Any blockers before we dive into the backlog?
 Let's make sure we're on the same page about the acceptance criteria.
 I'll circle back after standup to sync on the API contract.`
 
-const MODE_OPTIONS: { mode: ImportMode; icon: string; label: string; desc: string; defaultSource: SourceType }[] = [
-  { mode: 'file',  icon: '📄', label: 'ファイル',      desc: '.txt / .vtt / .srt',       defaultSource: 'YouTube'  },
-  { mode: 'url',   icon: '🌐', label: 'URL',            desc: '英語記事・ドキュメント',    defaultSource: '英語記事' },
-  { mode: 'text',  icon: '📋', label: 'テキスト貼り付け', desc: '会議録・Slackログなど',   defaultSource: '議事録'   },
+// 「何から学ぶ？」— ユーザーが考える単位（ソース）を1軸に統合。
+// 選ぶと入力方法(method)・種別(sourceType)・ヒントが自動で決まる。
+type SourceChoice = {
+  key: string
+  icon: string
+  label: string
+  sub: string
+  method: ImportMode
+  sourceType: SourceType
+  hint: string
+}
+const SOURCE_CHOICES: SourceChoice[] = [
+  { key: 'meeting', icon: '💬', label: '会議・チャット', sub: '貼り付け',     method: 'text', sourceType: '議事録',   hint: '議事録・Slack・Teams などのログをそのまま貼り付けてください' },
+  { key: 'article', icon: '📰', label: '英語記事・ブログ', sub: 'URLで取得',   method: 'url',  sourceType: '英語記事', hint: '記事ページの URL を貼り付けてください（取得できない場合は本文を貼り付け）' },
+  { key: 'youtube', icon: '▶️', label: 'YouTube',         sub: '字幕ファイル', method: 'file', sourceType: 'YouTube',  hint: 'YouTube Studio から字幕（.vtt / .srt）をダウンロードして読み込んでください' },
+  { key: 'podcast', icon: '🎙️', label: 'Podcast・音声',   sub: '文字起こし',   method: 'text', sourceType: 'Podcast',  hint: 'Whisper・Otter.ai などで文字起こししたテキストを貼り付けてください' },
+  { key: 'other',   icon: '📋', label: 'その他テキスト',   sub: '貼り付け',     method: 'text', sourceType: 'その他',   hint: '英語のテキストを貼り付けてください' },
 ]
 
 const SOURCE_TYPES: { value: SourceType; label: string }[] = [
@@ -63,11 +76,13 @@ function titleFromText(text: string) { return text.trim().split('\n')[0].slice(0
 export default function LibraryImportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [mode, setMode] = useState<ImportMode>('file')
+  const [sourceKey, setSourceKey] = useState<string>('meeting')
+  const [mode, setMode] = useState<ImportMode>('text')
+  const [expanded, setExpanded] = useState(false)
   const [url, setUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [pasteText, setPasteText] = useState('')
-  const [sourceType, setSourceType] = useState<SourceType>('YouTube')
+  const [sourceType, setSourceType] = useState<SourceType>('議事録')
   const [sourceTitle, setSourceTitle] = useState('')
   const [step, setStep] = useState<Step>('upload')
   const [error, setError] = useState<string | null>(null)
@@ -96,16 +111,20 @@ export default function LibraryImportPage() {
     }).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    const opt = MODE_OPTIONS.find((o) => o.mode === mode)!
-    setSourceType(opt.defaultSource)
+  const current = SOURCE_CHOICES.find((c) => c.key === sourceKey)!
+
+  // ソースを選び直すと、入力方法・種別・ヒントが切り替わり入力内容はリセット
+  function selectSource(c: SourceChoice) {
+    setSourceKey(c.key)
+    setMode(c.method)
+    setSourceType(c.sourceType)
     setSourceTitle('')
     setFile(null)
     setUrl('')
     setPasteText('')
     setError(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
-  }, [mode])
+  }
 
   const isSubmitting = step === 'submitting'
   const canSubmit =
@@ -262,26 +281,34 @@ export default function LibraryImportPage() {
         {/* ── メインフォーム ── */}
         {(step === 'upload' || step === 'submitting') && (
           <>
-            {/* モード選択 */}
-            <div className="grid grid-cols-3 gap-2">
-              {MODE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.mode}
-                  onClick={() => setMode(opt.mode)}
-                  disabled={isSubmitting}
-                  className={`flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl border transition-all ${
-                    mode === opt.mode
-                      ? 'bg-brand border-brand text-white shadow-md'
-                      : 'bg-white border-line text-gray-600 hover:border-brand'
-                  }`}
-                >
-                  <span className="text-2xl">{opt.icon}</span>
-                  <span className="text-xs font-semibold leading-tight text-center">{opt.label}</span>
-                  <span className={`text-[10px] leading-tight text-center ${mode === opt.mode ? 'text-brand-soft' : 'text-gray-400'}`}>
-                    {opt.desc}
-                  </span>
-                </button>
-              ))}
+            {/* 何から学ぶ？（ソース選択：1軸に統合） */}
+            <div className="space-y-2">
+              <p className="text-sm font-bold text-gray-800 px-1">何から学ぶ？</p>
+              <div className="grid grid-cols-2 gap-2">
+                {SOURCE_CHOICES.map((c, i) => (
+                  <button
+                    key={c.key}
+                    type="button"
+                    onClick={() => selectSource(c)}
+                    disabled={isSubmitting}
+                    className={`flex items-center gap-2.5 py-3 px-3 rounded-2xl border text-left transition-all ${
+                      i === SOURCE_CHOICES.length - 1 ? 'col-span-2' : ''
+                    } ${
+                      sourceKey === c.key
+                        ? 'bg-brand border-brand text-white shadow-md'
+                        : 'bg-white border-line text-gray-700 hover:border-brand'
+                    }`}
+                  >
+                    <span className="text-xl flex-shrink-0">{c.icon}</span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold leading-tight truncate">{c.label}</span>
+                      <span className={`block text-[10px] leading-tight ${sourceKey === c.key ? 'text-brand-soft' : 'text-gray-400'}`}>
+                        {c.sub}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* コンテンツ入力エリア */}
@@ -302,7 +329,7 @@ export default function LibraryImportPage() {
                         </div>
                       ) : (
                         <div className="space-y-1">
-                          <p className="text-2xl">📄</p>
+                          <p className="text-2xl">{current.icon}</p>
                           <p className="text-sm font-medium text-gray-600">ファイルを選択</p>
                           <p className="text-xs text-gray-400">.txt / .vtt / .srt</p>
                         </div>
@@ -330,7 +357,7 @@ export default function LibraryImportPage() {
 
               {/* URL */}
               {mode === 'url' && (
-                <div className="p-5 space-y-2">
+                <div className="p-5">
                   <input
                     type="url"
                     value={url}
@@ -344,9 +371,6 @@ export default function LibraryImportPage() {
                     style={{ fontSize: '16px' }}
                     autoFocus
                   />
-                  <p className="text-xs text-gray-400">
-                    YouTubeは .vtt/.srt ファイルをダウンロードしてファイルモードをご利用ください
-                  </p>
                 </div>
               )}
 
@@ -360,7 +384,7 @@ export default function LibraryImportPage() {
                       setPasteText(t)
                       if (t.length > 10) setSourceTitle(titleFromText(t))
                     }}
-                    placeholder="会議録、Slack メッセージ、技術ドキュメントなどを貼り付けてください..."
+                    placeholder="ここに英語のテキストを貼り付け..."
                     disabled={isSubmitting}
                     rows={7}
                     className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
@@ -385,55 +409,57 @@ export default function LibraryImportPage() {
                 </div>
               )}
 
-              {/* 区切り */}
-              <div className="border-t border-gray-100 px-5 py-4 space-y-4">
+              {/* 選択中ソースのヒント（常設・1箇所） */}
+              <div className="px-5 pb-4">
+                <p className="text-xs text-gray-600 bg-ground rounded-lg px-3 py-2 leading-relaxed flex items-start gap-1.5">
+                  <span className="flex-shrink-0">💡</span>
+                  <span>{current.hint}</span>
+                </p>
+              </div>
 
-                {/* コンテンツ種別 */}
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">コンテンツの種類</p>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {SOURCE_TYPES.map(({ value, label }) => (
-                      <button key={value} onClick={() => setSourceType(value)} disabled={isSubmitting}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                          sourceType === value
-                            ? 'bg-gray-800 text-white'
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                        }`}>
-                        {label}
-                      </button>
-                    ))}
+              {/* 詳細（任意）— タイトル・種別を畳む */}
+              <div className="border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-between px-5 py-3 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <span>詳細（任意）— タイトル・種別</span>
+                  <span className={`text-lg leading-none transition-transform ${expanded ? 'rotate-90' : ''}`}>›</span>
+                </button>
+                {expanded && (
+                  <div className="px-5 pb-4 space-y-4">
+                    {/* タイトル */}
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">タイトル</p>
+                      <input
+                        type="text"
+                        value={sourceTitle}
+                        onChange={(e) => setSourceTitle(e.target.value)}
+                        placeholder="（自動入力）"
+                        disabled={isSubmitting}
+                        className="w-full rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                      />
+                    </div>
+                    {/* 種別 */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">種別</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {SOURCE_TYPES.map(({ value, label }) => (
+                          <button key={value} type="button" onClick={() => setSourceType(value)} disabled={isSubmitting}
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                              sourceType === value
+                                ? 'bg-gray-800 text-white'
+                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                            }`}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* ソースタイプ補足ヒント */}
-                {sourceType && (() => {
-                  const hints: Record<string, string> = {
-                    'YouTube': 'YouTube Studioから字幕ファイル（.vtt）をダウンロードし、ファイルで追加してください',
-                    'Podcast': 'Whisper・Otter.aiなどで文字起こし後、テキストを貼り付けてください',
-                    '議事録': '会議録のテキストをそのまま貼り付けてください',
-                    '英語記事': 'URLを入力するか、本文テキストを貼り付けてください',
-                    'その他': 'テキストをそのまま貼り付けてください',
-                  }
-                  const hint = hints[sourceType]
-                  return hint ? (
-                    <p className="text-xs text-gray-600 bg-ground rounded-lg px-3 py-2 leading-relaxed">
-                      💡 {hint}
-                    </p>
-                  ) : null
-                })()}
-
-                {/* タイトル */}
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">タイトル</p>
-                  <input
-                    type="text"
-                    value={sourceTitle}
-                    onChange={(e) => setSourceTitle(e.target.value)}
-                    placeholder="（ファイル名・URLから自動入力）"
-                    disabled={isSubmitting}
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-                  />
-                </div>
+                )}
               </div>
             </div>
 
@@ -450,7 +476,7 @@ export default function LibraryImportPage() {
               disabled={!canSubmit || isSubmitting}
               className="w-full rounded-2xl bg-brand px-4 py-4 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md shadow-brand/20"
             >
-              {isSubmitting ? '処理を開始しています...' : 'Pick from Source →'}
+              {isSubmitting ? '処理を開始しています...' : 'このソースからフレーズをPick →'}
             </button>
 
             {isSubmitting && <Progress value={null} className="h-1 animate-pulse" />}
