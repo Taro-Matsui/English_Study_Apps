@@ -6,25 +6,25 @@ export const metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-amber-50 py-10 px-4">
+    <div className="min-h-screen bg-ground py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
           <Link href="/login" className="text-sm text-amber-700 hover:text-amber-900">← トップへ戻る</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">お問い合わせ</h1>
         </div>
 
-        <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 space-y-5 text-sm text-gray-700 leading-relaxed">
+        <div className="bg-white rounded-2xl border border-line shadow-sm p-6 space-y-5 text-sm text-gray-700 leading-relaxed">
 
           <p>
             サービスに関するご質問・ご要望・不具合のご報告・アカウント削除のご依頼は、
             下記のメールアドレスまでお気軽にお問い合わせください。
           </p>
 
-          <div className="bg-amber-50 rounded-xl p-4 space-y-1">
+          <div className="bg-ground rounded-xl p-4 space-y-1">
             <p className="text-xs text-amber-700 font-medium uppercase tracking-wider">連絡先</p>
             <a
               href="mailto:support@usepick.win"
-              className="text-amber-800 font-semibold hover:underline break-all"
+              className="text-brand font-semibold hover:underline break-all"
             >
               support@usepick.win
             </a>

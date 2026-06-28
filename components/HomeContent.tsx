@@ -97,8 +97,8 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       icon: '📊',
       title: t('nav_history'),
       desc: t('nav_history_desc'),
-      bg: 'bg-amber-50 hover:bg-amber-100',
-      border: 'border-amber-200',
+      bg: 'bg-ground hover:bg-amber-100',
+      border: 'border-line',
       iconBg: 'from-amber-500 to-amber-600',
       badge: null as string | null,
     },
@@ -107,9 +107,9 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       icon: '📚',
       title: t('nav_phrases'),
       desc: t('nav_phrases_desc'),
-      bg: 'bg-blue-50 hover:bg-blue-100',
-      border: 'border-blue-200',
-      iconBg: 'from-blue-500 to-blue-600',
+      bg: 'bg-brand-soft hover:bg-brand-soft',
+      border: 'border-brand',
+      iconBg: 'from-brand to-brand-deep',
       badge: null as string | null,
     },
     {
@@ -129,7 +129,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
   if (showSplash) {
     return (
-      <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-6">
         <div className="flex flex-col items-center gap-6 animate-fade-in">
           <div className="text-center space-y-1">
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pick</h1>
@@ -150,7 +150,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
   }
 
   return (
-    <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 pb-24">
+    <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-6 pb-24">
       <PwaInstallHint />
       <div className="w-full max-w-sm space-y-5">
 
@@ -162,13 +162,13 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
         {/* サマリーカード */}
         <div className="grid grid-cols-3 gap-2">
-          <Link href="/phrases" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-amber-50 transition-colors">
+          <Link href="/phrases" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-ground transition-colors">
             <p className="text-xl font-bold text-gray-900">
               {displayPhraseCount !== null ? displayPhraseCount : '—'}
             </p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">マイピックリスト</p>
           </Link>
-          <Link href="/streak" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-amber-50 transition-colors">
+          <Link href="/streak" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-ground transition-colors">
             <p className="text-xl font-bold text-gray-900 flex items-center justify-center gap-0.5">
               {displayStreak > 0 && <span className="text-base">🔥</span>}
               {displayStreak}
@@ -177,7 +177,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
               {lang === 'ja' ? '連続日数' : 'Streak'}
             </p>
           </Link>
-          <Link href="/library/jobs" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-amber-50 transition-colors">
+          <Link href="/library/jobs" className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 text-center hover:bg-ground transition-colors">
             <p className="text-xl font-bold text-gray-900">
               {displaySourceCount !== null ? displaySourceCount : '—'}
             </p>
@@ -200,7 +200,7 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
             <span className={`text-xs px-3 py-1 rounded-full border ${
               dailyPractice.used >= dailyPractice.limit
                 ? 'text-gray-500 bg-gray-50 border-gray-200'
-                : 'text-amber-700 bg-amber-50 border-amber-200'
+                : 'text-amber-700 bg-ground border-line'
             }`}>
               {lang === 'ja'
                 ? `本日 ${dailyPractice.used}/${dailyPractice.limit} チャレンジ`
@@ -220,20 +220,20 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
           position="bottom"
         >
           <Link href="/quiz"
-            className="block p-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-emerald-500/20">
+            className="block p-5 rounded-2xl bg-brand hover:bg-brand-deep active:scale-[0.98] transition-all duration-150 shadow-lg shadow-brand/20">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl flex-shrink-0">
                 🎯
               </div>
               <div className="flex-1">
                 <p className="font-bold text-white text-lg">{t('nav_quiz')}</p>
-                <p className="text-emerald-100 text-sm mt-0.5">
+                <p className="text-white/85 text-sm mt-0.5">
                   {!displayTodayDone
                     ? (lang === 'ja' ? '今日はまだ学習していません' : "You haven't studied today")
                     : (lang === 'ja' ? '今日のクイズを続ける' : "Continue today's quiz")}
                 </p>
               </div>
-              <span className="text-emerald-200 text-xl flex-shrink-0">›</span>
+              <span className="text-white/70 text-xl flex-shrink-0">›</span>
             </div>
           </Link>
         </HintBubble>

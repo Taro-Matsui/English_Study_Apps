@@ -56,14 +56,14 @@ export default function LibraryJobsPage() {
   }, [hasActive])
 
   return (
-    <div className="min-h-screen bg-amber-50 text-gray-900 pb-24">
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-amber-100">
+    <div className="min-h-screen bg-ground text-gray-900 pb-24">
+      <div className="sticky top-0 z-10 bg-ground/95 backdrop-blur-sm border-b border-line">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
           <Link href="/library/import" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <h1 className="flex-1 text-sm font-semibold">ソース</h1>
           <button
             onClick={fetchJobs}
-            className="text-xs px-3 py-1 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
+            className="text-xs px-3 py-1 rounded-lg bg-brand text-white hover:bg-brand-deep transition-colors"
           >
             更新
           </button>
@@ -91,7 +91,7 @@ export default function LibraryJobsPage() {
         {!loading && !apiError && jobs.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-400 text-sm">まだ Source がありません</p>
-            <Link href="/library/import" className="text-amber-700 text-sm hover:underline mt-2 inline-block">
+            <Link href="/library/import" className="text-brand text-sm hover:underline mt-2 inline-block">
               出会いから英語をピックする →
             </Link>
           </div>
@@ -104,7 +104,7 @@ export default function LibraryJobsPage() {
               <Link
                 key={job.id}
                 href={`/library/jobs/${job.id}`}
-                className="flex items-center gap-3 p-4 rounded-xl border border-amber-100 bg-white/90 hover:bg-amber-50/50 transition-colors"
+                className="flex items-center gap-3 p-4 rounded-xl border border-line bg-white/90 hover:bg-ground/50 transition-colors"
               >
                 <span className="text-lg">{job.type === 'file' ? '📄' : '🌐'}</span>
                 <div className="flex-1 min-w-0">

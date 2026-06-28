@@ -15,7 +15,7 @@ Let's make sure we're on the same page about the acceptance criteria.`
 
 const DIFF_CLS: Record<number, string> = {
   1: 'bg-emerald-100 text-emerald-700',
-  2: 'bg-blue-100 text-blue-700',
+  2: 'bg-brand-soft text-brand-deep',
   3: 'bg-amber-100 text-amber-700',
   4: 'bg-orange-100 text-orange-700',
   5: 'bg-red-100 text-red-700',
@@ -50,7 +50,7 @@ export default function DemoImportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-amber-50 p-4 pb-12">
+    <div className="min-h-screen bg-ground p-4 pb-12">
       <div className="max-w-2xl mx-auto space-y-5">
 
         {/* ヘッダー */}
@@ -71,14 +71,14 @@ export default function DemoImportPage() {
             onChange={(e) => { setText(e.target.value.slice(0, DEMO_TEXT_MAX)); setPhrases(null); setError(null) }}
             placeholder="英語テキストをここに貼り付けてください（会議録・Slackスレッド・技術記事など）"
             rows={7}
-            className="w-full text-sm text-gray-800 placeholder-gray-400 border border-gray-200 rounded-xl px-3 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full text-sm text-gray-800 placeholder-gray-400 border border-gray-200 rounded-xl px-3 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-brand"
             style={{ fontSize: '16px' }}
           />
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400">{text.length.toLocaleString()} / {DEMO_TEXT_MAX.toLocaleString()} 文字</span>
             <button
               onClick={() => { setText(SAMPLE); setPhrases(null); setError(null) }}
-              className="text-xs px-3 py-1 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors"
+              className="text-xs px-3 py-1 rounded-lg border border-brand text-brand hover:bg-brand-soft transition-colors"
             >
               💡 サンプルを試す
             </button>
@@ -87,14 +87,14 @@ export default function DemoImportPage() {
           <button
             onClick={handleExtract}
             disabled={text.trim().length < 50 || loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+            className="w-full bg-brand hover:bg-brand-deep disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors"
           >
             {loading ? 'AI が抽出中…（数秒かかります）' : 'フレーズを抽出する'}
           </button>
 
           {loading && (
-            <div className="h-1 bg-blue-100 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500 animate-pulse rounded-full w-full" />
+            <div className="h-1 bg-brand-soft rounded-full overflow-hidden">
+              <div className="h-full bg-brand animate-pulse rounded-full w-full" />
             </div>
           )}
         </div>
@@ -132,12 +132,12 @@ export default function DemoImportPage() {
             </div>
 
             {/* 登録 CTA */}
-            <div className="bg-blue-600 rounded-2xl p-5 space-y-2 text-center">
+            <div className="bg-brand rounded-2xl p-5 space-y-2 text-center">
               <p className="text-white font-bold">この {phrases.length} 件を保存して学習を始めよう！</p>
-              <p className="text-blue-100 text-sm">無料登録すると自分のフレーズをクイズで学べます</p>
+              <p className="text-white/85 text-sm">無料登録すると自分のフレーズをクイズで学べます</p>
               <Link
                 href="/login"
-                className="inline-block mt-2 bg-white text-blue-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors"
+                className="inline-block mt-2 bg-white text-brand-deep font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-brand-soft transition-colors"
               >
                 無料アカウント登録 →
               </Link>

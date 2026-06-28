@@ -82,7 +82,7 @@ function maskPhrase(context: string, phrase: string): string {
 
 export default function QuizPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-amber-50 flex items-center justify-center"><p className="text-gray-400 text-sm animate-pulse">読み込み中...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-ground flex items-center justify-center"><p className="text-gray-400 text-sm animate-pulse">読み込み中...</p></div>}>
       <QuizContent />
     </Suspense>
   )
@@ -203,7 +203,7 @@ function QuizContent() {
       {VOICE_PRESETS.map(({ key, label }) => (
         <button key={key} onClick={() => setVoicePreset(key)}
           className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
-            settings.voicePreset === key ? 'bg-blue-500 text-white' : 'text-gray-500 hover:text-gray-700'
+            settings.voicePreset === key ? 'bg-brand text-white' : 'text-gray-500 hover:text-gray-700'
           }`}>
           {label}
         </button>
@@ -352,7 +352,7 @@ function QuizContent() {
     <div className="flex items-center gap-0.5 bg-gray-100 rounded-full px-1.5 py-1">
       {(['slow', 'normal', 'fast'] as Speed[]).map((s) => (
         <button key={s} onClick={() => setSpeed(s)}
-          className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${speed === s ? 'bg-blue-500 text-white' : 'text-gray-500 hover:text-gray-700'}`}>
+          className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${speed === s ? 'bg-brand text-white' : 'text-gray-500 hover:text-gray-700'}`}>
           {t(`speed_${s}` as 'speed_fast' | 'speed_normal' | 'speed_slow')}
         </button>
       ))}
@@ -360,7 +360,7 @@ function QuizContent() {
   )
 
   if (step === 'loading') return (
-    <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+    <div className="min-h-screen bg-ground flex items-center justify-center">
       <p className="text-gray-400 text-sm animate-pulse">
         {isFocusMode ? '⚠️ Repick を読み込み中...' : t('quiz_loading')}
       </p>
@@ -368,14 +368,14 @@ function QuizContent() {
   )
 
   if (step === 'empty') return (
-    <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
+    <div className="min-h-screen bg-ground flex flex-col items-center justify-center gap-4 p-8 text-center">
       <p className="text-4xl">📭</p>
       <p className="text-gray-500 text-sm">
         {isFocusMode ? 'Repickフレーズが見つかりません。通常チャレンジに切り替えます。' : t('quiz_empty')}
       </p>
       {isFocusMode
-        ? <Link href="/quiz" className="text-sm text-blue-600 hover:underline">チャレンジを開始</Link>
-        : <Link href="/library/import" className="text-sm text-blue-600 hover:underline">{t('quiz_empty_link')}</Link>
+        ? <Link href="/quiz" className="text-sm text-brand hover:underline">チャレンジを開始</Link>
+        : <Link href="/library/import" className="text-sm text-brand hover:underline">{t('quiz_empty_link')}</Link>
       }
     </div>
   )
@@ -385,7 +385,7 @@ function QuizContent() {
     const completedSets = Math.floor(index / SET_SIZE)
     const remaining = total - index
     return (
-      <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-6 text-center">
         <div className="max-w-sm w-full space-y-5">
           <p className="text-5xl">🎉</p>
           <div className="space-y-1">
@@ -400,7 +400,7 @@ function QuizContent() {
           <Progress value={(doneCount / total) * 100} className="h-1.5" />
           <button
             onClick={() => setStep('question')}
-            className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 transition-colors active:bg-blue-700"
+            className="w-full py-3 rounded-2xl bg-brand text-white font-bold text-sm hover:bg-brand-deep transition-colors active:bg-brand-deep"
           >
             続ける（残り {remaining} 問）
           </button>
@@ -425,7 +425,7 @@ function QuizContent() {
       : 'Repickで苦手を克服しよう！'
     const isHighScore = pct >= 80
     return (
-      <div className="min-h-screen bg-amber-50 flex flex-col p-4">
+      <div className="min-h-screen bg-ground flex flex-col p-4">
         <div className="max-w-lg mx-auto w-full pt-8 space-y-5">
           <div className="text-center space-y-2">
             <p className="text-5xl">{grade}</p>
@@ -450,10 +450,10 @@ function QuizContent() {
               className="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/15 transition-colors">
               <span className="text-xl">🚀</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-emerald-300">英語をピックしてレベルアップ！</p>
-                <p className="text-xs text-emerald-400/70 mt-0.5">出会いから英語をピックする</p>
+                <p className="text-sm font-semibold text-emerald-700">英語をピックしてレベルアップ！</p>
+                <p className="text-xs text-emerald-600/80 mt-0.5">出会いから英語をピックする</p>
               </div>
-              <span className="text-emerald-400">›</span>
+              <span className="text-emerald-600">›</span>
             </Link>
           )}
           {score.incorrect + score.partial > 0 && (
@@ -461,10 +461,10 @@ function QuizContent() {
               className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 hover:bg-red-500/15 transition-colors text-left">
               <span className="text-xl">⚠️</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-red-300">Repick Mode</p>
-                <p className="text-xs text-red-400/70 mt-0.5">間違えたPickを重点的に練習</p>
+                <p className="text-sm font-semibold text-red-600">Repick Mode</p>
+                <p className="text-xs text-red-500/80 mt-0.5">間違えたPickを重点的に練習</p>
               </div>
-              <span className="text-red-400">›</span>
+              <span className="text-red-500">›</span>
             </button>
           )}
 
@@ -472,7 +472,7 @@ function QuizContent() {
             {answers.map((a, i) => {
               const st: JudgeStatus = a.status ?? (a.is_correct ? 'correct' : 'incorrect')
               return (
-                <div key={i} className={`rounded-xl p-3 border text-sm ${st === 'correct' ? 'bg-emerald-50 border-emerald-200' : st === 'partial' ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
+                <div key={i} className={`rounded-xl p-3 border text-sm ${st === 'correct' ? 'bg-emerald-50 border-emerald-200' : st === 'partial' ? 'bg-ground border-line' : 'bg-red-50 border-red-200'}`}>
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-gray-900">{a.phrase}</span>
                     <span className={`text-xs ${RESULT_CLS[st]}`}>
@@ -499,7 +499,7 @@ function QuizContent() {
           )}
 
           <div className="flex gap-2">
-            <button onClick={() => load(false)} className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors">{t('done_again')}</button>
+            <button onClick={() => load(false)} className="flex-1 py-3 rounded-xl bg-brand text-white text-sm font-bold hover:bg-brand-deep transition-colors">{t('done_again')}</button>
             <button
               onClick={() => router.push('/history')}
               disabled={saveState === 'saving'}
@@ -536,8 +536,8 @@ function QuizContent() {
   }
 
   return (
-    <div className="min-h-screen bg-amber-50">
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm">
+    <div className="min-h-screen bg-ground">
+      <div className="sticky top-0 z-10 bg-ground/95 backdrop-blur-sm">
         <div className="px-4 pt-3 pb-1 flex items-center justify-between max-w-lg mx-auto">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex items-center gap-3">
@@ -582,7 +582,7 @@ function QuizContent() {
 
               <div className="flex items-center justify-center gap-2 flex-wrap">
                 <button onClick={() => speak(current.phrase, 'phrase')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-blue-500/20 text-blue-500' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${speaking === 'phrase' ? 'bg-brand/20 text-brand' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                   {t('quiz_speak_phrase')}
                 </button>
                 <SpeedSelector />
@@ -603,10 +603,10 @@ function QuizContent() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                   placeholder={t('quiz_placeholder')}
                   style={{ fontSize: '16px' }}
-                  className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-brand transition-colors"
                 />
                 <button onClick={handleSubmit} disabled={!answer.trim()}
-                  className="w-full py-3 rounded-2xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-blue-700">
+                  className="w-full py-3 rounded-2xl bg-brand text-white font-bold text-sm hover:bg-brand-deep disabled:opacity-30 disabled:cursor-not-allowed transition-colors active:bg-brand-deep">
                   {t('quiz_submit')}
                 </button>
                 <button onClick={handleSkip}
@@ -620,7 +620,7 @@ function QuizContent() {
               <div className="flex flex-col items-center gap-2.5 py-4">
                 <div className="flex gap-1.5">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="w-2.5 h-2.5 rounded-full bg-blue-400 animate-bounce"
+                    <div key={i} className="w-2.5 h-2.5 rounded-full bg-brand animate-bounce"
                       style={{ animationDelay: `${i * 0.15}s` }} />
                   ))}
                 </div>
@@ -654,7 +654,7 @@ function QuizContent() {
                             &ldquo;{highlightPhrase(current.original_context, current.phrase)}&rdquo;
                           </p>
                           <button onClick={() => speak(current.original_context!, 'context')}
-                            className={`flex-shrink-0 mt-0.5 px-2 py-1 rounded-full text-[10px] transition-colors ${speaking === 'context' ? 'bg-blue-500/20 text-blue-500' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
+                            className={`flex-shrink-0 mt-0.5 px-2 py-1 rounded-full text-[10px] transition-colors ${speaking === 'context' ? 'bg-brand/20 text-brand' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
                             🔊
                           </button>
                         </div>
@@ -693,8 +693,8 @@ function QuizContent() {
                     </p>
                   )}
                   {explanation && (
-                    <div className="rounded-2xl border border-blue-500/20 bg-blue-50 p-3 space-y-1.5">
-                      <p className="text-xs text-blue-600 font-semibold uppercase tracking-wider">💡 Coach からのアドバイス</p>
+                    <div className="rounded-2xl border border-brand/20 bg-brand-soft p-3 space-y-1.5">
+                      <p className="text-xs text-brand font-semibold uppercase tracking-wider">💡 Coach からのアドバイス</p>
                       <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">{explanation}</p>
                     </div>
                   )}

@@ -114,15 +114,15 @@ export default function LibraryJobDetailPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-amber-50 flex items-center justify-center">
+    <div className="min-h-screen bg-ground flex items-center justify-center">
       <p className="text-gray-400 text-sm animate-pulse">読み込み中...</p>
     </div>
   )
 
   if (error && !job) return (
-    <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4">
+    <div className="min-h-screen bg-ground flex flex-col items-center justify-center gap-4">
       <p className="text-red-500 text-sm">{error}</p>
-      <Link href="/library/jobs" className="text-blue-600 text-sm hover:underline">← ソースに戻る</Link>
+      <Link href="/library/jobs" className="text-brand text-sm hover:underline">← ソースに戻る</Link>
     </div>
   )
 
@@ -131,8 +131,8 @@ export default function LibraryJobDetailPage() {
   const suggestedPhrases = phrases.filter((p) => p.suggested)
 
   return (
-    <div className="min-h-screen bg-amber-50 text-gray-900 pb-24">
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-gray-200">
+    <div className="min-h-screen bg-ground text-gray-900 pb-24">
+      <div className="sticky top-0 z-10 bg-ground/95 backdrop-blur-sm border-b border-gray-200">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-2xl mx-auto">
           <Link href="/library/jobs" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex-1 min-w-0">
@@ -155,7 +155,7 @@ export default function LibraryJobDetailPage() {
       <div className="px-4 pt-4 pb-12 max-w-2xl mx-auto space-y-5">
 
         {(job?.status === 'pending' || job?.status === 'processing') && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center space-y-3">
+          <div className="rounded-xl border border-line bg-ground p-6 text-center space-y-3">
             <p className="text-2xl animate-spin">⚙</p>
             <p className="text-amber-600 font-semibold text-sm">Pickしています...</p>
             <p className="text-gray-400 text-xs">自動的に更新されます。このページを開いたままにしてください。</p>
@@ -173,7 +173,7 @@ export default function LibraryJobDetailPage() {
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-2">
             <p className="text-red-500 font-semibold text-sm">処理に失敗しました</p>
             <p className="text-red-400 text-xs">{job.error_text}</p>
-            <Link href="/library/import" className="text-blue-600 text-xs hover:underline block mt-2">
+            <Link href="/library/import" className="text-brand text-xs hover:underline block mt-2">
               出会いから英語をピックする →
             </Link>
           </div>
@@ -189,8 +189,8 @@ export default function LibraryJobDetailPage() {
               <p className="text-gray-500 text-xs">{saveResult.skipped}件はスキップ</p>
             )}
             <div className="flex gap-2 mt-2 flex-wrap">
-              <Link href="/quiz" className="text-xs px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors font-medium">今すぐPracticeで確認する →</Link>
-              <Link href="/library/import" className="text-xs text-blue-600 hover:underline self-center">続けてPickする →</Link>
+              <Link href="/quiz" className="text-xs px-3 py-1.5 rounded-lg bg-brand text-white hover:bg-brand-deep transition-colors font-medium">今すぐPracticeで確認する →</Link>
+              <Link href="/library/import" className="text-xs text-brand hover:underline self-center">続けてPickする →</Link>
               <Link href="/" className="text-xs text-gray-400 hover:underline self-center">ホームへ →</Link>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function LibraryJobDetailPage() {
                 {SOURCE_TYPES.map(({ value, label }) => (
                   <button key={value} onClick={() => setSourceType(value)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      sourceType === value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      sourceType === value ? 'bg-brand text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     }`}>{label}</button>
                 ))}
               </div>
@@ -215,14 +215,14 @@ export default function LibraryJobDetailPage() {
                 value={sourceTitle}
                 onChange={(e) => setSourceTitle(e.target.value)}
                 placeholder="ソースタイトル（省略可）"
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder-gray-300 focus:outline-none focus:border-brand"
                 style={{ fontSize: '16px' }}
               />
               <input
                 type="date"
                 value={sourceDate}
                 onChange={(e) => setSourceDate(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-brand"
               />
             </div>
 
@@ -258,7 +258,7 @@ export default function LibraryJobDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={phrases.length === 0 || saving}
-                className="w-full py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full py-3 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand-deep disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {saving ? '追加中...' : `${phrases.length}件をPickする`}
               </button>
@@ -269,7 +269,7 @@ export default function LibraryJobDetailPage() {
         {job?.status === 'done' && phrases.length === 0 && !saveResult && (
           <div className="text-center py-8">
             <p className="text-gray-400 text-sm">Pickが0件です</p>
-            <Link href="/library/import" className="text-blue-600 text-sm hover:underline mt-2 inline-block">
+            <Link href="/library/import" className="text-brand text-sm hover:underline mt-2 inline-block">
               出会いから英語をピックする →
             </Link>
           </div>
@@ -299,7 +299,7 @@ function PhraseRow({
           <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">Lv.{p.difficulty}</span>
           {suggested && <span className="text-xs px-1.5 py-0.5 rounded bg-violet-100 text-violet-600">提案</span>}
         </div>
-        <p className="text-xs text-blue-600 mt-0.5">{p.meaning_ja}</p>
+        <p className="text-xs text-brand mt-0.5">{p.meaning_ja}</p>
         {p.original_context && (
           <p className="text-xs text-gray-400 mt-1 italic truncate">&quot;{p.original_context}&quot;</p>
         )}

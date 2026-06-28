@@ -183,17 +183,17 @@ export default function LibraryImportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-amber-50 pb-24">
+    <div className="min-h-screen bg-ground pb-24">
 
       {/* ヘッダー */}
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-amber-100">
+      <div className="sticky top-0 z-10 bg-ground/95 backdrop-blur-sm border-b border-line">
         <div className="max-w-lg mx-auto px-4 py-2 flex items-center gap-2">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-3xl p-3 -ml-3 flex items-center justify-center">‹</Link>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-gray-800">出会いから英語をピックする</p>
             <p className="text-[11px] text-gray-400 leading-tight">会話録・記事・字幕を追加してAIがPickします</p>
           </div>
-          <Link href="/library/jobs" className="text-xs text-amber-700 hover:text-amber-800 border border-amber-200 rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors whitespace-nowrap">
+          <Link href="/library/jobs" className="text-xs text-brand hover:text-brand-deep border border-line rounded-lg px-3 py-1.5 flex-shrink-0 transition-colors whitespace-nowrap">
             ソース
           </Link>
         </div>
@@ -207,8 +207,8 @@ export default function LibraryImportPage() {
             quotaInfo.used >= quotaInfo.limit
               ? 'bg-red-50 border-red-200'
               : quotaInfo.used >= quotaInfo.limit * 0.8
-              ? 'bg-amber-50 border-amber-200'
-              : 'bg-white border-amber-100'
+              ? 'bg-ground border-line'
+              : 'bg-white border-line'
           }`}>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-semibold text-gray-600">
@@ -223,7 +223,7 @@ export default function LibraryImportPage() {
             <div className="w-full bg-gray-100 rounded-full h-1.5">
               <div
                 className={`h-1.5 rounded-full transition-all ${
-                  quotaInfo.used >= quotaInfo.limit ? 'bg-red-500' : 'bg-amber-600'
+                  quotaInfo.used >= quotaInfo.limit ? 'bg-red-500' : 'bg-brand'
                 }`}
                 style={{ width: `${Math.min((quotaInfo.used / quotaInfo.limit) * 100, 100)}%` }}
               />
@@ -247,7 +247,7 @@ export default function LibraryImportPage() {
               <p className="text-sm text-gray-500">このファイル／テキストはすでにPickされています。重複フレーズが生成される場合があります。</p>
               <div className="flex gap-3">
                 <button onClick={() => { setDupConfirm(false); submit(true) }}
-                  className="flex-1 rounded-xl bg-amber-800 text-white text-sm font-medium py-2.5 hover:bg-amber-700 transition-colors">
+                  className="flex-1 rounded-xl bg-brand text-white text-sm font-medium py-2.5 hover:bg-brand-deep transition-colors">
                   続けてPickする
                 </button>
                 <button onClick={() => setDupConfirm(false)}
@@ -271,13 +271,13 @@ export default function LibraryImportPage() {
                   disabled={isSubmitting}
                   className={`flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl border transition-all ${
                     mode === opt.mode
-                      ? 'bg-amber-800 border-amber-800 text-white shadow-md'
-                      : 'bg-white border-amber-100 text-gray-600 hover:border-amber-300'
+                      ? 'bg-brand border-brand text-white shadow-md'
+                      : 'bg-white border-line text-gray-600 hover:border-brand'
                   }`}
                 >
                   <span className="text-2xl">{opt.icon}</span>
                   <span className="text-xs font-semibold leading-tight text-center">{opt.label}</span>
-                  <span className={`text-[10px] leading-tight text-center ${mode === opt.mode ? 'text-amber-200' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] leading-tight text-center ${mode === opt.mode ? 'text-brand-soft' : 'text-gray-400'}`}>
                     {opt.desc}
                   </span>
                 </button>
@@ -285,20 +285,20 @@ export default function LibraryImportPage() {
             </div>
 
             {/* コンテンツ入力エリア */}
-            <div className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
 
               {/* ファイル */}
               {mode === 'file' && (
                 <div className="p-5 space-y-3">
                   <label className="block">
                     <div className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
-                      file ? 'border-amber-300 bg-amber-50' : 'border-gray-200 hover:border-amber-300'
+                      file ? 'border-brand bg-ground' : 'border-gray-200 hover:border-brand'
                     }`}>
                       {file ? (
                         <div className="space-y-1">
                           <p className="text-sm font-semibold text-amber-800">{file.name}</p>
                           <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
-                          <p className="text-xs text-amber-600">別のファイルを選ぶ場合はタップ</p>
+                          <p className="text-xs text-brand">別のファイルを選ぶ場合はタップ</p>
                         </div>
                       ) : (
                         <div className="space-y-1">
@@ -322,7 +322,7 @@ export default function LibraryImportPage() {
                     const f = new File([blob], 'sample_meeting.txt', { type: 'text/plain' })
                     setFile(f); setSourceTitle('サンプル会議録'); setSourceType('議事録'); setError(null)
                   }} disabled={isSubmitting}
-                    className="text-xs text-amber-600 hover:text-amber-800 transition-colors">
+                    className="text-xs text-brand hover:text-brand-deep transition-colors">
                     💡 サンプルを使って試す
                   </button>
                 </div>
@@ -340,7 +340,7 @@ export default function LibraryImportPage() {
                     }}
                     placeholder="https://example.com/article"
                     disabled={isSubmitting}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                     style={{ fontSize: '16px' }}
                     autoFocus
                   />
@@ -363,7 +363,7 @@ export default function LibraryImportPage() {
                     placeholder="会議録、Slack メッセージ、技術ドキュメントなどを貼り付けてください..."
                     disabled={isSubmitting}
                     rows={7}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
                     style={{ fontSize: '16px' }}
                     autoFocus
                   />
@@ -378,7 +378,7 @@ export default function LibraryImportPage() {
                       setSourceTitle('サンプル会議録')
                       setSourceType('議事録')
                     }} disabled={isSubmitting}
-                      className="text-xs text-amber-600 hover:text-amber-800 transition-colors">
+                      className="text-xs text-brand hover:text-brand-deep transition-colors">
                       💡 サンプルを試す
                     </button>
                   </div>
@@ -416,7 +416,7 @@ export default function LibraryImportPage() {
                   }
                   const hint = hints[sourceType]
                   return hint ? (
-                    <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 leading-relaxed">
+                    <p className="text-xs text-amber-600 bg-ground rounded-lg px-3 py-2 leading-relaxed">
                       💡 {hint}
                     </p>
                   ) : null
@@ -431,7 +431,7 @@ export default function LibraryImportPage() {
                     onChange={(e) => setSourceTitle(e.target.value)}
                     placeholder="（ファイル名・URLから自動入力）"
                     disabled={isSubmitting}
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                   />
                 </div>
               </div>
@@ -448,7 +448,7 @@ export default function LibraryImportPage() {
             <button
               onClick={() => submit()}
               disabled={!canSubmit || isSubmitting}
-              className="w-full rounded-2xl bg-amber-800 px-4 py-4 text-sm font-bold text-white hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md shadow-amber-800/20"
+              className="w-full rounded-2xl bg-brand px-4 py-4 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md shadow-brand/20"
             >
               {isSubmitting ? '処理を開始しています...' : 'Pick from Source →'}
             </button>
@@ -459,7 +459,7 @@ export default function LibraryImportPage() {
 
         {/* 送信完了 */}
         {step === 'submitted' && jobId && (
-          <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-line shadow-sm p-6 space-y-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl">✅</span>
               <div>
@@ -470,12 +470,12 @@ export default function LibraryImportPage() {
             <AdBanner slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_IMPORT ?? ''} className="rounded-xl" />
             <div className="flex flex-col gap-2">
               <Link href="/library/jobs"
-                className="rounded-xl bg-amber-800 px-4 py-3 text-sm font-semibold text-white hover:bg-amber-700 transition-colors text-center">
+                className="rounded-xl bg-brand px-4 py-3 text-sm font-semibold text-white hover:bg-brand-deep transition-colors text-center">
                 ソースを確認する →
               </Link>
               <div className="flex gap-2">
                 <Link href={`/library/jobs/${jobId}`}
-                  className="flex-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors text-center">
+                  className="flex-1 rounded-xl border border-line bg-ground px-4 py-2.5 text-sm font-medium text-brand hover:bg-brand-soft transition-colors text-center">
                   このSourceの詳細
                 </Link>
                 <button onClick={handleReset}

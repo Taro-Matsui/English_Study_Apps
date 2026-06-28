@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-amber-50 py-10 px-4">
+    <div className="min-h-screen bg-ground py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
           <Link href="/login" className="text-sm text-amber-700 hover:text-amber-900">← トップへ戻る</Link>
@@ -14,7 +14,7 @@ export default function TermsPage() {
           <p className="text-sm text-gray-500 mt-1">最終更新日：2025年6月1日</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 space-y-6 text-sm text-gray-700 leading-relaxed">
+        <div className="bg-white rounded-2xl border border-line shadow-sm p-6 space-y-6 text-sm text-gray-700 leading-relaxed">
 
           <section className="space-y-2">
             <h2 className="font-bold text-gray-900 text-base">1. サービスの概要</h2>

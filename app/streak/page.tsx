@@ -91,7 +91,7 @@ export default function StreakPage() {
   const todayStr = new Date().toISOString().slice(0, 10)
 
   return (
-    <div className="min-h-screen bg-amber-50 pb-10">
+    <div className="min-h-screen bg-ground pb-10">
       {/* ヘッダー */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
         <div className="max-w-sm mx-auto flex items-center gap-2">
@@ -162,7 +162,7 @@ export default function StreakPage() {
                     <div
                       key={w}
                       className={`text-center text-[10px] font-medium py-0.5 ${
-                        i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'
+                        i === 0 ? 'text-red-400' : i === 6 ? 'text-brand' : 'text-gray-400'
                       }`}
                     >
                       {w}
@@ -196,7 +196,7 @@ export default function StreakPage() {
                         title={act ? `${act.correct}/${act.total} Good Pick` : dateStr}
                         className={`aspect-square rounded-md flex items-center justify-center text-[11px] font-medium transition-all ${
                           isFuture ? 'opacity-25' : ''
-                        } ${isToday ? 'ring-2 ring-blue-500 ring-offset-1' : ''} ${bgCls}`}
+                        } ${isToday ? 'ring-2 ring-brand ring-offset-1' : ''} ${bgCls}`}
                       >
                         {day}
                       </div>

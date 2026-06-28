@@ -94,10 +94,10 @@ export default async function SharePage({ params }: Props) {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center gap-4 p-8 text-center">
+      <div className="min-h-screen bg-ground flex flex-col items-center justify-center gap-4 p-8 text-center">
         <p className="text-4xl">🎸</p>
         <p className="text-sm text-gray-500">このシェアリンクは見つかりませんでした</p>
-        <Link href="/" className="text-sm text-blue-600 hover:underline">Pick を始める</Link>
+        <Link href="/" className="text-sm text-brand hover:underline">Pick を始める</Link>
       </div>
     )
   }
@@ -115,7 +115,7 @@ export default async function SharePage({ params }: Props) {
                'bg-red-100'
 
   return (
-    <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-6 text-center">
         {/* ヘッダー */}
         <div>
@@ -125,7 +125,7 @@ export default async function SharePage({ params }: Props) {
         </div>
 
         {/* スコアカード */}
-        <div className="bg-white/80 rounded-3xl border border-amber-200 shadow-sm p-8 space-y-3">
+        <div className="bg-white/80 rounded-3xl border border-line shadow-sm p-8 space-y-3">
           <p className="text-sm text-amber-700 font-medium">チャレンジ結果</p>
           <p className={`text-7xl font-bold ${scoreColor}`}>{pct}<span className="text-3xl">%</span></p>
           <div className={`inline-flex items-center gap-1.5 ${bgColor} rounded-full px-4 py-1.5`}>
@@ -139,13 +139,13 @@ export default async function SharePage({ params }: Props) {
         <div className="space-y-3">
           <Link
             href="/quiz"
-            className="block w-full py-3.5 rounded-2xl bg-amber-800 text-white text-sm font-bold hover:bg-amber-700 transition-colors text-center"
+            className="block w-full py-3.5 rounded-2xl bg-brand text-white text-sm font-bold hover:bg-brand-deep transition-colors text-center"
           >
             自分も挑戦する
           </Link>
           <Link
             href="/"
-            className="block w-full py-3 rounded-2xl bg-white border border-amber-200 text-amber-800 text-sm font-medium hover:bg-amber-50 transition-colors text-center"
+            className="block w-full py-3 rounded-2xl bg-white border border-line text-brand text-sm font-medium hover:bg-ground transition-colors text-center"
           >
             Pick とは？
           </Link>

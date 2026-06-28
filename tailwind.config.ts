@@ -9,6 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // ── Pick ブランドトークン（Trusted Teal）──────────────
+        // primary は青/emerald/amber 混在を廃しティールに一本化。
+        // semantic（正解=emerald / 惜しい=amber / 不正解=red）は別途 Tailwind 既定色を使用。
+        brand: { DEFAULT: "#0e6e72", deep: "#0a4f52", soft: "#dcecec" },
+        ground: "#f7f6f2",   // ページ地（旧 amber-50 を置換）
+        line: "#e3ddd0",      // カード境界（旧 amber-100 等を置換、地から締めて浮かせる）
+        ink: { DEFAULT: "#16211f", soft: "#5d6b66" },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

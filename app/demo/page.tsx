@@ -3,7 +3,7 @@ import { X_URL } from '@/lib/social'
 
 export default function DemoPage() {
   return (
-    <div className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md space-y-8">
 
         {/* ヘッダー */}
@@ -13,9 +13,9 @@ export default function DemoPage() {
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pick</h1>
           <p className="text-gray-500 text-sm leading-relaxed">
             会話からフレーズをピックして学ぶアプリを<br />
-            <span className="text-blue-600 font-semibold">ログインなし</span>で体験できます
+            <span className="text-brand font-semibold">ログインなし</span>で体験できます
           </p>
-          <div className="inline-flex items-center gap-1.5 bg-amber-100 border border-amber-200 rounded-full px-3 py-1 text-xs text-amber-800">
+          <div className="inline-flex items-center gap-1.5 bg-amber-100 border border-line rounded-full px-3 py-1 text-xs text-amber-800">
             <span>⚡</span>
             <span>デモモード — データは保存されません</span>
           </div>
@@ -25,7 +25,7 @@ export default function DemoPage() {
         <div className="space-y-3">
           <Link
             href="/demo/quiz"
-            className="block w-full rounded-2xl bg-white border border-amber-100 shadow-sm hover:bg-amber-50/60 transition-colors p-5 text-left"
+            className="block w-full rounded-2xl bg-white border border-line shadow-sm hover:bg-ground/60 transition-colors p-5 text-left"
           >
             <div className="flex items-center gap-4">
               <div className="text-3xl">🎯</div>
@@ -35,13 +35,13 @@ export default function DemoPage() {
                   よく使う20フレーズからランダム10問。AI が回答を判定します。
                 </p>
               </div>
-              <span className="ml-auto text-blue-600 text-xl">→</span>
+              <span className="ml-auto text-brand text-xl">→</span>
             </div>
           </Link>
 
           <Link
             href="/demo/import"
-            className="block w-full rounded-2xl bg-white border border-amber-100 shadow-sm hover:bg-amber-50/60 transition-colors p-5 text-left"
+            className="block w-full rounded-2xl bg-white border border-line shadow-sm hover:bg-ground/60 transition-colors p-5 text-left"
           >
             <div className="flex items-center gap-4">
               <div className="text-3xl">🎸</div>
@@ -51,7 +51,7 @@ export default function DemoPage() {
                   英語テキストを貼り付けると、AI がフレーズを自動抽出します。
                 </p>
               </div>
-              <span className="ml-auto text-blue-600 text-xl">→</span>
+              <span className="ml-auto text-brand text-xl">→</span>
             </div>
           </Link>
         </div>
@@ -67,7 +67,7 @@ export default function DemoPage() {
         <div className="space-y-2">
           <Link
             href="/login"
-            className="block w-full rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors px-4 py-3 text-center text-sm font-bold text-white"
+            className="block w-full rounded-xl bg-brand hover:bg-brand-deep transition-colors px-4 py-3 text-center text-sm font-bold text-white"
           >
             無料アカウント登録 / ログイン
           </Link>

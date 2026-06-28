@@ -71,7 +71,7 @@ export function PwaInstallHint() {
 
   return (
     <div
-      className="fixed bottom-20 left-4 right-4 z-40 rounded-2xl shadow-lg border border-amber-200 p-4 flex items-start gap-3"
+      className="fixed bottom-20 left-4 right-4 z-40 rounded-2xl shadow-lg border border-line p-4 flex items-start gap-3"
       style={{ background: 'rgba(245,240,232,0.97)', backdropFilter: 'blur(8px)' }}
     >
       {/* アイコン */}
@@ -95,7 +95,7 @@ export function PwaInstallHint() {
         {isAndroid && (
           <button
             onClick={handleInstall}
-            className="text-xs px-3 py-1.5 rounded-xl bg-amber-800 text-white font-semibold hover:bg-amber-700 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-xl bg-brand text-white font-semibold hover:bg-brand-deep transition-colors"
           >
             追加
           </button>

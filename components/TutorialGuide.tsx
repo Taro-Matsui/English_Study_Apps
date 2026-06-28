@@ -7,13 +7,13 @@ import { useAuth } from '@/lib/auth-context'
 const STEPS = [
   {
     icon: '🎯',
-    color: 'from-emerald-500 to-emerald-600',
+    color: 'from-brand to-brand-deep',
     title: 'クイズで練習しよう',
     desc: '初期フレーズ10問がすでに登録済みです。日本語訳を見て英語で答えると、AIが採点・フィードバックしてくれます。',
   },
   {
     icon: '📚',
-    color: 'from-blue-500 to-blue-600',
+    color: 'from-brand to-brand-deep',
     title: 'フレーズ一覧で管理',
     desc: '登録されたフレーズを検索・確認できます。クイズで間違えたフレーズも一覧から見直せます。',
   },
@@ -72,7 +72,7 @@ export function TutorialGuide() {
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === step ? 'w-6 bg-blue-400' : i < step ? 'w-2 bg-blue-400/40' : 'w-2 bg-white/15'
+                i === step ? 'w-6 bg-brand' : i < step ? 'w-2 bg-brand/40' : 'w-2 bg-white/15'
               }`}
             />
           ))}
@@ -96,7 +96,7 @@ export function TutorialGuide() {
           {isLast ? (
             <button
               onClick={handleStart}
-              className="w-full py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 transition-colors"
+              className="w-full py-3 rounded-xl bg-brand text-white text-sm font-bold hover:bg-brand-deep transition-colors"
             >
               クイズを始める 🎯
             </button>
@@ -110,7 +110,7 @@ export function TutorialGuide() {
               </button>
               <button
                 onClick={() => setStep((s) => s + 1)}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors"
+                className="flex-1 py-2.5 rounded-xl bg-brand text-white text-sm font-bold hover:bg-brand-deep transition-colors"
               >
                 次へ →
               </button>

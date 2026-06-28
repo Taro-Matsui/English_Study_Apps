@@ -38,7 +38,7 @@ function speak(text: string) {
 
 const DIFF_LABELS: Record<number, { label: string; cls: string }> = {
   1: { label: 'Lv.1', cls: 'bg-emerald-100 text-emerald-700' },
-  2: { label: 'Lv.2', cls: 'bg-blue-100 text-blue-700' },
+  2: { label: 'Lv.2', cls: 'bg-brand-soft text-brand-deep' },
   3: { label: 'Lv.3', cls: 'bg-amber-100 text-amber-700' },
   4: { label: 'Lv.4', cls: 'bg-orange-100 text-orange-700' },
   5: { label: 'Lv.5', cls: 'bg-red-100 text-red-700' },
@@ -51,13 +51,18 @@ const RESULT_CLS: Record<JudgeResult['status'], string> = {
 }
 
 export default function DemoQuizPage() {
-  const [phrases] = useState<DemoPhrase[]>(() => shuffle(DEMO_PHRASES).slice(0, 10))
+  // シャッフルは初回マウント後にクライアントで実行する。
+  // useState初期化で Math.random() を使うと SSR とクライアントで別の問題が描画され
+  // hydration mismatch（Text content did not match）になるため。
+  const [phrases, setPhrases] = useState<DemoPhrase[]>([])
   const [index, setIndex] = useState(0)
   const [step, setStep] = useState<Step>('question')
   const [answer, setAnswer] = useState('')
   const [judgment, setJudgment] = useState<JudgeResult | null>(null)
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
   const [speaking, setSpeaking] = useState(false)
+
+  useEffect(() => { setPhrases(shuffle(DEMO_PHRASES).slice(0, 10)) }, [])
 
   const current = phrases[index]
 
@@ -113,6 +118,16 @@ export default function DemoQuizPage() {
     }
   }
 
+  // 初回描画（SSR・マウント直後）は phrases 未確定。読み込み表示で hydration を一致させる
+  // （全フックの呼び出し後に置く＝フック順序を一定に保つ）
+  if (phrases.length === 0) {
+    return (
+      <div className="min-h-screen bg-ground flex items-center justify-center">
+        <p className="text-gray-400 text-sm animate-pulse">読み込み中...</p>
+      </div>
+    )
+  }
+
   if (step === 'done') {
     const allAnswers = [...answers]
     const correct = allAnswers.filter((a) => a.result.status === 'correct').length
@@ -120,7 +135,7 @@ export default function DemoQuizPage() {
     const pct = Math.round(((correct + partial * 0.5) / allAnswers.length) * 100)
 
     return (
-      <div className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-ground flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
           <div className="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 text-center space-y-3">
             <p className="text-5xl font-bold text-gray-900">{pct}<span className="text-2xl text-gray-400">%</span></p>
@@ -132,14 +147,14 @@ export default function DemoQuizPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-amber-100 shadow-sm rounded-2xl p-5 space-y-2">
+          <div className="bg-white border border-line shadow-sm rounded-2xl p-5 space-y-2">
             <p className="text-gray-900 font-bold">登録して続きを学ぼう</p>
             <p className="text-gray-500 text-sm">
               自分の会議録・ドキュメントからフレーズを抽出・保存できます。学習履歴も記録されます。
             </p>
             <Link
               href="/login"
-              className="inline-block mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors"
+              className="inline-block mt-2 bg-brand hover:bg-brand-deep text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors"
             >
               無料アカウント登録 →
             </Link>
@@ -164,7 +179,7 @@ export default function DemoQuizPage() {
   const diff = DIFF_LABELS[current.difficulty] ?? DIFF_LABELS[1]
 
   return (
-    <div className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-ground flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-4">
 
         {/* デモバナー */}
@@ -181,7 +196,7 @@ export default function DemoQuizPage() {
           </div>
           <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-500 rounded-full transition-all"
+              className="h-full bg-brand rounded-full transition-all"
               style={{ width: `${(index / phrases.length) * 100}%` }}
             />
           </div>
@@ -198,7 +213,7 @@ export default function DemoQuizPage() {
             <button
               onClick={handleSpeak}
               className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-colors flex-shrink-0 ${
-                speaking ? 'bg-blue-500/20 text-blue-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                speaking ? 'bg-brand/20 text-brand' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
               }`}
               title="読み上げ"
             >
@@ -218,20 +233,20 @@ export default function DemoQuizPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="意味を日本語で入力…"
               disabled={step === 'judging'}
-              className="w-full bg-white border border-gray-200 text-gray-900 placeholder-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
+              className="w-full bg-white border border-gray-200 text-gray-900 placeholder-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand transition-colors disabled:opacity-50"
               style={{ fontSize: '16px' }}
               autoFocus
             />
             <button
               onClick={handleSubmit}
               disabled={!answer.trim() || step === 'judging'}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition-colors"
+              className="w-full bg-brand hover:bg-brand-deep disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-sm transition-colors"
             >
               {step === 'judging' ? 'AI判定中…' : '回答する'}
             </button>
             {step === 'judging' && (
-              <div className="h-1 bg-blue-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 animate-pulse rounded-full w-full" />
+              <div className="h-1 bg-brand-soft rounded-full overflow-hidden">
+                <div className="h-full bg-brand animate-pulse rounded-full w-full" />
               </div>
             )}
           </div>
@@ -268,7 +283,7 @@ export default function DemoQuizPage() {
         {/* デモCTA */}
         <p className="text-center text-xs text-gray-400">
           自分のフレーズで学習したい場合は{' '}
-          <Link href="/login" className="text-blue-600 hover:text-blue-700 underline">無料登録</Link>
+          <Link href="/login" className="text-brand hover:text-brand-deep underline">無料登録</Link>
         </p>
       </div>
     </div>

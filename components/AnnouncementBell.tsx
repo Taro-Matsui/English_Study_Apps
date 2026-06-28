@@ -65,12 +65,12 @@ export function AnnouncementBell() {
                     key={a.id}
                     className={`p-4 rounded-xl space-y-1.5 ${
                       isUnread
-                        ? 'bg-blue-500/10 border border-blue-500/20'
+                        ? 'bg-brand/10 border border-brand/20'
                         : 'bg-gray-50 border border-gray-200'
                     }`}
                   >
                     <div className="flex items-center gap-2 flex-wrap">
-                      {isUnread && <span className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />}
+                      {isUnread && <span className="w-2 h-2 rounded-full bg-brand flex-shrink-0" />}
                       <p className="text-sm font-semibold text-gray-900 flex-1">{a.title}</p>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                         a.type === 'update'
@@ -94,7 +94,7 @@ export function AnnouncementBell() {
               <div className="p-4 border-t border-gray-100 flex-shrink-0">
                 <button
                   onClick={markAllRead}
-                  className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors"
+                  className="w-full py-2.5 rounded-xl bg-brand text-white text-sm font-bold hover:bg-brand-deep transition-colors"
                 >
                   すべて既読にする
                 </button>

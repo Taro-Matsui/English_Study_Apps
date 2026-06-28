@@ -125,7 +125,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="min-h-screen bg-ground">
       <div className="max-w-lg mx-auto px-4 py-10 space-y-10">
 
         {/* ── ヒーロー ── */}
@@ -142,7 +142,7 @@ export default function LoginPage() {
         {/* ── 機能紹介 ── */}
         <div className="space-y-3">
           {FEATURES.map((f) => (
-            <div key={f.title} className="flex items-start gap-3 bg-white rounded-2xl border border-amber-100 p-4 shadow-sm">
+            <div key={f.title} className="flex items-start gap-3 bg-white rounded-2xl border border-line p-4 shadow-sm">
               <span className="text-2xl flex-shrink-0 mt-0.5">{f.icon}</span>
               <div>
                 <p className="font-semibold text-gray-800 text-sm">{f.title}</p>
@@ -153,7 +153,7 @@ export default function LoginPage() {
         </div>
 
         {/* ── ログイン / 登録フォーム ── */}
-        <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 space-y-5">
+        <div className="bg-white rounded-2xl border border-line shadow-sm p-6 space-y-5">
           <h2 className="text-center text-sm font-semibold text-gray-700">
             {mode === 'signin' ? 'アカウントにログイン' : '無料で始める'}
           </h2>
@@ -165,7 +165,7 @@ export default function LoginPage() {
                 key={m}
                 onClick={() => { setMode(m); setError(null); setMessage(null); setConfirmPassword('') }}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  mode === m ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-700'
+                  mode === m ? 'bg-brand text-white' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {m === 'signin' ? 'ログイン' : '新規登録'}
@@ -185,7 +185,7 @@ export default function LoginPage() {
                 disabled={loading}
                 placeholder="you@example.com"
                 style={{ fontSize: '16px' }}
-                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-brand transition-colors disabled:opacity-50"
               />
             </div>
             <div>
@@ -199,7 +199,7 @@ export default function LoginPage() {
                 placeholder={mode === 'signup' ? '8文字以上' : '••••••••'}
                 minLength={mode === 'signup' ? 8 : undefined}
                 style={{ fontSize: '16px' }}
-                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
+                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none focus:border-brand transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -217,7 +217,7 @@ export default function LoginPage() {
                   className={`w-full bg-white border rounded-xl px-4 py-3 text-gray-900 placeholder-gray-300 focus:outline-none transition-colors disabled:opacity-50 ${
                     confirmPassword && confirmPassword !== password
                       ? 'border-red-500/60 focus:border-red-500'
-                      : 'border-gray-200 focus:border-blue-500'
+                      : 'border-gray-200 focus:border-brand'
                   }`}
                 />
                 {confirmPassword && confirmPassword !== password && (
@@ -250,7 +250,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !email || !password || (mode === 'signup' && password !== confirmPassword)}
-              className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 rounded-xl bg-brand text-white font-bold text-sm hover:bg-brand-deep disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? '処理中...' : mode === 'signin' ? 'ログイン' : '無料で始める'}
             </button>

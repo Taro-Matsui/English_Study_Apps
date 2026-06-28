@@ -122,7 +122,7 @@ export default function HistoryPage() {
   const maxTotal = Math.max(...daily.map((d) => d.total), 1)
 
   return (
-    <div className="min-h-screen bg-amber-50 pb-24">
+    <div className="min-h-screen bg-ground pb-24">
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export default function HistoryPage() {
                       </span>
                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-blue-400 transition-all"
+                          className="h-full rounded-full bg-brand transition-all"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -232,7 +232,7 @@ export default function HistoryPage() {
                       </span>
                       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-violet-400 transition-all"
+                          className="h-full rounded-full bg-brand transition-all"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -251,7 +251,7 @@ export default function HistoryPage() {
           <div className="text-center py-20 space-y-3">
             <p className="text-4xl">📊</p>
             <p className="text-sm text-gray-400">{t('history_empty')}</p>
-            <Link href="/quiz" className="text-xs text-blue-500 hover:underline">{t('history_start_quiz')}</Link>
+            <Link href="/quiz" className="text-xs text-brand hover:underline">{t('history_start_quiz')}</Link>
           </div>
         ) : (
           sessions.map((ses) => {
@@ -262,10 +262,10 @@ export default function HistoryPage() {
               ? `${ses.total_questions} Picks / Good Pick ${ses.correct_count}`
               : `${ses.total_questions} Picks / ${ses.correct_count} Good Pick`
             return (
-              <div key={ses.id} className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden">
+              <div key={ses.id} className="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
                 <button
                   onClick={() => setOpen(isOpen ? null : ses.id)}
-                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-amber-50/50 transition-colors"
+                  className="w-full px-5 py-4 flex items-center justify-between hover:bg-ground/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 text-left">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 ${
@@ -328,7 +328,7 @@ export default function HistoryPage() {
                               {t('history_your_answer')}<span className="text-gray-700">{a.user_answer}</span>
                             </p>
                             {!a.is_correct && a.phrases?.meaning_ja && (
-                              <p className="text-xs text-blue-600 mt-0.5">{t('history_correct')}{a.phrases.meaning_ja}</p>
+                              <p className="text-xs text-brand mt-0.5">{t('history_correct')}{a.phrases.meaning_ja}</p>
                             )}
                             {a.ai_feedback && (
                               <p className="text-xs text-gray-400 mt-0.5 italic">{a.ai_feedback}</p>

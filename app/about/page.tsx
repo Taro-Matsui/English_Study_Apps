@@ -6,14 +6,14 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-amber-50 py-10 px-4">
+    <div className="min-h-screen bg-ground py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
           <Link href="/login" className="text-sm text-amber-700 hover:text-amber-900">← トップへ戻る</Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">運営者情報</h1>
         </div>
 
-        <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 space-y-5 text-sm text-gray-700 leading-relaxed">
+        <div className="bg-white rounded-2xl border border-line shadow-sm p-6 space-y-5 text-sm text-gray-700 leading-relaxed">
 
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-4 border-b border-gray-100 pb-4">

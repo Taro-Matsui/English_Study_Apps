@@ -128,8 +128,8 @@ export default function PhrasesPage() {
   const hasFilters = !!q || !!source || diffFilter !== null || !!sceneFilter || onlyUnmastered
 
   return (
-    <div className="min-h-screen bg-amber-50 pb-24">
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-amber-100 px-4 py-3">
+    <div className="min-h-screen bg-ground pb-24">
+      <div className="sticky top-0 z-10 bg-ground/95 backdrop-blur-sm border-b border-line px-4 py-3">
         <div className="max-w-2xl mx-auto space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ export default function PhrasesPage() {
               <h1 className="text-base font-bold text-gray-800">{t('phrases_title')}</h1>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-brand bg-brand-soft px-2 py-0.5 rounded-full">
                 {loading ? '...' : countLabel}
               </span>
               {masteredCount > 0 && (
@@ -153,7 +153,7 @@ export default function PhrasesPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('phrases_search')}
-            className="h-9 text-sm bg-white border-amber-200 text-amber-900 placeholder-amber-400"
+            className="h-9 text-sm bg-white border-line text-amber-900 placeholder-amber-400"
           />
 
           {/* 難易度フィルター */}
@@ -161,7 +161,7 @@ export default function PhrasesPage() {
             <button
               onClick={() => setDiffFilter(null)}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                diffFilter === null ? 'bg-amber-800 text-white' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
+                diffFilter === null ? 'bg-brand text-white' : 'bg-white border border-line text-brand hover:bg-ground'
               }`}
             >
               {t('phrases_all')}
@@ -171,7 +171,7 @@ export default function PhrasesPage() {
                 key={lv}
                 onClick={() => setDiffFilter(diffFilter === lv ? null : lv)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  diffFilter === lv ? `${DIFF_CONFIG[lv].cls} ring-1 ring-current` : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
+                  diffFilter === lv ? `${DIFF_CONFIG[lv].cls} ring-1 ring-current` : 'bg-white border border-line text-brand hover:bg-ground'
                 }`}
               >
                 Lv.{lv}
@@ -186,7 +186,7 @@ export default function PhrasesPage() {
                 key={sc}
                 onClick={() => setSceneFilter(sceneFilter === sc ? '' : sc)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                  sceneFilter === sc ? 'bg-amber-800 text-white' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
+                  sceneFilter === sc ? 'bg-brand text-white' : 'bg-white border border-line text-brand hover:bg-ground'
                 }`}
               >
                 {SCENE_LABELS[sc]}
@@ -198,8 +198,8 @@ export default function PhrasesPage() {
                 onClick={() => setSource(source === type ? '' : type)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   source === type && type !== ''
-                    ? 'bg-amber-800 text-white'
-                    : type === '' ? 'hidden' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
+                    ? 'bg-brand text-white'
+                    : type === '' ? 'hidden' : 'bg-white border border-line text-brand hover:bg-ground'
                 }`}
               >
                 {type}
@@ -208,7 +208,7 @@ export default function PhrasesPage() {
             <button
               onClick={() => setOnlyUnmastered(!onlyUnmastered)}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
-                onlyUnmastered ? 'bg-amber-800 text-white' : 'bg-white border border-amber-200 text-amber-800 hover:bg-amber-50'
+                onlyUnmastered ? 'bg-brand text-white' : 'bg-white border border-line text-brand hover:bg-ground'
               }`}
             >
               Unpicked のみ
@@ -255,7 +255,7 @@ export default function PhrasesPage() {
             {!hasFilters && (
               <Link
                 href="/library/import"
-                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-800 text-white text-sm font-semibold hover:bg-amber-700 transition-colors shadow-sm"
+                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:bg-brand-deep transition-colors shadow-sm"
               >
                 フレーズをPickする →
               </Link>
@@ -269,7 +269,7 @@ export default function PhrasesPage() {
                 <div
                   key={p.id}
                   className={`bg-white rounded-2xl border shadow-sm p-4 flex items-start gap-3 hover:shadow-md transition-shadow ${
-                    isMastered ? 'border-emerald-200' : 'border-amber-100'
+                    isMastered ? 'border-emerald-200' : 'border-line'
                   }`}
                 >
                   <div className="flex-1 min-w-0">
@@ -287,7 +287,7 @@ export default function PhrasesPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm font-medium text-amber-800 mt-1">{p.meaning_ja}</p>
+                    <p className="text-sm font-medium text-brand mt-1">{p.meaning_ja}</p>
                     {p.original_context && (
                       <p className="text-xs text-gray-400 mt-1 italic line-clamp-2">
                         &quot;{p.original_context}&quot;
@@ -304,7 +304,7 @@ export default function PhrasesPage() {
                     <button
                       onClick={() => speak(p.phrase, p.id)}
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
-                        speaking === p.id ? 'bg-amber-100 text-amber-700 animate-pulse' : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                        speaking === p.id ? 'bg-brand-soft text-brand animate-pulse' : 'bg-ground text-brand hover:bg-brand-soft'
                       }`}
                     >
                       🔊
@@ -323,7 +323,7 @@ export default function PhrasesPage() {
             {hasMore && (
               <button
                 onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-                className="w-full py-3 rounded-2xl border border-amber-200 bg-white text-amber-700 text-sm font-medium hover:bg-amber-50 transition-colors"
+                className="w-full py-3 rounded-2xl border border-line bg-white text-brand text-sm font-medium hover:bg-ground transition-colors"
               >
                 もっと見る（残り {filteredPhrases.length - visibleCount} 件）
               </button>
@@ -334,7 +334,7 @@ export default function PhrasesPage() {
 
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4">
+          <div className="bg-ground rounded-2xl shadow-xl p-6 w-full max-w-sm space-y-4">
             <h2 className="font-bold text-gray-800">{t('phrases_delete_title')}</h2>
             <p className="text-sm text-gray-600 font-medium">&ldquo;{deleteTarget.phrase}&rdquo;</p>
             <div className="space-y-2">
@@ -358,7 +358,7 @@ export default function PhrasesPage() {
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 rounded-xl border border-amber-200 py-2 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
+                className="flex-1 rounded-xl border border-line py-2 text-sm text-brand hover:bg-ground transition-colors"
               >
                 {t('phrases_cancel')}
               </button>

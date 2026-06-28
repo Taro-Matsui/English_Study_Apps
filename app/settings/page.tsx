@@ -147,9 +147,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-amber-50 text-gray-900">
+    <div className="min-h-screen bg-ground text-gray-900">
       {/* ヘッダー */}
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-gray-200">
+      <div className="sticky top-0 z-10 bg-ground/95 backdrop-blur-sm border-b border-gray-200">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-lg mx-auto">
           <Link href="/" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
           <h1 className="flex-1 text-sm font-semibold">{ja ? '設定' : 'Settings'}</h1>
@@ -191,7 +191,7 @@ export default function SettingsPage() {
               </div>
               <Link
                 href="/onboarding"
-                className="text-xs px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 transition-colors flex-shrink-0"
+                className="text-xs px-3 py-1.5 rounded-lg bg-brand/10 text-brand hover:bg-brand-deep/20 transition-colors flex-shrink-0"
               >
                 {ja ? '変更' : 'Edit'}
               </Link>
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                       onClick={() => { setVoicePreset('custom'); setShowCustom(true) }}
                       className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                         isSel
-                          ? 'border-blue-500/50 bg-blue-50'
+                          ? 'border-brand/50 bg-brand-soft'
                           : 'border-gray-200 bg-white hover:bg-gray-50'
                       }`}
                     >
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium">{label}</p>
                         <p className="text-xs text-gray-400 mt-0.5">{ja ? desc_ja : desc_en}</p>
                       </div>
-                      {isSel && <span className="text-blue-500 text-xs font-bold">✓</span>}
+                      {isSel && <span className="text-brand text-xs font-bold">✓</span>}
                       <span className="text-gray-400 text-xs">{showCustom ? '▲' : '▼'}</span>
                     </div>
 
@@ -246,7 +246,7 @@ export default function SettingsPage() {
                               key={v.voiceURI}
                               className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
                                 isSelVoice
-                                  ? 'border-blue-500/40 bg-blue-50'
+                                  ? 'border-brand/40 bg-brand-soft'
                                   : 'border-gray-100 bg-white hover:bg-gray-50'
                               }`}
                             >
@@ -257,12 +257,12 @@ export default function SettingsPage() {
                                   <span className="ml-1.5 text-gray-400 font-normal">{v.lang}</span>
                                 </p>
                               </div>
-                              {isSelVoice && <span className="text-blue-500 text-[10px] font-bold">✓</span>}
+                              {isSelVoice && <span className="text-brand text-[10px] font-bold">✓</span>}
                               <button
                                 onClick={() => testCustomVoice(v)}
                                 className={`text-[10px] px-2 py-0.5 rounded transition-colors ${
                                   isTestingV
-                                    ? 'bg-blue-500/20 text-blue-600'
+                                    ? 'bg-brand/20 text-brand'
                                     : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                 }`}
                               >
@@ -282,7 +282,7 @@ export default function SettingsPage() {
                   key={key}
                   className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
                     isSel
-                      ? 'border-blue-500/50 bg-blue-50'
+                      ? 'border-brand/50 bg-brand-soft'
                       : 'border-gray-200 bg-white'
                   }`}
                 >
@@ -291,13 +291,13 @@ export default function SettingsPage() {
                     <p className="text-xs text-gray-400 mt-0.5">{ja ? desc_ja : desc_en}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {isSel && <span className="text-blue-500 text-xs font-bold">✓</span>}
+                    {isSel && <span className="text-brand text-xs font-bold">✓</span>}
                     {key !== 'default' && (
                       <button
                         onClick={() => testPreset(key)}
                         className={`text-xs px-2.5 py-1 rounded-lg transition-colors ${
                           isTesting
-                            ? 'bg-blue-500/20 text-blue-600'
+                            ? 'bg-brand/20 text-brand'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         }`}
                       >
@@ -333,7 +333,7 @@ export default function SettingsPage() {
               type="checkbox"
               checked={settings.contextHint}
               onChange={(e) => setContextHint(e.target.checked)}
-              className="w-4 h-4 accent-blue-500 flex-shrink-0"
+              className="w-4 h-4 accent-brand flex-shrink-0"
             />
             <div>
               <p className="text-sm font-medium">
@@ -350,7 +350,7 @@ export default function SettingsPage() {
               type="checkbox"
               checked={settings.showPronunciation}
               onChange={(e) => setShowPronunciation(e.target.checked)}
-              className="w-4 h-4 accent-blue-500 flex-shrink-0"
+              className="w-4 h-4 accent-brand flex-shrink-0"
             />
             <div>
               <p className="text-sm font-medium">
@@ -382,7 +382,7 @@ export default function SettingsPage() {
             >
               🔔 {ja ? `お知らせを未読にリセット` : 'Mark all announcements unread'}
               {unreadCount > 0 && (
-                <span className="ml-2 text-xs bg-blue-500/20 text-blue-600 px-1.5 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-brand/20 text-brand px-1.5 py-0.5 rounded-full">
                   {ja ? `${unreadCount}件未読` : `${unreadCount} unread`}
                 </span>
               )}
@@ -397,7 +397,7 @@ export default function SettingsPage() {
           </h2>
           <Link
             href="/settings/billing"
-            className="flex items-center justify-between p-4 rounded-xl border border-amber-200 bg-white hover:bg-amber-50 transition-colors"
+            className="flex items-center justify-between p-4 rounded-xl border border-line bg-white hover:bg-ground transition-colors"
           >
             <div>
               <p className="text-sm font-medium">{ja ? 'プランを管理する' : 'Manage Plan'}</p>

@@ -137,9 +137,9 @@ function BillingContent() {
   const currentPlan: Plan = sub?.plan ?? 'free'
 
   return (
-    <div className="min-h-screen bg-amber-50 text-gray-900">
+    <div className="min-h-screen bg-ground text-gray-900">
       {/* ヘッダー */}
-      <div className="sticky top-0 z-10 bg-amber-50/95 backdrop-blur-sm border-b border-gray-200">
+      <div className="sticky top-0 z-10 bg-ground/95 backdrop-blur-sm border-b border-gray-200">
         <div className="px-4 pt-3 pb-3 flex items-center gap-3 max-w-lg mx-auto">
           <Link href="/settings" className="text-gray-400 hover:text-gray-600 text-2xl p-2 -ml-2">‹</Link>
           <h1 className="flex-1 text-sm font-semibold">プラン・お支払い</h1>
@@ -155,7 +155,7 @@ function BillingContent() {
           </div>
         )}
         {canceled && (
-          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
+          <div className="rounded-xl bg-ground border border-line p-4 text-sm text-amber-800">
             決済をキャンセルしました。プランは変更されていません。
           </div>
         )}
@@ -168,7 +168,7 @@ function BillingContent() {
         {/* 現在のプラン */}
         <section className="space-y-2">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">現在のプラン</h2>
-          <div className="bg-white rounded-xl border border-amber-100 p-4 flex items-center justify-between">
+          <div className="bg-white rounded-xl border border-line p-4 flex items-center justify-between">
             {loading ? (
               <span className="text-sm text-gray-400">読み込み中...</span>
             ) : (
@@ -212,7 +212,7 @@ function BillingContent() {
               onClick={() => setInterval('monthly')}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
                 interval === 'monthly'
-                  ? 'bg-amber-800 text-white'
+                  ? 'bg-brand text-white'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -222,7 +222,7 @@ function BillingContent() {
               onClick={() => setInterval('yearly')}
               className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors relative ${
                 interval === 'yearly'
-                  ? 'bg-amber-800 text-white'
+                  ? 'bg-brand text-white'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -253,7 +253,7 @@ function BillingContent() {
                 key={plan.key}
                 className={`rounded-xl border p-4 space-y-3 ${
                   plan.highlight
-                    ? 'border-amber-400 bg-white'
+                    ? 'border-brand bg-white'
                     : 'border-gray-200 bg-white'
                 }`}
               >
@@ -262,7 +262,7 @@ function BillingContent() {
                     <div className="flex items-center gap-2">
                       <p className="font-semibold text-gray-900">{plan.label}</p>
                       {plan.highlight && (
-                        <span className="text-[10px] bg-amber-800 text-white px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-[10px] bg-brand text-white px-2 py-0.5 rounded-full font-medium">
                           おすすめ
                         </span>
                       )}
@@ -309,7 +309,7 @@ function BillingContent() {
                     disabled={isLoading || !priceKey}
                     className={`w-full py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${
                       plan.highlight
-                        ? 'bg-amber-800 text-white hover:bg-amber-700'
+                        ? 'bg-brand text-white hover:bg-brand-deep'
                         : 'bg-gray-900 text-white hover:bg-gray-800'
                     }`}
                   >
@@ -343,7 +343,7 @@ function BillingContent() {
 
 export default function BillingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-amber-50" />}>
+    <Suspense fallback={<div className="min-h-screen bg-ground" />}>
       <BillingContent />
     </Suspense>
   )
