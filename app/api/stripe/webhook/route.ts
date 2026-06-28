@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type Stripe from 'stripe'
 import { getStripe } from '@/lib/stripe'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { log } from '@/lib/logger'
 import type { Plan } from '@/lib/subscription'
 
 // Stripe は raw body を署名検証に使うため bodyParser を無効化
@@ -183,6 +184,21 @@ export async function POST(req: NextRequest) {
 
     case 'customer.subscription.deleted': {
       const subscription = event.data.object as Stripe.Subscription
+
+      // チャーン分析: 解約理由を記録（Stripe のキャンセルフローが収集した場合のみ値が入る）
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cd = (subscription as any).cancellation_details
+      log({
+        level: 'info',
+        endpoint: '/api/stripe/webhook',
+        message: 'subscription_canceled',
+        detail: {
+          stripe_subscription_id: subscription.id,
+          reason: cd?.reason ?? null,
+          feedback: cd?.feedback ?? null,
+          comment: cd?.comment ?? null,
+        },
+      })
 
       await supabase
         .from('subscriptions')

@@ -54,6 +54,9 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
 
   // 本日のチャレンジ数とプランの上限を取得
   const [dailyPractice, setDailyPractice] = useState<{ used: number; limit: number; plan: string } | null>(null)
+  // チャーン防衛: 決済失敗(past_due)を検知して支払い方法更新を促す
+  const [pastDue, setPastDue] = useState(false)
+  const [portalLoading, setPortalLoading] = useState(false)
   useEffect(() => {
     Promise.all([
       fetch('/api/stripe/subscription').then((r) => r.json()),
@@ -63,8 +66,19 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
       const used: number = countData?.count ?? 0
       const limit = plan === 'free' ? 5 : 10
       setDailyPractice({ used, limit, plan })
+      setPastDue(sub?.status === 'past_due')
     }).catch(() => {})
   }, [user?.id])
+
+  async function handlePortal() {
+    setPortalLoading(true)
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json()
+      if (data.url) { window.location.href = data.url; return }
+    } catch {}
+    setPortalLoading(false)
+  }
 
   // クイズページ表示を高速化するためフレーズをバックグラウンドでプリフェッチ
   useEffect(() => {
@@ -159,6 +173,26 @@ export function HomeContent({ phraseCount, sourceCount, streak, todayDone, weakC
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Pick</h1>
           <p className="text-gray-500 text-sm">{t('tagline')}</p>
         </div>
+
+        {/* チャーン防衛: 決済失敗バナー（意図せぬ解約の回収） */}
+        {pastDue && (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-3.5 flex items-center gap-3">
+            <span className="text-xl flex-shrink-0">⚠️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-red-700">お支払いに失敗しました</p>
+              <p className="text-xs text-red-600/80 mt-0.5 leading-relaxed">
+                有料プランを継続するには支払い方法を更新してください。
+              </p>
+            </div>
+            <button
+              onClick={handlePortal}
+              disabled={portalLoading}
+              className="flex-shrink-0 text-xs font-bold bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {portalLoading ? '移動中…' : '更新する'}
+            </button>
+          </div>
+        )}
 
         {/* サマリーカード */}
         <div className="grid grid-cols-3 gap-2">
