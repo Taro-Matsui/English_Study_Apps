@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon: '🎯',
     title: 'チャレンジで即定着',
-    desc: '日本語の意味を見て英語で答えるシンプルなチャレンジ。AIが回答を採点してフィードバックします。',
+    desc: '英語フレーズを見て日本語の意味を答えるシンプルなチャレンジ。AIが回答を採点してフィードバックします。',
   },
   {
     icon: '📊',
@@ -134,8 +134,8 @@ export default function LoginPage() {
           <img src="/pick_logo.png" alt="Pick" className="w-20 h-20 rounded-2xl mx-auto mb-1" />
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Pick</h1>
           <p className="text-gray-500 text-sm leading-relaxed">
-            実際の会話から、フレーズをピックする学習アプリ。<br />
-            自分のリアルなテキストで、使える英語を身につけよう。
+            実際の会話から、フレーズをピックして学ぶアプリ。<br />
+            自分のリアルなテキストで出会った英語を、忘れる前に定着させよう。
           </p>
         </div>
 

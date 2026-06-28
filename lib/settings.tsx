@@ -29,7 +29,7 @@ const DEFAULT: Settings = {
   voiceURI: null,
   skipMastered: false,
   masteredIds: [],
-  contextHint: false,
+  contextHint: true, // 「文脈ごと学ぶ」コア価値を既定で可視化（出題時にマスク文脈を表示）
   showPronunciation: false,
 }
 const KEY = 'app_settings'

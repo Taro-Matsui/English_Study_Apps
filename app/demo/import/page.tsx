@@ -50,13 +50,13 @@ export default function DemoImportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 pb-12">
+    <div className="min-h-screen bg-amber-50 p-4 pb-12">
       <div className="max-w-2xl mx-auto space-y-5">
 
         {/* ヘッダー */}
         <div className="flex items-center justify-between pt-2">
           <Link href="/demo" className="text-sm text-gray-500 hover:text-gray-700">← デモトップ</Link>
-          <span className="text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full">デモモード</span>
+          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">デモモード</span>
         </div>
 
         <div>
@@ -121,7 +121,7 @@ export default function DemoImportPage() {
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${DIFF_CLS[p.difficulty] ?? DIFF_CLS[1]}`}>
                       Lv.{p.difficulty}
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">{p.usage_scene}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">{p.usage_scene}</span>
                   </div>
                   <p className="text-sm text-gray-600">{p.meaning_ja}</p>
                   {p.original_context && (
@@ -132,7 +132,7 @@ export default function DemoImportPage() {
             </div>
 
             {/* 登録 CTA */}
-            <div className="bg-gradient-to-r from-blue-600 to-emerald-600 rounded-2xl p-5 space-y-2 text-center">
+            <div className="bg-blue-600 rounded-2xl p-5 space-y-2 text-center">
               <p className="text-white font-bold">この {phrases.length} 件を保存して学習を始めよう！</p>
               <p className="text-blue-100 text-sm">無料登録すると自分のフレーズをクイズで学べます</p>
               <Link
