@@ -58,7 +58,6 @@ const RESULT_CLS: Record<JudgeStatus, string> = {
   incorrect: 'text-red-400',
 }
 
-function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5) }
 
 
 function highlightPhrase(text: string, phrase: string): React.ReactNode {
@@ -95,7 +94,7 @@ function QuizContent() {
   const isFocusMode = searchParams.get('mode') === 'focus'
 
   const { t } = useLanguage()
-  const { settings, markMastered, setVoicePreset } = useSettings()
+  const { settings, setVoicePreset } = useSettings()
   const { user } = useAuth()
   const [phrases, setPhrases] = useState<QuizPhrase[]>([])
   const [index, setIndex] = useState(0)
@@ -120,25 +119,18 @@ function QuizContent() {
     setStep('loading'); setAnswers([])
     setSaveState(null)
     try {
-      let excludeIds: string[] = []
-      let skipMastered = false
-      try {
-        const saved = JSON.parse(localStorage.getItem('app_settings') ?? '{}')
-        skipMastered = Boolean(saved.skipMastered)
-        if (skipMastered && (saved.masteredIds as string[] | undefined)?.length) {
-          excludeIds = (saved.masteredIds as string[]).slice(0, 500)
-        }
-      } catch {}
-
-      // 通常モード + skipMastered 無効 → プリフェッチキャッシュを利用して即起動
-      if (!focusMode && !skipMastered) {
+      // SRS: 出題順はサーバの due 順（next_review_date 昇順）を信頼する。
+      // クライアントでのシャッフルや「正解済みを除外」は SRS と矛盾するため行わない
+      // （習熟フレーズは間隔が伸び due が遠のくことで自然に出題頻度が下がる）。
+      // 通常モードは同じ /api/quiz の due 順応答をプリフェッチしたキャッシュで即起動。
+      if (!focusMode) {
         try {
           const cached = sessionStorage.getItem('quiz_prefetch')
           if (cached) {
             const { phrases: cachedPhrases, ts } = JSON.parse(cached) as { phrases: QuizPhrase[]; ts: number }
             sessionStorage.removeItem('quiz_prefetch') // 使い切り
             if (Date.now() - ts < 90_000 && cachedPhrases.length) {
-              setPhrases(shuffle(cachedPhrases).slice(0, 10))
+              setPhrases(cachedPhrases.slice(0, 10))
               setIndex(0); setScore({ correct: 0, partial: 0, incorrect: 0 }); setStep('question')
               return
             }
@@ -149,11 +141,11 @@ function QuizContent() {
       const res = await fetch('/api/quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limit: 10, exclude: excludeIds, mode: focusMode ? 'focus' : 'normal' }),
+        body: JSON.stringify({ limit: 10, mode: focusMode ? 'focus' : 'normal' }),
       })
       const data: QuizPhrase[] = await res.json()
       if (!data.length) { setStep('empty'); return }
-      setPhrases(shuffle(data).slice(0, 10))
+      setPhrases(data.slice(0, 10))
       setIndex(0); setScore({ correct: 0, partial: 0, incorrect: 0 }); setStep('question')
     } catch { setStep('empty') }
   }, [isFocusMode])
@@ -247,7 +239,7 @@ function QuizContent() {
         status,
         response_time_ms: responseTimeMs,
       }])
-      if (status === 'correct') markMastered(current.id)
+      // 習熟管理は SRS（complete で user_progress を更新）に一本化したため markMastered は呼ばない
       speak(current.phrase, 'phrase'); setStep('result')
       // partial / incorrect は解説を自動取得（correct はユーザーが任意で開ける）
       if (status !== 'correct') handleExplain()
@@ -308,7 +300,7 @@ function QuizContent() {
       const finalPct = Math.round((finalScore.correct / total) * 100)
       fetch('/api/quiz/complete', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers, mode: isFocusMode ? 'focus' : 'normal' }),
       })
         .then((r) => r.json())
         .then((d) => {

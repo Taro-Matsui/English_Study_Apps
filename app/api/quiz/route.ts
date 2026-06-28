@@ -4,6 +4,15 @@ import { getUser } from '@/lib/auth'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
+const PHRASE_COLS =
+  'id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, source_type, usage_scene, engineer_level, added_date'
+
+interface PhraseRow {
+  id: string
+  added_date?: string | null
+  [k: string]: unknown
+}
+
 async function fetchPhrases(user: { id: string }, limit: number, excludeIds: string[]) {
   const db = getSupabaseAdmin()
 
@@ -56,95 +65,70 @@ export async function POST(req: NextRequest) {
     .filter((s): s is string => typeof s === 'string' && UUID_RE.test(s))
     .slice(0, 500)
 
-  // 弱点フォーカスモード: 直近5セッションで2回以上不正解のフレーズを優先出題
-  if (mode === 'focus') {
-    const db = getSupabaseAdmin()
-    const { data: recentSessions } = await db
-      .from('quiz_sessions')
-      .select('id')
+  // SRS: due（next_review_date <= 今日JST）を最優先で出題。
+  // focus（ピックアップ チャレンジ）は誤答リセット分(repetitions=0)を上位に並べる。
+  const db = getSupabaseAdmin()
+  const todayJst = new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
+  // 1. user_progress から due の phrase_id を取得（期限の古い順 / focus は rep 昇順優先）
+  let dueQuery = db
+    .from('user_progress')
+    .select('phrase_id, next_review_date, repetitions')
+    .eq('user_id', user.id)
+    .lte('next_review_date', todayJst)
+  dueQuery = mode === 'focus'
+    ? dueQuery.order('repetitions', { ascending: true }).order('next_review_date', { ascending: true })
+    : dueQuery.order('next_review_date', { ascending: true })
+  const { data: dueRows } = await dueQuery.limit(limit * 3)
+
+  const dueIds = (dueRows ?? [])
+    .map((r: { phrase_id: string }) => r.phrase_id)
+    .filter((id: string) => !excludeIds.includes(id))
+
+  let result: PhraseRow[] = []
+  if (dueIds.length > 0) {
+    const { data } = await db
+      .from('phrases')
+      .select(PHRASE_COLS)
+      .in('id', dueIds)
+      .is('deleted_at', null)
       .eq('user_id', user.id)
-      .order('completed_at', { ascending: false })
-      .limit(5)
-
-    if (recentSessions?.length) {
-      const sessionIds = recentSessions.map((s: { id: string }) => s.id)
-      const { data: wrongAnswers } = await db
-        .from('quiz_answers')
-        .select('phrase_id')
-        .in('session_id', sessionIds)
-        .eq('is_correct', false)
-
-      if (wrongAnswers?.length) {
-        const counts = new Map<string, number>()
-        wrongAnswers.forEach((a: { phrase_id: string }) => {
-          counts.set(a.phrase_id, (counts.get(a.phrase_id) ?? 0) + 1)
-        })
-        const weakIds = Array.from(counts.entries())
-          .filter(([, c]) => c >= 2)
-          .map(([id]) => id)
-          .filter((id) => UUID_RE.test(id) && !excludeIds.includes(id))
-          .slice(0, limit * 5)
-
-        if (weakIds.length > 0) {
-          const { data: weakPhrases, error } = await db
-            .from('phrases')
-            .select('id, phrase, pronunciation, meaning_ja, original_context, difficulty, source_title, source_type, usage_scene, engineer_level, added_date')
-            .in('id', weakIds)
-            .is('deleted_at', null)
-            .eq('user_id', user.id)
-          if (!error && weakPhrases?.length) {
-            const shuffled = [...weakPhrases].sort(() => Math.random() - 0.5)
-            return NextResponse.json(shuffled.slice(0, limit))
-          }
-        }
-      }
-    }
-    // 弱点フレーズが不足 → 通常出題にフォールバック
+    const ord = new Map(dueIds.map((id, i) => [id, i] as [string, number]))
+    result = ((data ?? []) as PhraseRow[]).sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9))
   }
 
-  const { data, error } = await fetchPhrases(user, limit, excludeIds)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-  const shuffled = [...(data ?? [])].sort(() => Math.random() - 0.5)
-
-  // 即答済みフレーズの再出確率を下げる:
-  // 直近10セッションで3秒以内に正解したフレーズをリストの後ろへ移動
-  let quickMasteredIds = new Set<string>()
-  try {
-    const db = getSupabaseAdmin()
-    const { data: recentSessions } = await db
-      .from('quiz_sessions')
-      .select('id')
+  // 2. due が limit に満たない分は未学習フレーズ（user_progress 行なし）を新着順で補充
+  if (result.length < limit) {
+    const need = limit - result.length
+    const { data: progressRows } = await db
+      .from('user_progress')
+      .select('phrase_id')
       .eq('user_id', user.id)
-      .order('completed_at', { ascending: false })
-      .limit(10)
-    if (recentSessions?.length) {
-      const sessionIds = recentSessions.map((s: { id: string }) => s.id)
-      const { data: fastAnswers } = await db
-        .from('quiz_answers')
-        .select('phrase_id')
-        .in('session_id', sessionIds)
-        .eq('is_correct', true)
-        .not('response_time_ms', 'is', null)
-        .lt('response_time_ms', 3500)
-      if (fastAnswers?.length) {
-        const counts = new Map<string, number>()
-        fastAnswers.forEach((a: { phrase_id: string }) => {
-          counts.set(a.phrase_id, (counts.get(a.phrase_id) ?? 0) + 1)
-        })
-        quickMasteredIds = new Set(
-          Array.from(counts.entries()).filter(([, c]) => c >= 3).map(([id]) => id)
-        )
-      }
+    const studied = new Set((progressRows ?? []).map((r: { phrase_id: string }) => r.phrase_id))
+    const taken = new Set<string>([...excludeIds, ...result.map((p) => p.id)])
+    const { data: idRows } = await db
+      .from('phrases')
+      .select('id')
+      .is('deleted_at', null)
+      .eq('user_id', user.id)
+      .order('added_date', { ascending: false })
+      .limit(500)
+    const freshIds = ((idRows ?? []) as { id: string }[])
+      .map((r) => r.id)
+      .filter((id) => !studied.has(id) && !taken.has(id))
+      .slice(0, need)
+    if (freshIds.length > 0) {
+      const { data } = await db
+        .from('phrases')
+        .select(PHRASE_COLS)
+        .in('id', freshIds)
+        .is('deleted_at', null)
+        .eq('user_id', user.id)
+      const ord = new Map(freshIds.map((id, i) => [id, i] as [string, number]))
+      const fresh = ((data ?? []) as PhraseRow[]).sort((a, b) => (ord.get(a.id) ?? 1e9) - (ord.get(b.id) ?? 1e9))
+      result = [...result, ...fresh]
     }
-  } catch {}
+  }
 
-  // 直近7日以内に追加されたフレーズを「新着」として優先出題
-  const recentCutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-  const isRecent = (p: { added_date?: string | null }) => !!p.added_date && p.added_date >= recentCutoff
-
-  const newPhrases = shuffled.filter((p) => isRecent(p) && !quickMasteredIds.has(p.id))
-  const normal     = shuffled.filter((p) => !isRecent(p) && !quickMasteredIds.has(p.id))
-  const quick      = shuffled.filter((p) => quickMasteredIds.has(p.id))
-  return NextResponse.json([...newPhrases, ...normal, ...quick].slice(0, limit))
+  return NextResponse.json(result.slice(0, limit))
 }

@@ -65,14 +65,16 @@ export interface QuizAnswerRecord {
   user_answer: string
   is_correct: boolean
   ai_feedback: string
-  /** 表示用のみ。DBには保存されない */
+  /** 表示用 + SRS の grade 導出（complete でサーバ側がメモリ上で使用）。quiz_answers には保存しない */
   status?: JudgeStatus
-  /** 問題表示から回答送信までのミリ秒 */
+  /** 問題表示から回答送信までのミリ秒。SRS の good/hard 判定にも使う */
   response_time_ms?: number
 }
 
 export interface CompleteRequest {
   answers: QuizAnswerRecord[]
+  /** 出題モード。session_type 振り分け用（focus→'review' / それ以外→'srs'） */
+  mode?: 'normal' | 'focus'
 }
 
 export interface HistorySession {
