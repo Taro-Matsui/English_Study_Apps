@@ -81,6 +81,7 @@ export default function LibraryImportPage() {
   const [jobId, setJobId] = useState<string | null>(null)
   const [dupConfirm, setDupConfirm] = useState(false)
   const pendingHashRef = useRef<string | null>(null)
+  const [consented, setConsented] = useState(false)
 
   // プラン別クォータ表示
   const [quotaInfo, setQuotaInfo] = useState<{ plan: string; used: number; limit: number } | null>(null)
@@ -119,8 +120,7 @@ export default function LibraryImportPage() {
 
   const isSubmitting = step === 'submitting'
   const canSubmit =
-    mode === 'file' ? !!file :
-    pasteText.trim().length >= 100
+    consented && (mode === 'file' ? !!file : pasteText.trim().length >= 100)
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null
@@ -180,6 +180,7 @@ export default function LibraryImportPage() {
   function handleReset() {
     setFile(null); setPasteText('')
     setSourceTitle(''); setError(null); setJobId(null); setDupConfirm(false)
+    setConsented(false)
     setStep('upload')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -427,21 +428,29 @@ export default function LibraryImportPage() {
               </div>
             </div>
 
-            {/* 登録時の注意書き（ご自身が複製の主体／権利の範囲で利用する前提を明示） */}
-            <details className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-              <summary className="text-xs text-amber-800 leading-relaxed cursor-pointer list-none flex items-start gap-1.5 [&::-webkit-details-marker]:hidden">
-                <span className="flex-shrink-0">⚠️</span>
-                <span>
-                  <span className="font-semibold">ご自身が権利を持つ／私的な学習の範囲のテキスト</span>をご利用ください。会社の機密・NDA 対象の資料や、第三者の個人情報は登録しないでください。
-                  <span className="text-amber-600 underline ml-1 whitespace-nowrap">利用上の注意 ›</span>
-                </span>
-              </summary>
-              <ul className="mt-2.5 pl-6 space-y-1.5 text-[11px] text-amber-700 list-disc leading-relaxed">
-                <li>字幕のダウンロードや音声の文字起こしは、<span className="font-medium">ご自身で行ってから</span>貼り付け・読み込みをしてください。</li>
-                <li>入力したテキストは、フレーズ抽出のため AI（Anthropic／米国）に送信されます。</li>
-                <li>取り込んだ全文は保存されません。保存するのは抽出したフレーズと短い用例です。</li>
+            {/* 登録時の同意チェック */}
+            <div className={`rounded-xl border px-4 py-3 space-y-2.5 transition-colors ${
+              consented ? 'bg-white border-line' : 'bg-amber-50 border-amber-200'
+            }`}>
+              <ul className="pl-1 space-y-1.5 text-[11px] text-gray-600 list-none leading-relaxed">
+                <li>・字幕DLや音声文字起こしは<span className="font-semibold text-gray-800">ご自身で行ってから</span>貼り付け・読み込みをしてください。</li>
+                <li>・入力テキストはフレーズ抽出のため<span className="font-semibold text-gray-800"> AI（Anthropic／米国）に送信</span>されます。</li>
+                <li>・取り込んだ全文は保存されません。保存するのは抽出フレーズと短い用例のみです。</li>
+                <li>・会社の機密・NDA 対象の資料や第三者の個人情報は登録しないでください。</li>
               </ul>
-            </details>
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={consented}
+                  onChange={(e) => setConsented(e.target.checked)}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 rounded border-gray-300 text-brand accent-brand flex-shrink-0"
+                />
+                <span className={`text-xs font-semibold ${consented ? 'text-gray-700' : 'text-amber-800'}`}>
+                  上記を確認し、自分の責任で利用します
+                </span>
+              </label>
+            </div>
 
             {/* エラー */}
             {error && (
