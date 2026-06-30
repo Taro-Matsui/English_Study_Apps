@@ -7,7 +7,7 @@ import { SourceType } from '@/types'
 import { AdBanner } from '@/components/AdBanner'
 
 type Step = 'upload' | 'submitting' | 'submitted' | 'error'
-type ImportMode = 'file' | 'url' | 'text'
+type ImportMode = 'file' | 'text'
 
 const TEXT_MAX = 200_000
 const HASH_STORAGE_KEY = 'import_hashes'
@@ -33,7 +33,7 @@ type SourceChoice = {
 }
 const SOURCE_CHOICES: SourceChoice[] = [
   { key: 'meeting', icon: '💬', label: '会議・チャット', sub: '貼り付け',     method: 'text', sourceType: '議事録',   hint: '議事録・Slack・Teams などのログをそのまま貼り付けてください' },
-  { key: 'article', icon: '📰', label: '英語記事・ブログ', sub: 'URLで取得',   method: 'url',  sourceType: '英語記事', hint: '記事ページの URL を貼り付けてください（取得できない場合は本文を貼り付け）' },
+  { key: 'article', icon: '📰', label: '英語記事・ブログ', sub: '本文を貼り付け', method: 'text', sourceType: '英語記事', hint: '記事の本文をコピーして貼り付けてください' },
   { key: 'youtube', icon: '▶️', label: 'YouTube',         sub: '字幕ファイル', method: 'file', sourceType: 'YouTube',  hint: 'YouTube Studio から字幕（.vtt / .srt）をダウンロードして読み込んでください' },
   { key: 'podcast', icon: '🎙️', label: 'Podcast・音声',   sub: '文字起こし',   method: 'text', sourceType: 'Podcast',  hint: 'Whisper・Otter.ai などで文字起こししたテキストを貼り付けてください' },
   { key: 'other',   icon: '📋', label: 'その他テキスト',   sub: '貼り付け',     method: 'text', sourceType: 'その他',   hint: '英語のテキストを貼り付けてください' },
@@ -64,13 +64,6 @@ function saveHash(hash: string) {
   } catch {}
 }
 function titleFromFilename(name: string) { return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() }
-function titleFromUrl(urlStr: string) {
-  try {
-    const u = new URL(urlStr)
-    const slug = u.pathname.split('/').filter(Boolean).pop() ?? u.hostname
-    return slug.replace(/[_-]+/g, ' ').replace(/\.\w+$/, '').trim() || u.hostname
-  } catch { return urlStr.slice(0, 40) }
-}
 function titleFromText(text: string) { return text.trim().split('\n')[0].slice(0, 30).trim() }
 
 export default function LibraryImportPage() {
@@ -79,7 +72,6 @@ export default function LibraryImportPage() {
   const [sourceKey, setSourceKey] = useState<string>('meeting')
   const [mode, setMode] = useState<ImportMode>('text')
   const [expanded, setExpanded] = useState(false)
-  const [url, setUrl] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [pasteText, setPasteText] = useState('')
   const [sourceType, setSourceType] = useState<SourceType>('議事録')
@@ -120,7 +112,6 @@ export default function LibraryImportPage() {
     setSourceType(c.sourceType)
     setSourceTitle('')
     setFile(null)
-    setUrl('')
     setPasteText('')
     setError(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -129,7 +120,6 @@ export default function LibraryImportPage() {
   const isSubmitting = step === 'submitting'
   const canSubmit =
     mode === 'file' ? !!file :
-    mode === 'url' ? !!url.trim() :
     pasteText.trim().length >= 100
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -156,13 +146,6 @@ export default function LibraryImportPage() {
         const form = new FormData()
         form.append('file', file)
         res = await fetch('/api/admin/import-async', { method: 'POST', body: form })
-      } else if (mode === 'url') {
-        if (!url.trim()) { setStep('upload'); return }
-        res = await fetch('/api/admin/import-async', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: url.trim() }),
-        })
       } else {
         const trimmed = pasteText.trim()
         if (!trimmed) { setStep('upload'); return }
@@ -195,7 +178,7 @@ export default function LibraryImportPage() {
   }
 
   function handleReset() {
-    setFile(null); setUrl(''); setPasteText('')
+    setFile(null); setPasteText('')
     setSourceTitle(''); setError(null); setJobId(null); setDupConfirm(false)
     setStep('upload')
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -355,25 +338,6 @@ export default function LibraryImportPage() {
                 </div>
               )}
 
-              {/* URL */}
-              {mode === 'url' && (
-                <div className="p-5">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) => {
-                      setUrl(e.target.value)
-                      if (e.target.value) setSourceTitle(titleFromUrl(e.target.value))
-                    }}
-                    placeholder="https://example.com/article"
-                    disabled={isSubmitting}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-                    style={{ fontSize: '16px' }}
-                    autoFocus
-                  />
-                </div>
-              )}
-
               {/* テキスト貼り付け */}
               {mode === 'text' && (
                 <div className="p-5 space-y-2">
@@ -462,6 +426,22 @@ export default function LibraryImportPage() {
                 )}
               </div>
             </div>
+
+            {/* 登録時の注意書き（ご自身が複製の主体／権利の範囲で利用する前提を明示） */}
+            <details className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <summary className="text-xs text-amber-800 leading-relaxed cursor-pointer list-none flex items-start gap-1.5 [&::-webkit-details-marker]:hidden">
+                <span className="flex-shrink-0">⚠️</span>
+                <span>
+                  <span className="font-semibold">ご自身が権利を持つ／私的な学習の範囲のテキスト</span>をご利用ください。会社の機密・NDA 対象の資料や、第三者の個人情報は登録しないでください。
+                  <span className="text-amber-600 underline ml-1 whitespace-nowrap">利用上の注意 ›</span>
+                </span>
+              </summary>
+              <ul className="mt-2.5 pl-6 space-y-1.5 text-[11px] text-amber-700 list-disc leading-relaxed">
+                <li>字幕のダウンロードや音声の文字起こしは、<span className="font-medium">ご自身で行ってから</span>貼り付け・読み込みをしてください。</li>
+                <li>入力したテキストは、フレーズ抽出のため AI（Anthropic／米国）に送信されます。</li>
+                <li>取り込んだ全文は保存されません。保存するのは抽出したフレーズと短い用例です。</li>
+              </ul>
+            </details>
 
             {/* エラー */}
             {error && (
