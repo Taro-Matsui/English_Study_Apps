@@ -183,6 +183,13 @@ Claude の max_tokens 超過で JSON 切断時の3段階フォールバック:
 2. 未エスケープ改行をサニタイズして再試行
 3. `{}` ブレース数えで完結オブジェクトを個別抽出
 
+### フレーズ抽出と source_type（重要な非直観点）
+**抽出プロンプトは `study_purpose / study_subcategory / study_level`（onboarding）だけで駆動する。`source_type` は抽出に一切影響しない。**
+- `extractPhrasesWithClaude(text, userContext)` の `userContext` に `source_type` は含まれない（`import-async` の `processJob`→`getUserContext` は study_* のみ渡す）。
+- `source_type`（YouTube/Podcast/議事録/英語記事/その他）は**保存時にソース詳細画面（jobs/[id]）で付与されるメタデータ**。`phrases.source_type` に入り `SourceBadge`（出典表示）と `plan-quota` の `System` 除外にのみ使う。
+- ソース追加画面（library/import）の「利用の幅チップ」は **placeholder を差し替えるだけの表示要素で、サーバーに種別を送らない**（`import_jobs` に種別カラムは無い）。
+- → 「ソース種別で抽出傾向を変えたい」場合は import→`import_jobs.source_type`→`extract-phrases` の配線を**新規に通す必要がある**（現状は無い）。加えて `SYSTEM_PROMPT` がエンジニア文脈・口語除外（"I think" 等）に固定なので、種別ガイダンスはユーザープロンプト側の最優先上書きにしないと効かない点に注意。
+
 ### Railway リバースプロキシ対応
 `auth/callback/route.ts` では `request.url` が `localhost:8080` になるため、
 `x-forwarded-host` / `x-forwarded-proto` から正しい origin を構築する。
