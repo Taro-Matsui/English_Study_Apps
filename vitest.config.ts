@@ -5,6 +5,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      include: ['lib/**/*.ts'],
+      exclude: ['lib/**/*.test.ts', 'lib/**/*.d.ts'],
+    },
   },
   resolve: {
     alias: { '@': path.resolve(__dirname, '.') },

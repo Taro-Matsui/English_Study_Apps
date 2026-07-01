@@ -1,0 +1,42 @@
+name: CI
+
+# master への push / PR で単体テストと型・ビルドを検証する。
+# ※ Railway は master push で自動デプロイするため、真に「壊れたコミットのデプロイ」を止めるには
+#    ブランチ保護（PR必須＋本CI必須）への移行が前提。現状は緑/赤のシグナルとして機能する。
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      # Lint は当面アドバイザリ（既存の指摘で全体を赤にしないため continue-on-error）
+      - name: Lint (advisory)
+        run: npm run lint
+        continue-on-error: true
+
+      # 以下はブロッキングゲート
+      - name: Unit tests
+        run: npm run test
+
+      - name: Type check & build
+        run: npm run build
+        env:
+          # ビルド時の env 参照フォールバック（Supabase クライアントは遅延初期化のため通常は不要）
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: dummy-service-key
