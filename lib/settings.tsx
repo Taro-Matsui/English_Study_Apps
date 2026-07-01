@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 
-export type VoicePreset = 'default' | 'us-female' | 'us-male' | 'indian' | 'custom'
+export type VoicePreset = 'default' | 'us-female' | 'us-male' | 'uk' | 'indian' | 'custom'
 
 interface Settings {
   voicePreset: VoicePreset  // 音声プリセット
@@ -55,6 +55,26 @@ const FEMALE_KW = ['samantha', 'zira', 'victoria', 'karen', 'moira', 'ava', 'fio
 const MALE_KW   = ['alex', 'fred', 'david', 'daniel', 'mark', 'arthur', 'gordon', 'oliver',
   'thomas', 'lee', 'james', 'rishi']
 
+/**
+ * アクセントごとの基本ピッチ。voice が同一エンジンでも聴感上の差異を作る。
+ * pitchDelta は speed=fast/slow 時に加算される。
+ */
+export const VOICE_ACCENT_PARAMS: Record<VoicePreset, { basePitch: number }> = {
+  default:    { basePitch: 1.0  },
+  'us-female':{ basePitch: 1.08 }, // やや高め・明瞭
+  'us-male':  { basePitch: 0.85 }, // 低め・落ち着いた
+  uk:         { basePitch: 1.05 }, // フォーマルな高さ・やや抑制
+  indian:     { basePitch: 1.18 }, // 高めで歯切れよい
+  custom:     { basePitch: 1.0  },
+}
+
+/** speed ごとのレートと、ピッチへの加算値（自然な発話の変化を模倣） */
+export const SPEED_SPEAK_PARAMS: Record<'slow' | 'normal' | 'fast', { rate: number; pitchDelta: number }> = {
+  slow:   { rate: 0.65, pitchDelta: -0.08 }, // ゆっくり → 落ち着いた低め
+  normal: { rate: 0.88, pitchDelta: 0     },
+  fast:   { rate: 1.25, pitchDelta: 0.08  }, // 早口 → 少し高く弾む
+}
+
 /** プリセットに対応する SpeechSynthesisVoice を返す（クライアント専用）*/
 export function getVoiceForPreset(
   preset: VoicePreset,
@@ -70,12 +90,24 @@ export function getVoiceForPreset(
     return voices.find((v) => v.voiceURI === customURI) ?? null
   }
 
+  if (preset === 'uk') {
+    return (
+      voices.find((v) => v.lang === 'en-GB' || v.lang === 'en_GB') ??
+      voices.find((v) => v.name.toLowerCase().includes('british')) ??
+      // Daniel は macOS の British 男性音声
+      voices.find((v) => v.name.toLowerCase() === 'daniel') ??
+      // Google UK English
+      voices.find((v) => v.name.toLowerCase().includes('uk english')) ??
+      voices.find((v) => v.lang.startsWith('en')) ?? null
+    )
+  }
+
   if (preset === 'indian') {
     return (
-      voices.find((v) => v.lang.startsWith('en-IN')) ??
-      voices.find((v) => v.lang.startsWith('en_IN')) ??
+      voices.find((v) => v.lang === 'en-IN' || v.lang === 'en_IN') ??
       voices.find((v) => v.name.toLowerCase().includes('rishi')) ??
       voices.find((v) => v.name.toLowerCase().includes('india')) ??
+      // en-IN が無いデバイスでは null を返し pitch だけで差別化
       null
     )
   }

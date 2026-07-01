@@ -8,7 +8,7 @@ import type { QuizAnswerRecord, UsageScene, EngineerLevel } from '@/types'
 import type { JudgeResponse, JudgeStatus } from '../api/quiz/judge/route'
 import type { ExplainResponse } from '../api/quiz/explain/route'
 import { useLanguage, LangToggle } from '@/lib/i18n'
-import { useSettings, getVoiceForPreset, VoicePreset } from '@/lib/settings'
+import { useSettings, getVoiceForPreset, VoicePreset, VOICE_ACCENT_PARAMS, SPEED_SPEAK_PARAMS } from '@/lib/settings'
 import { useAuth } from '@/lib/auth-context'
 import { openXShare, generateQuizResultImage, uploadShareImage } from '@/lib/share-image'
 import { AdBanner } from '@/components/AdBanner'
@@ -35,7 +35,7 @@ type Speed = 'fast' | 'normal' | 'slow'
 // 5問1セットの区切り（T1-6 案A）。セット境界でインタースティシャルを挟む。
 const SET_SIZE = 5
 
-const SPEED_RATE: Record<Speed, number> = { fast: 1.3, normal: 0.88, slow: 0.6 }
+// SPEED_RATE は SPEED_SPEAK_PARAMS に移行（lib/settings.tsx）
 
 // ライト地で読めるチップ（旧ダークテーマ用の text-*-400 を light variant に）
 const SCENE_CLS: Record<UsageScene, string> = {
@@ -185,7 +185,10 @@ function QuizContent() {
     window.speechSynthesis.cancel()
     if (speaking === key) { setSpeaking(null); return }
     const utt = new SpeechSynthesisUtterance(text)
-    utt.rate = SPEED_RATE[speed]
+    const { rate, pitchDelta } = SPEED_SPEAK_PARAMS[speed]
+    const { basePitch } = VOICE_ACCENT_PARAMS[settings.voicePreset] ?? { basePitch: 1.0 }
+    utt.rate = rate
+    utt.pitch = Math.max(0.1, Math.min(2.0, basePitch + pitchDelta))
     const voice = getVoiceForPreset(settings.voicePreset, settings.voiceURI)
     if (voice) {
       utt.voice = voice
@@ -199,9 +202,10 @@ function QuizContent() {
 
   const VOICE_PRESETS: { key: VoicePreset; label: string }[] = [
     { key: 'default',    label: '既定' },
-    { key: 'us-female',  label: '♀ US' },
-    { key: 'us-male',    label: '♂ US' },
-    { key: 'indian',     label: '🇮🇳 IN' },
+    { key: 'us-female',  label: '♀ 米' },
+    { key: 'us-male',    label: '♂ 米' },
+    { key: 'uk',         label: '🇬🇧 英' },
+    { key: 'indian',     label: '🇮🇳 印' },
   ]
 
   const VoiceSelector = () => (

@@ -33,11 +33,12 @@ const LEVEL_LABELS: Record<string, string> = {
 }
 
 const PRESET_CONFIG: { key: VoicePreset; label: string; desc_ja: string; desc_en: string }[] = [
-  { key: 'default',   label: 'ブラウザ既定', desc_ja: 'OS・ブラウザの既定音声', desc_en: 'System default voice' },
-  { key: 'us-female', label: '♀ US Female', desc_ja: '米国英語・女性音声',       desc_en: 'American English, female' },
-  { key: 'us-male',   label: '♂ US Male',   desc_ja: '米国英語・男性音声',       desc_en: 'American English, male' },
-  { key: 'indian',    label: '🇮🇳 Indian EN', desc_ja: 'インド英語音声 (en-IN)',  desc_en: 'Indian English (en-IN)' },
-  { key: 'custom',    label: '🎛 カスタム',  desc_ja: '一覧から音声を選ぶ',       desc_en: 'Choose from voice list' },
+  { key: 'default',   label: 'ブラウザ既定',   desc_ja: 'OS・ブラウザの既定音声',                   desc_en: 'System default voice' },
+  { key: 'us-female', label: '♀ US Female',   desc_ja: '米国英語・女性音声 (en-US)',                desc_en: 'American English, female' },
+  { key: 'us-male',   label: '♂ US Male',     desc_ja: '米国英語・男性音声 (en-US)',                desc_en: 'American English, male' },
+  { key: 'uk',        label: '🇬🇧 UK English', desc_ja: '英国英語 (en-GB)・ピッチ高め・フォーマル', desc_en: 'British English (en-GB)' },
+  { key: 'indian',    label: '🇮🇳 Indian EN',  desc_ja: 'インド英語 (en-IN)・高ピッチ・歯切れ',     desc_en: 'Indian English (en-IN)' },
+  { key: 'custom',    label: '🎛 カスタム',    desc_ja: '一覧から音声を選ぶ',                        desc_en: 'Choose from voice list' },
 ]
 
 /** 既知の声名から性別を推定（カスタム音声リスト表示用） */
