@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ExtractedPhrase, SourceType, SaveResponse } from '@/types'
+import { ExtractedPhrase, SourceType, SaveResponse, SourceMeta } from '@/types'
 import { formatTime } from '@/lib/utils'
 
 interface Job {
@@ -16,6 +16,7 @@ interface Job {
   error_text: string | null
   created_at: string
   completed_at: string | null
+  meta?: SourceMeta | null
 }
 
 const SOURCE_TYPES: { value: SourceType; label: string }[] = [
@@ -56,7 +57,10 @@ export default function LibraryJobDetailPage() {
       setJob(data)
       if (data.status === 'done' && data.phrases) {
         setPhrases((prev) => prev.length ? prev : data.phrases!)
-        setSourceTitle((prev) => prev || data.source_name || '')
+        // 保存フォームのタイトル既定: AI推定(meta.title)を優先候補にしつつ、無ければユーザー由来の source_name。
+        // source_name 自体は上書きしないため、一覧・ヘッダにはユーザー入力が保持される。
+        setSourceTitle((prev) => prev || data.meta?.title || data.source_name || '')
+        setSourceDate((prev) => prev || data.meta?.date || '')
       }
     } catch {
       setError('読み込みに失敗しました')
@@ -202,6 +206,9 @@ export default function LibraryJobDetailPage() {
           <>
             <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">ソース情報</h2>
+              {job?.meta && (job.meta.title || job.meta.date || job.meta.topics.length > 0) && (
+                <p className="text-[11px] text-gray-400">タイトル・日付・テーマはAIの推定です（編集できます）</p>
+              )}
               <div className="flex gap-2 flex-wrap">
                 {SOURCE_TYPES.map(({ value, label }) => (
                   <button key={value} onClick={() => setSourceType(value)}
@@ -222,8 +229,17 @@ export default function LibraryJobDetailPage() {
                 type="date"
                 value={sourceDate}
                 onChange={(e) => setSourceDate(e.target.value)}
+                aria-label="ソースの日付"
                 className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-brand"
               />
+              {job?.meta?.topics && job.meta.topics.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span className="text-xs text-gray-400">テーマ</span>
+                  {job.meta.topics.map((t) => (
+                    <span key={t} className="px-2 py-0.5 rounded-full bg-brand-soft text-brand-deep text-[11px]">{t}</span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">

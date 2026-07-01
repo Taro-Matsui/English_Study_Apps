@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const phrases = await extractPhrasesWithClaude(text)
+    const { phrases } = await extractPhrasesWithClaude(text)
 
     return NextResponse.json<ExtractResponse>({ success: true, phrases })
   } catch (err) {

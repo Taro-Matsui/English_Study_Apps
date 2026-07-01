@@ -1,4 +1,4 @@
-import { ExtractedPhrase } from '@/types'
+import { ExtractedPhrase, SourceMeta, ExtractionResult } from '@/types'
 import { AI_MODELS } from '@/lib/ai-models'
 
 const SYSTEM_PROMPT = `あなたはエンジニアの英語学習を支援するAIです。
@@ -30,7 +30,7 @@ const SYSTEM_PROMPT = `あなたはエンジニアの英語学習を支援する
 4: 文脈なしでは意味が掴めない上級コロケーション（under the hood, out of the box 等）
 5: ネイティブ同士で使う表現。日本人には馴染みが薄い（punt on, bikeshedding 等）
 
-必ずJSON配列のみを返してください。説明文やコメントは不要です。`
+必ず指定のJSON形式のみを返してください。説明文やコメントは不要です。`
 
 const PURPOSE_LABELS: Record<string, string> = {
   // ビジネス top-level
@@ -80,18 +80,25 @@ ${userContext!.study_domain ? `- 特に学びたい専門領域や興味・趣�
 ${text}
 ---
 
-以下のJSON配列形式で返してください：
-[
-  {
-    "phrase": "フレーズ（英語）",
-    "pronunciation": "日本語カタカナ読み（例: データ、むるちくらすたー）",
-    "meaning_ja": "日本語での意味・説明（下記の書き方を参照）",
-    "original_context": "元テキストでの使用例文（英語原文から最大120文字で引用）",
-    "difficulty": 3,
-    "usage_scene": "daily|technical|business|other のいずれか",
-    "engineer_level": "junior|mid|senior のいずれか"
-  }
-]
+以下のJSON形式で返してください（先頭に source、続けて phrases の順）：
+{
+  "source": {
+    "title": "このテキストの内容を表す簡潔なタイトル（日本語可・30字以内。会議名・記事見出し・動画タイトル・イベント名などを推定）",
+    "date": "テキスト中に明示された日付があれば YYYY-MM-DD。無ければ null（推測で埋めない）",
+    "topics": ["主要テーマを1〜4語で2〜4個（例: スプリント計画, CI/CD）"]
+  },
+  "phrases": [
+    {
+      "phrase": "フレーズ（英語）",
+      "pronunciation": "日本語カタカナ読み（例: データ、むるちくらすたー）",
+      "meaning_ja": "日本語での意味・説明（下記の書き方を参照）",
+      "original_context": "元テキストでの使用例文（英語原文から最大120文字で引用）",
+      "difficulty": 3,
+      "usage_scene": "daily|technical|business|other のいずれか",
+      "engineer_level": "junior|mid|senior のいずれか"
+    }
+  ]
+}
 
 meaning_ja の書き方：
 - フレーズ単体の一般的な意味を核心として書く（文脈に依存しない普遍的な意味）
@@ -125,7 +132,7 @@ engineer_level の選び方：
 - original_context には「このフレーズが実際に使われそうな典型的な一文」を英語で作成`
 }
 
-export async function extractPhrasesWithClaude(text: string, userContext?: UserContext): Promise<ExtractedPhrase[]> {
+export async function extractPhrasesWithClaude(text: string, userContext?: UserContext): Promise<ExtractionResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY が設定されていません')
 
@@ -175,53 +182,109 @@ export async function extractPhrasesWithClaude(text: string, userContext?: UserC
     throw new Error('Claude API から予期しないレスポンス形式が返されました')
   }
 
-  // JSON部分を抽出（```json ... ``` ブロックにも対応）
-  const raw: string = content.text.trim()
-  const jsonMatch = raw.match(/```json\s*([\s\S]*?)\s*```/) || raw.match(/(\[[\s\S]*\])/)
-  const jsonStr = jsonMatch ? jsonMatch[1] : raw
+  return parseExtractionResponse(content.text)
+}
 
-  let phrases: ExtractedPhrase[]
-  try {
-    phrases = JSON.parse(jsonStr)
-  } catch {
-    // フォールバック: JSON 文字列値内の未エスケープ改行・タブを修正して再試行
-    // Claude がoriginal_context に複数行テキストをそのまま入れると JSON が不正になるため
-    const sanitized = jsonStr.replace(/"((?:[^"\\]|\\.)*)"/g, (match) =>
-      match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
-    )
-    try {
-      phrases = JSON.parse(sanitized)
-    } catch {
-      // フォールバック2: max_tokens 超過等で JSON が途中で切れた場合の部分回復
-      // 完結している { ... } オブジェクトを1つずつ取り出してパースする
-      const recovered: ExtractedPhrase[] = []
-      let depth = 0
-      let start = -1
-      for (let i = 0; i < sanitized.length; i++) {
-        const ch = sanitized[i]
-        if (ch === '{') {
-          if (depth === 0) start = i
-          depth++
-        } else if (ch === '}') {
-          depth--
-          if (depth === 0 && start !== -1) {
-            try { recovered.push(JSON.parse(sanitized.slice(start, i + 1))) } catch { /* skip */ }
-            start = -1
-          }
-        }
-      }
-      if (recovered.length === 0) {
-        throw new Error(`レスポンスをJSONとして解析できませんでした:\n${raw.slice(0, 200)}`)
-      }
-      // M3: 部分回復を使用した場合は警告ログを残す（サイレントデータ損失の検知用）
-      console.warn('[extract-phrases] JSON partial recovery activated, recovered:', recovered.length, 'phrases')
-      phrases = recovered
+// 非英語フレーズ検知（CJK・アラビア文字等が phrase フィールドに含まれる場合）
+const NON_LATIN_RE = /[一-鿿぀-ヿ가-힯؀-ۿ]/
+
+function cleanPhrases(arr: unknown): ExtractedPhrase[] {
+  if (!Array.isArray(arr)) return []
+  return (arr as ExtractedPhrase[]).filter(
+    (p) => p && p.phrase && p.meaning_ja && !NON_LATIN_RE.test(p.phrase)
+  )
+}
+
+/** source オブジェクトを SourceMeta に正規化。有効な値が無ければ null */
+function normalizeMeta(src: unknown): SourceMeta | null {
+  if (!src || typeof src !== 'object') return null
+  const s = src as Record<string, unknown>
+  const title = typeof s.title === 'string' && s.title.trim() ? s.title.trim().slice(0, 60) : null
+  const dateRaw = typeof s.date === 'string' ? s.date.trim() : ''
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateRaw) ? dateRaw : null
+  const topics = Array.isArray(s.topics)
+    ? s.topics
+        .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+        .map((t) => t.trim().slice(0, 30))
+        .slice(0, 6)
+    : []
+  if (!title && !date && topics.length === 0) return null
+  return { title, date, topics }
+}
+
+/**
+ * Claude のレスポンス文字列を { phrases, meta } に変換する純関数。
+ * 新形式 `{ source, phrases }` を優先し、旧形式（素の配列）や max_tokens 切断にもフォールバックする。
+ * phrase 抽出は best-effort な meta より優先し、従来の堅牢性を維持する（回復不能な場合のみ throw）。
+ */
+export function parseExtractionResponse(raw: string): ExtractionResult {
+  const text = (raw ?? '').trim()
+  const fenced = text.match(/```json\s*([\s\S]*?)\s*```/)
+  const candidate = fenced ? fenced[1] : text
+  const objMatch = candidate.match(/\{[\s\S]*\}/)
+  const arrMatch = candidate.match(/\[[\s\S]*\]/)
+  const sanitize = (str: string) =>
+    str.replace(/"((?:[^"\\]|\\.)*)"/g, (m) => m.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t'))
+
+  // fromObject=true（{source,phrases}形式）なら空配列でも確定（正当な抽出ゼロを尊重）。
+  // 配列形式は topics 等の別配列を誤取得しうるため、phrase を1件以上含む時のみ確定する。
+  const tryParse = (str: string): { res: ExtractionResult; fromObject: boolean } | null => {
+    let obj: unknown
+    try { obj = JSON.parse(str) } catch { return null }
+    if (Array.isArray(obj)) return { res: { phrases: cleanPhrases(obj), meta: null }, fromObject: false }
+    if (obj && typeof obj === 'object' && Array.isArray((obj as Record<string, unknown>).phrases)) {
+      const o = obj as Record<string, unknown>
+      return { res: { phrases: cleanPhrases(o.phrases), meta: normalizeMeta(o.source) }, fromObject: true }
     }
+    return null
   }
 
-  if (!Array.isArray(phrases)) throw new Error('レスポンスが配列ではありません')
+  // fromObject（{source,phrases}）は空配列でも確定。配列形式は phrase を1件以上含む時のみ確定
+  // （topics 等の別配列の誤取得を避ける）。有効な JSON を一度でも見たら sawValidJson を立て、
+  // 最終的に phrase ゼロでも「正当な抽出ゼロ」として空返しする（旧挙動＝素の [] を許容）ために使う。
+  let sawValidJson = false
+  const scan = (transform: (s: string) => string): ExtractionResult | null => {
+    for (const c of [candidate, objMatch?.[0], arrMatch?.[0]]) {
+      if (!c) continue
+      const t = tryParse(transform(c))
+      if (!t) continue
+      sawValidJson = true
+      if (t.fromObject || t.res.phrases.length > 0) return t.res
+    }
+    return null
+  }
+  const direct = scan((s) => s)
+  if (direct) return direct
+  const sanitized = scan(sanitize)
+  if (sanitized) return sanitized
 
-  // 非英語フレーズを除外（CJK・アラビア文字等が phrase フィールドに含まれる場合）
-  const nonLatinRe = /[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af\u0600-\u06ff]/
-  return phrases.filter((p) => p.phrase && p.meaning_ja && !nonLatinRe.test(p.phrase))
+  // 3. 部分回復: phrases 配列の中身から完結した {…} を拾う（切断対応）。source は best-effort
+  const s = sanitize(candidate)
+  const pIdx = s.indexOf('"phrases"')
+  const arrStart = pIdx >= 0 ? s.indexOf('[', pIdx) : -1
+  const scanFrom = arrStart >= 0 ? arrStart + 1 : 0
+  const recovered: unknown[] = []
+  let depth = 0
+  let start = -1
+  for (let i = scanFrom; i < s.length; i++) {
+    const ch = s[i]
+    if (ch === '{') { if (depth === 0) start = i; depth++ }
+    else if (ch === '}') {
+      depth--
+      if (depth === 0 && start !== -1) {
+        try { recovered.push(JSON.parse(s.slice(start, i + 1))) } catch { /* skip */ }
+        start = -1
+      }
+    }
+  }
+  const phrases = cleanPhrases(recovered)
+  if (phrases.length === 0) {
+    if (sawValidJson) return { phrases: [], meta: null }  // 正当な抽出ゼロ（素の [] 等）は throw しない
+    throw new Error(`レスポンスをJSONとして解析できませんでした:\n${text.slice(0, 200)}`)
+  }
+  let meta: SourceMeta | null = null
+  const sMatch = s.match(/"source"\s*:\s*(\{[\s\S]*?\})/)
+  if (sMatch) { try { meta = normalizeMeta(JSON.parse(sMatch[1])) } catch { meta = null } }
+  console.warn('[extract-phrases] JSON partial recovery activated, recovered:', phrases.length, 'phrases')
+  return { phrases, meta }
 }

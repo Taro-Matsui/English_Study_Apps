@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const phrases = await extractPhrasesWithClaude(text)
+    const { phrases } = await extractPhrasesWithClaude(text)
 
     log({ level: 'info', endpoint: '/api/admin/import-url',
       message: 'url_import_success', detail: { url: parsed.hostname, phrase_count: phrases.length } })

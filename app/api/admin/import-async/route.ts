@@ -6,7 +6,6 @@ import { checkPhraseQuota } from '@/lib/plan-quota'
 import { parseTranscript } from '@/lib/parse-transcript'
 import { extractPhrasesWithClaude } from '@/lib/extract-phrases'
 import { log } from '@/lib/logger'
-import { ExtractedPhrase } from '@/types'
 
 const TEXT_MAX_LEN = 200_000
 const ALLOWED_EXTS = ['txt', 'vtt', 'srt']
@@ -63,13 +62,21 @@ async function processJob(jobId: string, text: string) {
   const db = getSupabaseAdmin()
   try {
     const userContext = await getUserContext(db, jobId)
-    const phrases: ExtractedPhrase[] = await extractPhrasesWithClaude(text, userContext)
-    await db.from('import_jobs').update({
+    const { phrases, meta } = await extractPhrasesWithClaude(text, userContext)
+    // 自動タグ: AI推定タイトルは meta.title に保持し、保存画面の既定候補として使う。
+    // source_name（ユーザー由来のファイル名/入力タイトル）は上書きしない（明示入力の破棄を防ぐ）。
+    const update: Record<string, unknown> = {
       status: 'done',
       phrase_count: phrases.length,
       phrases: phrases as unknown as Record<string, unknown>[],
       completed_at: new Date().toISOString(),
-    }).eq('id', jobId)
+    }
+    await db.from('import_jobs').update(update).eq('id', jobId)
+    // meta は別列（migration 019）。未適用環境でも本体更新を壊さないよう best-effort で分離して書く
+    if (meta) {
+      const { error: metaErr } = await db.from('import_jobs').update({ meta }).eq('id', jobId)
+      if (metaErr) console.warn('[import-async] meta 保存をスキップ（019 未適用?）:', metaErr.message)
+    }
     log({ level: 'info', endpoint: '/api/admin/import-async',
       message: 'job_done', detail: { job_id: jobId, phrase_count: phrases.length } })
   } catch (err) {

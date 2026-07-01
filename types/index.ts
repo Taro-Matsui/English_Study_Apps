@@ -42,6 +42,22 @@ export interface ExtractResponse {
   error?: string
 }
 
+/** 抽出と同じ Claude 呼び出しで推定するソースのメタ情報（自動タグ）。すべて best-effort */
+export interface SourceMeta {
+  /** 推定タイトル（日本語可・簡潔）。判定不能なら null */
+  title: string | null
+  /** テキスト中に明示された日付 YYYY-MM-DD。推測できなければ null */
+  date: string | null
+  /** テーマタグ（0〜数個） */
+  topics: string[]
+}
+
+/** extractPhrasesWithClaude の戻り値。meta は取得できなければ null */
+export interface ExtractionResult {
+  phrases: ExtractedPhrase[]
+  meta: SourceMeta | null
+}
+
 export interface SaveRequest {
   phrases: ExtractedPhrase[]
   source_type: SourceType

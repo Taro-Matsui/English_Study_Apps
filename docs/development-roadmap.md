@@ -48,6 +48,7 @@
 
 - ✅ migration 017 適用済み（Supabase）
 - ✅ 既存ユーザーへのシード補填（backfill `--apply`）実行済み・冪等確認済み
+- ⏳ **migration 019 適用**（`import_jobs.meta` = 自動タグ）: Supabase SQL Editor で [`supabase/migrations/019_import_jobs_meta.sql`](../supabase/migrations/019_import_jobs_meta.sql) を実行（1行・未適用でもアプリは安全＝meta は best-effort）
 - ⏳ SRS due 順の実機スモーク確認（推奨: チャレンジ→完了→再開で正解語が即再出題されないこと）
 - 📌 品質担保: master 反映前に**敵対的レビュー・ワークフロー**を2回実施し、実害バグ（課金枠が緩む NULL 除外、SRS進捗を全消去する設定リセット 等）を捕捉・修正
 

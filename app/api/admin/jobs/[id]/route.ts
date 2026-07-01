@@ -13,9 +13,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: 'IDが不正です' }, { status: 400 })
 
   const db = getSupabaseAdmin()
+  // meta（自動タグ・migration 019）を含めるが、未適用環境でも壊れないよう '*' で取得する
+  // （存在しない列を明示 select するとエラーになるため）。
   const { data, error } = await db
     .from('import_jobs')
-    .select('id, type, source_name, status, phrase_count, phrases, error_text, created_at, completed_at')
+    .select('*')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()

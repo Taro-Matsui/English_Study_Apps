@@ -170,7 +170,7 @@ subscriptions:  plan TEXT                -- 'free'|'starter'|'pro'（migration 0
 plan_quotas:    rollover_phrases INT     -- Starter: 前月繰越フレーズ数（上限100）（migration 016）
                 period_start DATE        -- 今月の課金期間開始日
 ```
-マイグレーションは `supabase/migrations/001〜016.sql`（全て Supabase ダッシュボードで手動実行済み）。
+マイグレーションは `supabase/migrations/001〜019.sql`（Supabase ダッシュボードで手動実行）。**[019_import_jobs_meta.sql](supabase/migrations/019_import_jobs_meta.sql)（`import_jobs.meta` = 自動タグ）は要適用**（未適用でもアプリは安全＝meta は best-effort。適用後に自動タグが保存される）。
 
 ## 重要パターン
 
@@ -189,6 +189,12 @@ Claude の max_tokens 超過で JSON 切断時の3段階フォールバック:
 - `source_type`（YouTube/Podcast/議事録/英語記事/その他）は**保存時にソース詳細画面（jobs/[id]）で付与されるメタデータ**。`phrases.source_type` に入り `SourceBadge`（出典表示）と `plan-quota` の `System` 除外にのみ使う。
 - ソース追加画面（library/import）の「利用の幅チップ」は **placeholder を差し替えるだけの表示要素で、サーバーに種別を送らない**（`import_jobs` に種別カラムは無い）。
 - → 「ソース種別で抽出傾向を変えたい」場合は import→`import_jobs.source_type`→`extract-phrases` の配線を**新規に通す必要がある**（現状は無い）。加えて `SYSTEM_PROMPT` がエンジニア文脈・口語除外（"I think" 等）に固定なので、種別ガイダンスはユーザープロンプト側の最優先上書きにしないと効かない点に注意。
+
+### 自動タグ（source メタ）— migration 019
+`extractPhrasesWithClaude` は `{ phrases, meta }`（`ExtractionResult`）を返す。`meta`（`SourceMeta`＝title/date/topics）は**同じ Claude 呼び出しで推定するソースのタグ**で、追加API費用なし。パースは純関数 `parseExtractionResponse`（`__tests__/unit/extract-phrases.test.ts`）に分離。
+- 保存は **migration 019 前後どちらでも安全**: `import-async` は本体更新（status/phrases/`source_name`＝AI推定タイトル）と `meta` 書き込みを**分離**し、`meta` は best-effort（列不在なら警告ログのみ）。読み取りは `jobs/[id]` API が `select('*')`。
+- `jobs/[id]` 保存画面は `meta.date` を日付欄にプリフィル、`meta.topics` をテーマチップ表示（すべて編集可・確定はユーザー）。`source_type` とは別物（source_type は依然ユーザー選択）。
+- meta は best-effort。`parseExtractionResponse` は新形式 `{source,phrases}` を優先し、旧・素の配列や max_tokens 切断でも phrase 抽出を維持（回復不能時のみ throw）。
 
 ### Railway リバースプロキシ対応
 `auth/callback/route.ts` では `request.url` が `localhost:8080` になるため、
