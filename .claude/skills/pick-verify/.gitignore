@@ -1,0 +1,5 @@
+# セッション状態(token含む)とスクショは絶対にコミットしない
+*.png
+*.json
+!*.config.json
+.auth*

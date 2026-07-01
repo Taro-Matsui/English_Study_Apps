@@ -35,5 +35,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Code settings (may contain API keys)
-.claude/
+# Claude Code settings (may contain API keys) — 個別設定は除外。
+# ただし共有すべき PJ スコープの skills / agents は追跡する（秘密情報を含めないこと）。
+.claude/*
+!.claude/skills/
+!.claude/agents/
