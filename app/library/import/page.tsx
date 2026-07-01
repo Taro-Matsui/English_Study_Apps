@@ -3,7 +3,6 @@
 import { useRef, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Progress } from '@/components/ui/progress'
-import { SourceType } from '@/types'
 import { AdBanner } from '@/components/AdBanner'
 
 type Step = 'upload' | 'submitting' | 'submitted' | 'error'
@@ -20,34 +19,28 @@ Any blockers before we dive into the backlog?
 Let's make sure we're on the same page about the acceptance criteria.
 I'll circle back after standup to sync on the API contract.`
 
-// 「何から学ぶ？」— ユーザーが考える単位（ソース）を1軸に統合。
-// 選ぶと入力方法(method)・種別(sourceType)・ヒントが自動で決まる。
-type SourceChoice = {
-  key: string
-  icon: string
-  label: string
-  sub: string
-  method: ImportMode
-  sourceType: SourceType
-  hint: string
-}
-const SOURCE_CHOICES: SourceChoice[] = [
-  { key: 'meeting', icon: '💬', label: '会議・チャット', sub: '貼り付け',     method: 'text', sourceType: '議事録',   hint: '議事録・Slack・Teams などのログをそのまま貼り付けてください' },
-  { key: 'article', icon: '📰', label: '英語記事・ブログ', sub: '本文を貼り付け', method: 'text', sourceType: '英語記事', hint: '記事の本文をコピーして貼り付けてください' },
-  { key: 'youtube', icon: '▶️', label: 'YouTube',         sub: '字幕ファイル', method: 'file', sourceType: 'YouTube',  hint: 'YouTube Studio から字幕（.vtt / .srt）をダウンロードして読み込んでください' },
-  { key: 'podcast', icon: '🎙️', label: 'Podcast・音声',   sub: '文字起こし',   method: 'text', sourceType: 'Podcast',  hint: 'Whisper・Otter.ai などで文字起こししたテキストを貼り付けてください' },
-  { key: 'other',   icon: '📋', label: 'その他テキスト',   sub: '貼り付け',     method: 'text', sourceType: 'その他',   hint: '英語のテキストを貼り付けてください' },
-]
-
-const SOURCE_TYPES: { value: SourceType; label: string }[] = [
-  { value: 'YouTube',  label: 'YouTube' },
-  { value: 'Podcast',  label: 'Podcast' },
-  { value: '議事録',   label: '議事録'  },
-  { value: '英語記事', label: '英語記事' },
-  { value: 'その他',   label: 'その他'  },
-]
-
 const ACCEPT = '.txt,.vtt,.srt'
+
+// 「貼る → AIが選ぶ → 定着」— 登録すると何が得られるかの期待値を伝える3ステップ
+const STEPS: { icon: string; label: string }[] = [
+  { icon: '📥', label: '英語を貼る' },
+  { icon: '✨', label: 'AIが必要なフレーズを選ぶ' },
+  { icon: '🎯', label: 'チャレンジで定着' },
+]
+
+// 「英語ならなんでも学べる」利用の幅を示すチップ。選択は強制せず、押すと例文プレースホルダが変わるだけ。
+const DEFAULT_PLACEHOLDER =
+  '会議のチャット・記事の一節・YouTubeの字幕・Podcastの書き起こし…英語ならなんでもOK。ここに貼り付け（100文字〜）'
+const SOURCE_EXAMPLES: { key: string; icon: string; label: string; placeholder: string }[] = [
+  { key: 'meeting', icon: '💬', label: '会議・チャット', placeholder: 'Slack・Teams・会議の英語ログをそのまま貼り付け…（100文字〜）' },
+  { key: 'article', icon: '📰', label: '記事・ブログ',   placeholder: '英語記事・ブログの本文をコピーして貼り付け…（100文字〜）' },
+  { key: 'youtube', icon: '▶️', label: 'YouTube字幕',   placeholder: 'YouTube字幕のテキストを貼り付け（.vtt/.srtファイルは下のリンクから）…' },
+  { key: 'podcast', icon: '🎙️', label: 'Podcast',      placeholder: 'Whisper・Otter.ai などの文字起こしを貼り付け…（100文字〜）' },
+  { key: 'other',   icon: '📋', label: 'その他',         placeholder: '英語のテキストなら何でも貼り付け…（100文字〜）' },
+]
+
+// 成果プレビュー: サンプル文(sprint planning)から実際に採れる代表フレーズ
+const SAMPLE_PHRASES = ['circle back', 'touch base', 'on the same page', 'time-box']
 
 async function hashText(text: string): Promise<string> {
   const data = new TextEncoder().encode(text.slice(0, 30_000))
@@ -69,12 +62,11 @@ function titleFromText(text: string) { return text.trim().split('\n')[0].slice(0
 export default function LibraryImportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [sourceKey, setSourceKey] = useState<string>('meeting')
   const [mode, setMode] = useState<ImportMode>('text')
+  const [placeholder, setPlaceholder] = useState(DEFAULT_PLACEHOLDER)
   const [expanded, setExpanded] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [pasteText, setPasteText] = useState('')
-  const [sourceType, setSourceType] = useState<SourceType>('議事録')
   const [sourceTitle, setSourceTitle] = useState('')
   const [step, setStep] = useState<Step>('upload')
   const [error, setError] = useState<string | null>(null)
@@ -104,18 +96,17 @@ export default function LibraryImportPage() {
     }).catch(() => {})
   }, [])
 
-  const current = SOURCE_CHOICES.find((c) => c.key === sourceKey)!
+  // 字幕(.vtt/.srt)混入の検知: text経路は parseTranscript を通さないため、タイムスタンプ行が残ると抽出精度が落ちる
+  const looksLikeSubtitle = mode === 'text' && /-->/.test(pasteText)
 
-  // ソースを選び直すと、入力方法・種別・ヒントが切り替わり入力内容はリセット
-  function selectSource(c: SourceChoice) {
-    setSourceKey(c.key)
-    setMode(c.method)
-    setSourceType(c.sourceType)
-    setSourceTitle('')
-    setFile(null)
-    setPasteText('')
+  // 入力方法の切替（file/paste の実機能差だけを残す）。入力内容は破棄しない＝「貼ったのに消えた」事故を防ぐ
+  function switchToFile() {
+    setMode('file')
     setError(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+  function switchToText() {
+    setMode('text')
+    setError(null)
   }
 
   const isSubmitting = step === 'submitting'
@@ -156,7 +147,7 @@ export default function LibraryImportPage() {
         res = await fetch('/api/admin/import-async', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: trimmed, sourceType, sourceTitle: sourceTitle || 'テキスト貼り付け' }),
+          body: JSON.stringify({ text: trimmed, sourceTitle: sourceTitle || 'テキスト貼り付け' }),
         })
       }
 
@@ -181,6 +172,7 @@ export default function LibraryImportPage() {
     setFile(null); setPasteText('')
     setSourceTitle(''); setError(null); setJobId(null); setDupConfirm(false)
     setConsented(false)
+    setMode('text'); setPlaceholder(DEFAULT_PLACEHOLDER)
     setStep('upload')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -265,40 +257,112 @@ export default function LibraryImportPage() {
         {/* ── メインフォーム ── */}
         {(step === 'upload' || step === 'submitting') && (
           <>
-            {/* 何から学ぶ？（ソース選択：1軸に統合） */}
-            <div className="space-y-2">
-              <p className="text-sm font-bold text-gray-800 px-1">何から学ぶ？</p>
-              <div className="grid grid-cols-2 gap-2">
-                {SOURCE_CHOICES.map((c, i) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    onClick={() => selectSource(c)}
-                    disabled={isSubmitting}
-                    className={`flex items-center gap-2.5 py-3 px-3 rounded-2xl border text-left transition-all ${
-                      i === SOURCE_CHOICES.length - 1 ? 'col-span-2' : ''
-                    } ${
-                      sourceKey === c.key
-                        ? 'bg-brand border-brand text-white shadow-md'
-                        : 'bg-white border-line text-gray-700 hover:border-brand'
-                    }`}
-                  >
-                    <span className="text-xl flex-shrink-0">{c.icon}</span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold leading-tight truncate">{c.label}</span>
-                      <span className={`block text-[10px] leading-tight ${sourceKey === c.key ? 'text-brand-soft' : 'text-gray-400'}`}>
-                        {c.sub}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
+            {/* 期待値の3ステップ：貼る → AIが選ぶ → 定着（登録の価値を先に伝える） */}
+            <div className="flex items-center justify-between gap-1 px-1 pt-1">
+              {STEPS.map((s, i) => (
+                <div key={s.label} className="flex items-center gap-1 min-w-0">
+                  <span className="text-sm flex-shrink-0">{s.icon}</span>
+                  <span className="text-[10px] leading-tight text-gray-500 truncate">{s.label}</span>
+                  {i < STEPS.length - 1 && <span className="text-gray-300 text-xs flex-shrink-0 ml-1">→</span>}
+                </div>
+              ))}
             </div>
 
             {/* コンテンツ入力エリア */}
             <div className="bg-white rounded-2xl border border-line shadow-sm overflow-hidden">
 
-              {/* ファイル */}
+              {/* 入力方法の選択（貼り付け / ファイル）。切替で入力内容は破棄しない */}
+              <div className="p-3 pb-0">
+                <div className="grid grid-cols-2 gap-1 bg-gray-100 rounded-xl p-1">
+                  <button type="button" onClick={switchToText} disabled={isSubmitting}
+                    className={`rounded-lg py-2 text-xs font-semibold transition-colors ${
+                      mode === 'text' ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}>
+                    ✍️ 貼り付け
+                  </button>
+                  <button type="button" onClick={switchToFile} disabled={isSubmitting}
+                    className={`rounded-lg py-2 text-xs font-semibold transition-colors ${
+                      mode === 'file' ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                    }`}>
+                    📎 ファイル
+                  </button>
+                </div>
+              </div>
+
+              {/* テキスト貼り付け（主役） */}
+              {mode === 'text' && (
+                <div className="p-5 space-y-2">
+                  <textarea
+                    value={pasteText}
+                    onChange={(e) => {
+                      const t = e.target.value.slice(0, TEXT_MAX)
+                      setPasteText(t)
+                      if (t.length > 10) setSourceTitle(titleFromText(t))
+                    }}
+                    placeholder={placeholder}
+                    disabled={isSubmitting}
+                    rows={7}
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
+                    style={{ fontSize: '16px' }}
+                    autoFocus
+                  />
+
+                  {/* 字幕混入ガード：text経路は parseTranscript を通さないため、ファイル読込へ誘導 */}
+                  {looksLikeSubtitle && (
+                    <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                      <span className="flex-shrink-0">⚠️</span>
+                      <p className="text-xs text-amber-800 leading-relaxed">
+                        字幕ファイルのようです。タイムスタンプが混ざると精度が落ちます。
+                        <button type="button" onClick={switchToFile} className="font-semibold underline ml-1">
+                          ファイルとして読み込む
+                        </button>
+                        のが正確です。
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-400">
+                      {pasteText.trim().length < 100 && pasteText.length > 0
+                        ? <span className="text-amber-500">あと {100 - pasteText.trim().length} 文字以上</span>
+                        : `${pasteText.length.toLocaleString()} 文字`}
+                    </p>
+                    <button type="button" onClick={() => {
+                      setPasteText(SAMPLE_TEXT)
+                      setSourceTitle('サンプル会議録')
+                    }} disabled={isSubmitting}
+                      className="text-xs text-brand hover:text-brand-deep transition-colors">
+                      💡 サンプルを試す
+                    </button>
+                  </div>
+
+                  {/* 成果プレビュー：こんなフレーズが見つかる（価値を具体化） */}
+                  <div className="rounded-lg bg-ground px-3 py-2">
+                    <p className="text-[11px] leading-relaxed">
+                      <span className="text-gray-400">こんなフレーズが見つかります：</span>{' '}
+                      {SAMPLE_PHRASES.map((p, i) => (
+                        <span key={p}>
+                          <span className="font-semibold text-brand">{p}</span>
+                          {i < SAMPLE_PHRASES.length - 1 && <span className="text-gray-300"> ・ </span>}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+
+                  {/* 幅chips：英語ならなんでもOK（選択は強制せず、押すと例文が変わるだけ） */}
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {SOURCE_EXAMPLES.map((s) => (
+                      <button key={s.key} type="button" disabled={isSubmitting}
+                        onClick={() => setPlaceholder(s.placeholder)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] text-gray-500 bg-gray-100 hover:bg-gray-200 transition-colors">
+                        <span>{s.icon}</span><span>{s.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ファイル（字幕・書き起こし専用） */}
               {mode === 'file' && (
                 <div className="p-5 space-y-3">
                   <label className="block">
@@ -313,9 +377,9 @@ export default function LibraryImportPage() {
                         </div>
                       ) : (
                         <div className="space-y-1">
-                          <p className="text-2xl">{current.icon}</p>
-                          <p className="text-sm font-medium text-gray-600">ファイルを選択</p>
-                          <p className="text-xs text-gray-400">.txt / .vtt / .srt</p>
+                          <p className="text-2xl">📎</p>
+                          <p className="text-sm font-medium text-gray-600">字幕・書き起こしファイルを選択</p>
+                          <p className="text-xs text-gray-400">.txt / .vtt / .srt（タイムスタンプは自動で除去）</p>
                         </div>
                       )}
                     </div>
@@ -328,61 +392,18 @@ export default function LibraryImportPage() {
                       className="sr-only"
                     />
                   </label>
-                  <button type="button" onClick={() => {
-                    const blob = new Blob([SAMPLE_TEXT], { type: 'text/plain' })
-                    const f = new File([blob], 'sample_meeting.txt', { type: 'text/plain' })
-                    setFile(f); setSourceTitle('サンプル会議録'); setSourceType('議事録'); setError(null)
-                  }} disabled={isSubmitting}
-                    className="text-xs text-brand hover:text-brand-deep transition-colors">
-                    💡 サンプルを使って試す
-                  </button>
                 </div>
               )}
 
-              {/* テキスト貼り付け */}
-              {mode === 'text' && (
-                <div className="p-5 space-y-2">
-                  <textarea
-                    value={pasteText}
-                    onChange={(e) => {
-                      const t = e.target.value.slice(0, TEXT_MAX)
-                      setPasteText(t)
-                      if (t.length > 10) setSourceTitle(titleFromText(t))
-                    }}
-                    placeholder="ここに英語のテキストを貼り付け..."
-                    disabled={isSubmitting}
-                    rows={7}
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent resize-none"
-                    style={{ fontSize: '16px' }}
-                    autoFocus
-                  />
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-gray-400">
-                      {pasteText.trim().length < 100 && pasteText.length > 0
-                        ? <span className="text-amber-500">あと {100 - pasteText.trim().length} 文字以上</span>
-                        : `${pasteText.length.toLocaleString()} 文字`}
-                    </p>
-                    <button type="button" onClick={() => {
-                      setPasteText(SAMPLE_TEXT)
-                      setSourceTitle('サンプル会議録')
-                      setSourceType('議事録')
-                    }} disabled={isSubmitting}
-                      className="text-xs text-brand hover:text-brand-deep transition-colors">
-                      💡 サンプルを試す
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* 選択中ソースのヒント（常設・1箇所） */}
-              <div className="px-5 pb-4">
+              {/* ヒント（常設・1箇所） */}
+              <div className="px-5 pb-4 pt-2">
                 <p className="text-xs text-gray-600 bg-ground rounded-lg px-3 py-2 leading-relaxed flex items-start gap-1.5">
                   <span className="flex-shrink-0">💡</span>
-                  <span>{current.hint}</span>
+                  <span>字幕（.vtt / .srt）や音声は、ご自身で書き起こし・ダウンロードしてから追加してください。</span>
                 </p>
               </div>
 
-              {/* 詳細（任意）— タイトル・種別を畳む */}
+              {/* 詳細（任意）— タイトルのみ（種別は保存時に選択） */}
               <div className="border-t border-gray-100">
                 <button
                   type="button"
@@ -390,7 +411,7 @@ export default function LibraryImportPage() {
                   disabled={isSubmitting}
                   className="w-full flex items-center justify-between px-5 py-3 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  <span>詳細（任意）— タイトル・種別</span>
+                  <span>詳細（任意）— タイトル</span>
                   <span className={`text-lg leading-none transition-transform ${expanded ? 'rotate-90' : ''}`}>›</span>
                 </button>
                 {expanded && (
@@ -406,22 +427,6 @@ export default function LibraryImportPage() {
                         disabled={isSubmitting}
                         className="w-full rounded-lg border border-gray-200 bg-gray-50 text-gray-800 placeholder-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
                       />
-                    </div>
-                    {/* 種別 */}
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">種別</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {SOURCE_TYPES.map(({ value, label }) => (
-                          <button key={value} type="button" onClick={() => setSourceType(value)} disabled={isSubmitting}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                              sourceType === value
-                                ? 'bg-gray-800 text-white'
-                                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                            }`}>
-                            {label}
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 )}
@@ -465,7 +470,7 @@ export default function LibraryImportPage() {
               disabled={!canSubmit || isSubmitting}
               className="w-full rounded-2xl bg-brand px-4 py-4 text-sm font-bold text-white hover:bg-brand-deep disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md shadow-brand/20"
             >
-              {isSubmitting ? '処理を開始しています...' : 'このソースからフレーズをPick →'}
+              {isSubmitting ? '処理を開始しています...' : (mode === 'file' ? 'このファイルからフレーズをPick →' : 'このテキストからフレーズをPick →')}
             </button>
 
             {isSubmitting && <Progress value={null} className="h-1 animate-pulse" />}
