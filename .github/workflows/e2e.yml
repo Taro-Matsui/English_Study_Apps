@@ -1,0 +1,44 @@
+name: E2E smoke
+
+# pick-verify を土台にした本番スモーク（login → 主要ルートのレンダリング確認）。
+# 重い/コストが出るため push では走らせず、手動 or 夜間定期のみ。読み取り系だけで AI コストは発生しない。
+# 必要な secrets: PICK_TEST_EMAIL / PICK_TEST_PASSWORD（確認済みテスト垢）。未設定ならスクリプトが skip。
+# 任意 vars: PICK_BASE_URL（既定 https://usepick.win）。
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 20 * * *' # 毎日 05:00 JST（20:00 UTC）
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      # Playwright は本体依存に含めない（verify CI を軽く保つ）。ここでのみ導入。
+      - name: Install Playwright (chromium)
+        run: npm i playwright --no-save && npx playwright install --with-deps chromium
+
+      - name: Run E2E smoke
+        run: node e2e/smoke.mjs
+        env:
+          PICK_BASE_URL: ${{ vars.PICK_BASE_URL || 'https://usepick.win' }}
+          PICK_TEST_EMAIL: ${{ secrets.PICK_TEST_EMAIL }}
+          PICK_TEST_PASSWORD: ${{ secrets.PICK_TEST_PASSWORD }}
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: e2e/screenshots/
+          if-no-files-found: ignore
