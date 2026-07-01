@@ -1,0 +1,4 @@
+# 既定のコードオーナー（PR 作成時に自動でレビュー要求される）。
+# ※ ソロ運用のため、ブランチ保護では「Require review from Code Owners」は OFF に。
+#    自分の PR を自分で承認できないため（approvals=0 運用と整合）。
+* @Taro-Matsui
