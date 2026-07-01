@@ -51,6 +51,8 @@
 - ⏳ **migration 019 適用**（`import_jobs.meta` = 自動タグ）: Supabase SQL Editor で [`supabase/migrations/019_import_jobs_meta.sql`](../supabase/migrations/019_import_jobs_meta.sql) を実行（1行・未適用でもアプリは安全＝meta は best-effort）
 - ⏳ SRS due 順の実機スモーク確認（推奨: チャレンジ→完了→再開で正解語が即再出題されないこと）
 - 📌 品質担保: master 反映前に**敵対的レビュー・ワークフロー**を2回実施し、実害バグ（課金枠が緩む NULL 除外、SRS進捗を全消去する設定リセット 等）を捕捉・修正
+- ✅ 自動QA: 単体/統合テスト 111件（`vitest`）・CI ワークフロー（[.github/workflows/ci.yml](../.github/workflows/ci.yml)、test+build）・coverage 計測（v8）を整備
+- ⏳ **CI ゲート化**（観点#1）: ブランチ保護＋PR フロー移行で「壊れたコミットのデプロイ」を構造的に停止。手順は [docs/branch-protection-and-ci.md](branch-protection-and-ci.md)。**GitHub/Railway の設定操作が必要（要・松井）**
 
 ---
 

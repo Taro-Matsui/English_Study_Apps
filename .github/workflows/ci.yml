@@ -10,7 +10,13 @@ on:
   pull_request:
     branches: [master]
 
+# 同一ブランチの旧ランは新ランで打ち切る（PR更新のたびに無駄に走らせない）
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # ブランチ保護の必須チェックにはこの job 名「verify」を指定する
   verify:
     runs-on: ubuntu-latest
     steps:
