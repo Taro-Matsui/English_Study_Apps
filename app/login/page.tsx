@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase-browser'
 import { X_URL } from '@/lib/social'
+import { track } from '@/lib/track'
 
 type Mode = 'signin' | 'signup'
 
@@ -51,6 +52,9 @@ export default function LoginPage() {
       return
     }
 
+    // 登録前ファネル: 新規登録の送信意図を計測（登録後は auth.users で追える）
+    if (mode === 'signup') track('login_cta_click', { method: 'email' })
+
     const supabase = createBrowserSupabaseClient()
 
     if (mode === 'signin') {
@@ -95,6 +99,7 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setGoogleLoading(true)
     setError(null)
+    track('login_cta_click', { method: 'google' })
     const supabase = createBrowserSupabaseClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

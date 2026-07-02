@@ -96,3 +96,61 @@
 価格・LTV・通知効果・競合防御性は本リサーチ未検証。断定せず実ユーザーでA/B検証する。
 - T1-3 の継続率SQLを定点観測のベースラインに
 - Free採点上限 / メール通知 / 価格改定 は導入前後で計測してから判断
+
+---
+
+## 7. 次サイクル: 市場投入（計器→蛇口→検証）— 2026-07-02 承認
+
+> 出典: 6次元監査＋敵対的検証ワークフロー（27エージェント）。方針は松井承認済み。
+> **確定した反論**: 「計器を最優先の前提ゲートにする」は N=0 の罠。母数ゼロでは GTM ダッシュボードは何も測れず、最初の数〜数十人の離脱は既存 Postgres タイムスタンプ（`auth.users`/`phrases`/`quiz_sessions`/`subscriptions`）＋`retention.sql` の SQL 直読で完全に追える。→ **順序は「計器→蛇口→検証」を維持しつつ、計器は"登録前だけの薄いパッチ(S)"に限定し、蛇口の配線を最優先に前倒す**。フル計装は母数が二桁に乗るまで着手禁止。
+
+### real_bottleneck / confirmed（実コード確認済みの蛇口ブロッカー）
+| # | 事実 | 影響 |
+|---|---|---|
+| B1 | `middleware.ts:6/9` の PUBLIC_PATHS/GUEST_PATHS に LP パスが無く、`:71-72` で未ログイン（＝Googlebot）は全て `/login` に302 | 新LPが物理的にクロール・閲覧不能＝蛇口が閉じている |
+| B2 | `app/robots.ts`・`app/sitemap.ts` が不在（matcher `:107` は両者を除外済みで置けば即機能） | クローラ発見指針ゼロ |
+| B3 | `share/[id]/page.tsx:141,147` の両CTA（`/quiz`・`/`）が認証必須パス | Xシェア流入者が全員 /login で死ぬ（唯一の外部露出） |
+| B4 | `app/api/admin/logs/route.ts` は認可ゲート皆無（`getUser`も`ADMIN_EMAILS`も無し、`getSupabase()`） | `app_logs` の RLS 次第で認証済み他ユーザーが越境PII閲覧 |
+| B5 | `/demo/extract`・`/demo/judge` は無認証Claude口・インメモリ制限（Railway再起動でリセット）・DEMO_MODEL既定Sonnet | /demo を公開入口にする瞬間に原価流出リスク |
+
+### Tier1 — 蛇口の配線＋登録前だけの薄い計装（同一PR中心・S主体）
+1. **middleware に `/phrases-for` を公開登録**（GUEST_PATHS側、`/demo`が実証済み）(S)
+2. **シーンLPを seed-phrases から静的生成** `app/phrases-for/[scene]/page.tsx`＋`generateStaticParams`。**Claude生成パイプラインは組まない**（既存110フレーズで数本）(M)
+3. **`app/robots.ts`/`app/sitemap.ts`＋`metadataBase`**（認証必須をDisallow・LP/demoをAllow）(S)
+4. **シェア着地の両CTAを `/demo/quiz`・`/demo` へ**（B3修復）(S)
+5. **`track()`＋登録前4イベント**（LP表示/demo到達/login CTA/callback到達）、GA4で自PV実測し測定ID確定 (S)
+6. **別名義Google資産の棚卸し**（GTM/GA4/AdSense/OAuth の実名紐付き確認・後戻り防止）(S)
+
+### Tier2 — 蛇口を開ける前の安全弁＋実ユーザー招待前の衛生（soon）
+- Anthropic 予算アラート＋Railway 請求通知（ゼロコード暫定安全弁）(S)
+- demoレート制限の永続化（`api_rate_limits` RPC へ）＋`AI_MODEL_DEMO_*` を Haiku 固定 (M)
+- `quiz/judge` に日次判定上限（現状 Free は 60回/時×24=1440回/日まで無料判定可）(S)
+- `admin/logs` に `getUser()`＋`ADMIN_EMAILS`＋user_idフィルタ、旧 `import`/`import-url` 残骸削除 (S)
+- シェアの主役をフレーズに（B3修復とセットで意味を持つ）(S)
+- Stripe `trial_will_end` 告知＋webhook case（実trialユーザー前提）(S)
+
+### Tier3 — 母数が二桁に乗るまで後回し（feature/計器バイアス回避・着手禁止）
+アプリ内フル計装 / SRSメールリマインド / due件数バッジ / 紹介報酬 / Pro差別化。
+
+### 市場投入仮説（棄却条件つき）
+| 仮説 | チャネル | 主要指標 | 棄却条件 |
+|---|---|---|---|
+| 用途別フレーズ学習に検索需要が実在しシーンLPが流入を生む | pSEO（別名義・無人） | 公開4週の Search 由来セッション・imp | 8週でオーガニックimp二桁/日未満 or 検索ボリューム実質ゼロ→副軸へ |
+| LP流入者は認証不要/demoで1問体験すれば登録に進む | LP→/demo→/login | 3段通過率 | 最初の100セッションで LP→demo<10% or demo→login<5%→導線再設計 |
+| フレーズ主役シェアはスコアシェアよりクリックを生む | 製品内ループ | 1シェア当り着地流入・着地→demo到達 | 母数二桁でクリック率1%未満→副軸縮退 |
+| 14日Proトライアル→有料がCAC≈¥60で成立 | trial→paid | period_end後の継続率 | 無言満了/即解約が支配的→価格・プラン再検証（母数出るまで保留） |
+
+### First Sprint（1〜2週・実装スコープ）
+1. **WebSearch で狙うクエリの検索ボリューム・競合確認 → 2〜3本確定**（本文生成より前）
+2. middleware に `/phrases-for` 公開登録
+3. `app/phrases-for/[scene]/page.tsx` を seed-phrases から静的生成（CTA→`/demo/import`）
+4. `app/robots.ts`/`app/sitemap.ts`＋`metadataBase`
+5. `share/[id]` の両CTA を `/demo/*` へ
+6. `track()`＋登録前4イベント、GA4自PV実測で測定ID確定
+7. Anthropic 予算アラート＋Railway 請求通知（松井・ゼロコード）
+
+### 事業視点（誰が推進する／動機）
+COI で実名PR・コミュニティ・法人営業は禁じ手 → 獲得は SEO と製品内シェアの**2つの無人チャネル**のみで成立させる。SEO推進動機＝`seed-phrases.ts` の約110フレーズが既にキュレーション済みで生成パイプライン不要・追加API費用ゼロ・静的配信無料。シェア推進動機＝別名義の匿名学習記録として実名を晒さず回せる（ただしB3修復が前提）。
+
+### 順序（Sequencing）
+計器の第一歩（登録前track＋GA4自PV実測＋別名義資産棚卸し）→ 蛇口を物理的に開ける同一PR（クエリ確認→middleware→シーンLP→robots/sitemap→登録前計装→シェアCTA修復）→ 蛇口を開ける前の安全弁（原価アラート→demo制限永続化+Haiku固定→judge日次上限→admin/logs封鎖）→ 検証（実流入で登録前ファネルをSQL/GA4で読み kill_criteria 照合）→ 母数二桁でTier3を実データで正当化してから着手。

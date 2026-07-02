@@ -5,8 +5,9 @@ import type { NextRequest } from 'next/server'
 // 認証不要なパス
 const PUBLIC_PATHS = ['/login', '/auth/callback', '/share', '/api/og', '/privacy', '/terms', '/about', '/contact', '/api/stripe/webhook']
 
-// 認証状態に関わらず通過するパス（デモモード）
-const GUEST_PATHS = ['/demo', '/api/demo']
+// 認証状態に関わらず通過するパス（デモモード / SEO用シーンLP）
+// /phrases-for/* は未ログイン（＝Googlebot・検索流入）でもクロール・閲覧可能にする（pSEOの前提）
+const GUEST_PATHS = ['/demo', '/api/demo', '/phrases-for']
 
 // オンボーディング完了前でも許可するパス（認証は必要）
 const ONBOARDING_EXEMPT = ['/onboarding', '/api/', '/auth/']

@@ -138,13 +138,13 @@ export default async function SharePage({ params }: Props) {
         {/* CTA */}
         <div className="space-y-3">
           <Link
-            href="/quiz"
+            href="/demo/quiz"
             className="block w-full py-3.5 rounded-2xl bg-brand text-white text-sm font-bold hover:bg-brand-deep transition-colors text-center"
           >
             自分も挑戦する
           </Link>
           <Link
-            href="/"
+            href="/demo"
             className="block w-full py-3 rounded-2xl bg-white border border-line text-brand text-sm font-medium hover:bg-ground transition-colors text-center"
           >
             Pick とは？

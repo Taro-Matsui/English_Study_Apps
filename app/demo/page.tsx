@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { X_URL } from '@/lib/social'
+import { TrackOnMount } from '@/components/TrackOnMount'
 
 export default function DemoPage() {
   return (
     <div className="min-h-screen bg-ground flex flex-col items-center justify-center p-6">
+      <TrackOnMount event="demo_reached" />
       <div className="w-full max-w-md space-y-8">
 
         {/* ヘッダー */}

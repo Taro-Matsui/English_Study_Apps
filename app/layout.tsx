@@ -19,6 +19,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://usepick.win"),
   title: "Pick",
   description: "実際の会話・文書から英語フレーズをPickして学ぶアプリ",
   icons: {
